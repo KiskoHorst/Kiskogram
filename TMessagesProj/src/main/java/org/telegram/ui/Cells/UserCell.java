@@ -14,6 +14,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.UserObject;
@@ -28,6 +29,7 @@ import org.telegram.ui.Components.CheckBox;
 import org.telegram.ui.Components.CheckBoxSquare;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.ActionBar.SimpleTextView;
+import org.telegram.ui.Components.kg_Themes;
 
 public class UserCell extends FrameLayout {
 
@@ -50,7 +52,7 @@ public class UserCell extends FrameLayout {
     private int lastStatus;
     private TLRPC.FileLocation lastAvatar;
 
-    private int statusColor = 0xffa8a8a8;
+    private int statusColor = kg_Themes.getColor(kg_Themes.TEXT_HINT);
     private int statusOnlineColor = 0xff3b84c0;
 
     public UserCell(Context context, int padding, int checkbox, boolean admin) {
@@ -63,7 +65,7 @@ public class UserCell extends FrameLayout {
         addView(avatarImageView, LayoutHelper.createFrame(48, 48, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 0 : 7 + padding, 8, LocaleController.isRTL ? 7 + padding : 0, 0));
 
         nameTextView = new SimpleTextView(context);
-        nameTextView.setTextColor(0xff212121);
+        nameTextView.setTextColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
         nameTextView.setTextSize(17);
         nameTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
         addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 28 + (checkbox == 2 ? 18 : 0) : (68 + padding), 11.5f, LocaleController.isRTL ? (68 + padding) : 28 + (checkbox == 2 ? 18 : 0), 0));
@@ -102,7 +104,7 @@ public class UserCell extends FrameLayout {
         if (value == 1) {
             adminImage.setImageResource(R.drawable.admin_star);
         } else if (value == 2) {
-            adminImage.setImageResource(R.drawable.admin_star2);
+            adminImage.setImageResource(kg_Themes.getDrawable("admin_star2", ApplicationLoader.applicationContext));
         }
     }
 

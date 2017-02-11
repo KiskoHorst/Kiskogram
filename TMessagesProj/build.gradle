@@ -21,17 +21,16 @@ dependencies {
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.2'
+    buildToolsVersion '24.0.3'
 
     useLibrary 'org.apache.http.legacy'
-    defaultConfig.applicationId = "org.telegram.messenger"
+    defaultConfig.applicationId = "li.peeloi.kisko.kiskogram"
 
-    sourceSets.main.jniLibs.srcDirs = ['./jni/']
+    //sourceSets.main.jniLibs.srcDirs = ['./jni/']
 
-    externalNativeBuild {
-        ndkBuild {
-            path "jni/Android.mk"
-        }
+    sourceSets.main {
+        jniLibs.srcDir 'libs'
+        jni.srcDirs = [] //disable automatic ndk-build call
     }
 
     compileOptions {
@@ -80,7 +79,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 851
+    defaultConfig.versionCode = 85103
 
     sourceSets.debug {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
@@ -114,13 +113,13 @@ android {
 
     applicationVariants.all { variant ->
         def abiVersion = variant.productFlavors.get(0).versionCode
-        variant.mergedFlavor.versionCode = defaultConfig.versionCode * 10 + abiVersion;
+        variant.mergedFlavor.versionCode = defaultConfig.versionCode;
     }
 
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 24
-        versionName "3.13.1"
+        versionName "3.13.1-r3-dev"
 
         externalNativeBuild {
             ndkBuild {

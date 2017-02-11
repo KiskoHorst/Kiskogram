@@ -1656,8 +1656,8 @@ public class NotificationsController {
                 mBuilder.setContentText(detailText);
                 NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
                 inboxStyle.setBigContentTitle(name);
-                int count = Math.min(10, pushMessages.size());
-                for (int i = 0; i < count; i++) {
+                int count = Math.min(7, pushMessages.size());
+                for (int i = count-1; i >= 0; i--) {
                     MessageObject messageObject = pushMessages.get(i);
                     String message = getStringForMessage(messageObject, false);
                     if (message == null || messageObject.messageOwner.date <= dismissDate) {

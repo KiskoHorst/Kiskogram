@@ -13,6 +13,7 @@ import android.view.View;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
+import org.telegram.ui.Components.kg_Themes;
 
 public class ShadowSectionCell extends View {
 
@@ -20,7 +21,7 @@ public class ShadowSectionCell extends View {
 
     public ShadowSectionCell(Context context) {
         super(context);
-        setBackgroundResource(R.drawable.greydivider);
+        setBackgroundResource(kg_Themes.getDrawable("greydivider", context));
     }
 
     public void setSize(int value) {

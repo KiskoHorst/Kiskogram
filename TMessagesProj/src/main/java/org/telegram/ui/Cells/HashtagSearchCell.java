@@ -19,6 +19,7 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
+import org.telegram.ui.Components.kg_Themes;
 
 public class HashtagSearchCell extends TextView {
 
@@ -30,10 +31,11 @@ public class HashtagSearchCell extends TextView {
         setGravity(Gravity.CENTER_VERTICAL);
         setPadding(AndroidUtilities.dp(16), 0, AndroidUtilities.dp(16), 0);
         setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
-        setTextColor(0xff000000);
+        setTextColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
         if (paint == null) {
             paint = new Paint();
-            paint.setColor(0xffdcdcdc);
+            paint.setColor(kg_Themes.getColor(kg_Themes.DRAWER_DIVIDER));
+            paint.setStrokeWidth(AndroidUtilities.dp(1));
         }
 
         setBackgroundResource(R.drawable.list_selector);
@@ -62,7 +64,7 @@ public class HashtagSearchCell extends TextView {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (needDivider) {
-            canvas.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1, paint);
+            canvas.drawLine(0, getHeight() - AndroidUtilities.dp(1)/2, getWidth(), getHeight() - AndroidUtilities.dp(1)/2, paint);
         }
     }
 }

@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.ui.ActionBar.SimpleTextView;
+import org.telegram.ui.Components.kg_Themes;
 
 public class TextCell extends FrameLayout {
 
@@ -29,7 +30,7 @@ public class TextCell extends FrameLayout {
         super(context);
 
         textView = new SimpleTextView(context);
-        textView.setTextColor(0xff212121);
+        textView.setTextColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
         textView.setTextSize(16);
         textView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
         addView(textView);

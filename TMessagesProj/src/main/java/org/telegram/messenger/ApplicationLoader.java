@@ -248,7 +248,7 @@ public class ApplicationLoader extends Application {
 
         try {
             langCode = LocaleController.getLocaleStringIso639();
-            deviceModel = Build.MANUFACTURER + Build.MODEL;
+            deviceModel = Build.MANUFACTURER + " " + Build.MODEL;
             PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
             appVersion = pInfo.versionName + " (" + pInfo.versionCode + ")";
             systemVersion = "SDK " + Build.VERSION.SDK_INT;

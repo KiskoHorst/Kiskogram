@@ -24,10 +24,11 @@ import android.os.Build;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
+import org.telegram.ui.Components.kg_Themes;
 
 public class Theme {
 
-    public static final int ACTION_BAR_COLOR = 0xff527da3;
+    public static final int ACTION_BAR_COLOR = kg_Themes.getColor(kg_Themes.TOOLBAR);
     public static final int ACTION_BAR_PHOTO_VIEWER_COLOR = 0x7f000000;
     public static final int ACTION_BAR_MEDIA_PICKER_COLOR = 0xff333333;
     public static final int ACTION_BAR_VIDEO_EDIT_COLOR = 0xff000000;
@@ -58,7 +59,7 @@ public class Theme {
 
     public static final int ATTACH_SHEET_TEXT_COLOR = 0xff757575;
 
-    public static final int DIALOGS_MESSAGE_TEXT_COLOR = 0xff8f8f8f;
+    public static final int DIALOGS_MESSAGE_TEXT_COLOR = kg_Themes.getColor(kg_Themes.DIALOGS_MESSAGE_NOALPHA);
     public static final int DIALOGS_NAME_TEXT_COLOR = 0xff4d83b3;
     public static final int DIALOGS_ATTACH_TEXT_COLOR = 0xff4d83b3;
     public static final int DIALOGS_PRINTING_TEXT_COLOR = 0xff4d83b3;
@@ -78,7 +79,7 @@ public class Theme {
     public static final int INAPP_PLAYER_BACKGROUND_COLOR = 0xffffffff;
 
     public static final int REPLY_PANEL_NAME_TEXT_COLOR = 0xff3a8ccf;
-    public static final int REPLY_PANEL_MESSAGE_TEXT_COLOR = 0xff222222;
+    public static final int REPLY_PANEL_MESSAGE_TEXT_COLOR = kg_Themes.getColor(kg_Themes.TEXT_PRIMARY);
 
     public static final int ALERT_PANEL_NAME_TEXT_COLOR = 0xff3a8ccf;
     public static final int ALERT_PANEL_MESSAGE_TEXT_COLOR = 0xff999999;
@@ -124,8 +125,8 @@ public class Theme {
     public static final int MSG_IN_REPLY_NAME_TEXT_COLOR = 0xff3a8ccf;
     public static final int MSG_OUT_REPLY_NAME_TEXT_COLOR = 0xff55ab4f;
     public static final int MSG_STICKER_REPLY_NAME_TEXT_COLOR = 0xffffffff;
-    public static final int MSG_IN_REPLY_MESSAGE_TEXT_COLOR = 0xff000000;
-    public static final int MSG_OUT_REPLY_MESSAGE_TEXT_COLOR = 0xff000000;
+    public static final int MSG_IN_REPLY_MESSAGE_TEXT_COLOR = kg_Themes.getColor(kg_Themes.TEXT_PRIMARY);
+    public static final int MSG_OUT_REPLY_MESSAGE_TEXT_COLOR = kg_Themes.getColor(kg_Themes.TEXT_PRIMARY);
     public static final int MSG_IN_REPLY_MEDIA_MESSAGE_TEXT_COLOR = 0xffa1aab3;
     public static final int MSG_OUT_REPLY_MEDIA_MESSAGE_TEXT_COLOR = 0xff65b05b;
     public static final int MSG_IN_REPLY_MEDIA_MESSAGE_SELETED_TEXT_COLOR = 0xff89b4c1;
@@ -190,7 +191,7 @@ public class Theme {
     public static final int MSG_IN_VENUE_INFO_SELECTED_TEXT_COLOR = 0xff89b4c1;
     public static final int MSG_OUT_VENUE_INFO_SELECTED_TEXT_COLOR = 0xff65b05b;
     public static final int MSG_MEDIA_INFO_TEXT_COLOR = 0xffffffff;
-    public static final int MSG_TEXT_COLOR = 0xff000000;
+    public static final int MSG_TEXT_COLOR = kg_Themes.getColor(kg_Themes.TEXT_PRIMARY);
     public static final int MSG_LINK_TEXT_COLOR = 0xff2678b6;
     public static final int MSG_LINK_SELECT_BACKGROUND_COLOR = 0x3362a9e3;
     public static final int MSG_TEXT_SELECT_BACKGROUND_COLOR = 0x6662a9e3;
@@ -253,14 +254,14 @@ public class Theme {
 
     public static void loadRecources(Context context) {
         if (backgroundDrawableIn == null) {
-            backgroundDrawableIn = context.getResources().getDrawable(R.drawable.msg_in);
-            backgroundDrawableInSelected = context.getResources().getDrawable(R.drawable.msg_in_selected);
-            backgroundDrawableOut = context.getResources().getDrawable(R.drawable.msg_out);
-            backgroundDrawableOutSelected = context.getResources().getDrawable(R.drawable.msg_out_selected);
-            backgroundMediaDrawableIn = context.getResources().getDrawable(R.drawable.msg_in_photo);
-            backgroundMediaDrawableInSelected = context.getResources().getDrawable(R.drawable.msg_in_photo_selected);
-            backgroundMediaDrawableOut = context.getResources().getDrawable(R.drawable.msg_out_photo);
-            backgroundMediaDrawableOutSelected = context.getResources().getDrawable(R.drawable.msg_out_photo_selected);
+            backgroundDrawableIn = context.getResources().getDrawable(kg_Themes.getDrawable("msg_in", context));
+            backgroundDrawableInSelected = context.getResources().getDrawable(kg_Themes.getDrawable("msg_in_selected", context));
+            backgroundDrawableOut = context.getResources().getDrawable(kg_Themes.getDrawable("msg_out", context));
+            backgroundDrawableOutSelected = context.getResources().getDrawable(kg_Themes.getDrawable("msg_out_selected", context));
+            backgroundMediaDrawableIn = context.getResources().getDrawable(kg_Themes.getDrawable("msg_in_photo", context));
+            backgroundMediaDrawableInSelected = context.getResources().getDrawable(kg_Themes.getDrawable("msg_in_photo_selected", context));
+            backgroundMediaDrawableOut = context.getResources().getDrawable(kg_Themes.getDrawable("msg_out_photo", context));
+            backgroundMediaDrawableOutSelected = context.getResources().getDrawable(kg_Themes.getDrawable("msg_out_photo_selected", context));
             checkDrawable = context.getResources().getDrawable(R.drawable.msg_check);
             halfCheckDrawable = context.getResources().getDrawable(R.drawable.msg_halfcheck);
             clockDrawable = context.getResources().getDrawable(R.drawable.msg_clock);

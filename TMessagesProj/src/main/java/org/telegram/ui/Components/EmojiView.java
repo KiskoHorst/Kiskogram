@@ -229,78 +229,78 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
             setMeasuredDimension(View.MeasureSpec.getSize(widthMeasureSpec), View.MeasureSpec.getSize(widthMeasureSpec));
         }
 
-        @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            if (touched) {
-                if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
-                    if (pickerViewPopup != null && pickerViewPopup.isShowing()) {
-                        pickerViewPopup.dismiss();
-
-                        String color = null;
-                        switch (pickerView.getSelection()) {
-                            case 1:
-                                color = "\uD83C\uDFFB";
-                                break;
-                            case 2:
-                                color = "\uD83C\uDFFC";
-                                break;
-                            case 3:
-                                color = "\uD83C\uDFFD";
-                                break;
-                            case 4:
-                                color = "\uD83C\uDFFE";
-                                break;
-                            case 5:
-                                color = "\uD83C\uDFFF";
-                                break;
-                        }
-                        String code = (String) getTag();
-                        if (pager.getCurrentItem() != 0) {
-                            if (color != null) {
-                                emojiColor.put(code, color);
-                                code = addColorToCode(code, color);
-                            } else {
-                                emojiColor.remove(code);
-                            }
-                            setImageDrawable(Emoji.getEmojiBigDrawable(code));
-                            sendEmoji(null);
-                            saveEmojiColors();
-                        } else {
-                            sendEmoji(code + (color != null ? color : ""));
-                        }
-                    }
-                    touched = false;
-                    touchedX = -10000;
-                    touchedY = -10000;
-                } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    boolean ignore = false;
-                    if (touchedX != -10000) {
-                        if (Math.abs(touchedX - event.getX()) > AndroidUtilities.getPixelsInCM(0.2f, true) || Math.abs(touchedY - event.getY()) > AndroidUtilities.getPixelsInCM(0.2f, false)) {
-                            touchedX = -10000;
-                            touchedY = -10000;
-                        } else {
-                            ignore = true;
-                        }
-                    }
-                    if (!ignore) {
-                        getLocationOnScreen(location);
-                        float x = location[0] + event.getX();
-                        pickerView.getLocationOnScreen(location);
-                        x -= location[0] + AndroidUtilities.dp(3);
-                        int position = (int) (x / (emojiSize + AndroidUtilities.dp(4)));
-                        if (position < 0) {
-                            position = 0;
-                        } else if (position > 5) {
-                            position = 5;
-                        }
-                        pickerView.setSelection(position);
-                    }
-                }
-            }
-            lastX = event.getX();
-            lastY = event.getY();
-            return super.onTouchEvent(event);
-        }
+        //@Override
+        //public boolean onTouchEvent(MotionEvent event) {
+        //    if (touched) {
+        //        if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+        //            if (pickerViewPopup != null && pickerViewPopup.isShowing()) {
+        //                pickerViewPopup.dismiss();
+//
+        //                String color = null;
+        //                switch (pickerView.getSelection()) {
+        //                    case 1:
+        //                        color = "\uD83C\uDFFB";
+        //                        break;
+        //                    case 2:
+        //                        color = "\uD83C\uDFFC";
+        //                        break;
+        //                    case 3:
+        //                        color = "\uD83C\uDFFD";
+        //                        break;
+        //                    case 4:
+        //                        color = "\uD83C\uDFFE";
+        //                        break;
+        //                    case 5:
+        //                        color = "\uD83C\uDFFF";
+        //                        break;
+        //                }
+        //                String code = (String) getTag();
+        //                if (pager.getCurrentItem() != 0) {
+        //                    if (color != null) {
+        //                        emojiColor.put(code, color);
+        //                        code = addColorToCode(code, color);
+        //                    } else {
+        //                        emojiColor.remove(code);
+        //                    }
+        //                    setImageDrawable(Emoji.getEmojiBigDrawable(code));
+        //                    sendEmoji(null);
+        //                    saveEmojiColors();
+        //                } else {
+        //                    sendEmoji(code + (color != null ? color : ""));
+        //                }
+        //            }
+        //            touched = false;
+        //            touchedX = -10000;
+        //            touchedY = -10000;
+        //        } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+        //            boolean ignore = false;
+        //            if (touchedX != -10000) {
+        //                if (Math.abs(touchedX - event.getX()) > AndroidUtilities.getPixelsInCM(0.2f, true) || Math.abs(touchedY - event.getY()) > AndroidUtilities.getPixelsInCM(0.2f, false)) {
+        //                    touchedX = -10000;
+        //                    touchedY = -10000;
+        //                } else {
+        //                    ignore = true;
+        //                }
+        //            }
+        //            if (!ignore) {
+        //                getLocationOnScreen(location);
+        //                float x = location[0] + event.getX();
+        //                pickerView.getLocationOnScreen(location);
+        //                x -= location[0] + AndroidUtilities.dp(3);
+        //                int position = (int) (x / (emojiSize + AndroidUtilities.dp(4)));
+        //                if (position < 0) {
+        //                    position = 0;
+        //                } else if (position > 5) {
+        //                    position = 5;
+        //                }
+        //                pickerView.setSelection(position);
+        //            }
+        //        }
+        //    }
+        //    lastX = event.getX();
+        //    lastY = event.getY();
+        //    return super.onTouchEvent(event);
+        //}
     }
 
     private class EmojiPopupWindow extends PopupWindow {
@@ -827,51 +827,51 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                     return super.onInterceptTouchEvent(ev);
                 }
 
-                @Override
-                public boolean onTouchEvent(MotionEvent ev) {
-                    if (first) {
-                        first = false;
-                        lastX = ev.getX();
-                    }
-                    float newTranslationX = stickersTab.getTranslationX();
-                    if (stickersTab.getScrollX() == 0 && newTranslationX == 0) {
-                        if (!startedScroll && lastX - ev.getX() < 0) {
-                            if (pager.beginFakeDrag()) {
-                                startedScroll = true;
-                                lastTranslateX = stickersTab.getTranslationX();
-                            }
-                        } else if (startedScroll && lastX - ev.getX() > 0) {
-                            if (pager.isFakeDragging()) {
-                                pager.endFakeDrag();
-                                startedScroll = false;
-                            }
-                        }
-                    }
-                    if (startedScroll) {
-                        int dx = (int) (ev.getX() - lastX + newTranslationX - lastTranslateX);
-                        try {
-                            pager.fakeDragBy(dx);
-                            lastTranslateX = newTranslationX;
-                        } catch (Exception e) {
-                            try {
-                                pager.endFakeDrag();
-                            } catch (Exception e2) {
-                                //don't promt
-                            }
-                            startedScroll = false;
-                            FileLog.e("tmessages", e);
-                        }
-                    }
-                    lastX = ev.getX();
-                    if (ev.getAction() == MotionEvent.ACTION_CANCEL || ev.getAction() == MotionEvent.ACTION_UP) {
-                        first = true;
-                        if (startedScroll) {
-                            pager.endFakeDrag();
-                            startedScroll = false;
-                        }
-                    }
-                    return startedScroll || super.onTouchEvent(ev);
-                }
+                //@Override
+                //public boolean onTouchEvent(MotionEvent ev) {
+                //    if (first) {
+                //        first = false;
+                //        lastX = ev.getX();
+                //    }
+                //    float newTranslationX = stickersTab.getTranslationX();
+                //    if (stickersTab.getScrollX() == 0 && newTranslationX == 0) {
+                //        if (!startedScroll && lastX - ev.getX() < 0) {
+                //            if (pager.beginFakeDrag()) {
+                //                startedScroll = true;
+                //                lastTranslateX = stickersTab.getTranslationX();
+                //            }
+                //        } else if (startedScroll && lastX - ev.getX() > 0) {
+                //            if (pager.isFakeDragging()) {
+                //                pager.endFakeDrag();
+                //                startedScroll = false;
+                //            }
+                //        }
+                //    }
+                //    if (startedScroll) {
+                //        int dx = (int) (ev.getX() - lastX + newTranslationX - lastTranslateX);
+                //        try {
+                //            pager.fakeDragBy(dx);
+                //            lastTranslateX = newTranslationX;
+                //        } catch (Exception e) {
+                //            try {
+                //                pager.endFakeDrag();
+                //            } catch (Exception e2) {
+                //                //don't promt
+                //            }
+                //            startedScroll = false;
+                //            FileLog.e("tmessages", e);
+                //        }
+                //    }
+                //    lastX = ev.getX();
+                //    if (ev.getAction() == MotionEvent.ACTION_CANCEL || ev.getAction() == MotionEvent.ACTION_UP) {
+                //        first = true;
+                //        if (startedScroll) {
+                //            pager.endFakeDrag();
+                //            startedScroll = false;
+                //        }
+                //    }
+                //    return startedScroll || super.onTouchEvent(ev);
+                //}
             };
             stickersTab.setUnderlineHeight(AndroidUtilities.dp(1));
             stickersTab.setIndicatorColor(0xffe2e5e7);
@@ -910,7 +910,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                         }
                     }
                     if (page == 0) {
-                        pager.setCurrentItem(0);
+                        pager.setCurrentItem(6);
                         return;
                     } else {
                         if (page == gifTabNum + 1 || page == trendingTabNum + 1) {
@@ -951,13 +951,11 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         pager = new ViewPager(context) {
             @Override
             public boolean onInterceptTouchEvent(MotionEvent ev) {
-                if (getParent() != null) {
-                    getParent().requestDisallowInterceptTouchEvent(true);
-                }
-                return super.onInterceptTouchEvent(ev);
+                return false;
             }
         };
         pager.setAdapter(new EmojiPagesAdapter());
+
 
         emojiTab = new LinearLayout(context) {
             @Override
@@ -982,7 +980,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         pagerSlidingTabStrip.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                EmojiView.this.onPageScrolled(position, getMeasuredWidth() - getPaddingLeft() - getPaddingRight(), positionOffsetPixels);
+                //EmojiView.this.onPageScrolled(position, getMeasuredWidth() - getPaddingLeft() - getPaddingRight(), positionOffsetPixels);
             }
 
             @Override
@@ -1126,7 +1124,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         stickersGridView.setVisibility(GONE);
         stickersEmptyView.setVisibility(GONE);
         trendingGridView.setVisibility(GONE);
-        stickersTab.onPageScrolled(gifTabNum + 1, (recentTabBum > 0 ? recentTabBum : stickersTabOffset) + 1);
+        stickersTab.onPageScrolled(0, (recentTabBum > 0 ? recentTabBum : stickersTabOffset) + 1);
         saveNewPage();
     }
 
@@ -1283,10 +1281,10 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         gifTabNum = -2;
         trendingTabNum = -2;
 
-        stickersTabOffset = 0;
+        stickersTabOffset = -1;
         int lastPosition = stickersTab.getCurrentPosition();
         stickersTab.removeTabs();
-        stickersTab.addIconTab(R.drawable.ic_smiles2_smile);
+        //stickersTab.addIconTab(R.drawable.ic_smiles2_smile);
 
         if (showGifs && !recentGifs.isEmpty()) {
             stickersTab.addIconTab(R.drawable.ic_smiles_gif);
@@ -1565,37 +1563,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
     }
 
     public void onOpen(boolean forceEmoji) {
-        if (stickersTab != null) {
-            if (currentPage == 0 || forceEmoji) {
-                if (pager.getCurrentItem() == 6) {
-                    pager.setCurrentItem(0, !forceEmoji);
-                }
-            } else if (currentPage == 1) {
-                if (pager.getCurrentItem() != 6) {
-                    pager.setCurrentItem(6);
-                }
-                if (stickersTab.getCurrentPosition() == gifTabNum + 1) {
-                    if (recentTabBum >= 0) {
-                        stickersTab.selectTab(recentTabBum + 1);
-                    } else if (gifTabNum >= 0) {
-                        stickersTab.selectTab(gifTabNum + 2);
-                    } else {
-                        stickersTab.selectTab(1);
-                    }
-                }
-            } else if (currentPage == 2) {
-                if (pager.getCurrentItem() != 6) {
-                    pager.setCurrentItem(6);
-                }
-                if (stickersTab.getCurrentPosition() != gifTabNum + 1) {
-                    if (gifTabNum >= 0 && !recentGifs.isEmpty()) {
-                        stickersTab.selectTab(gifTabNum + 1);
-                    } else {
-                        switchToGifTab = true;
-                    }
-                }
-            }
-        }
+        pager.setCurrentItem(6);
     }
 
     @Override

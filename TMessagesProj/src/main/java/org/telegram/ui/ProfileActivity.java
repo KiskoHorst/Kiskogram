@@ -89,6 +89,7 @@ import org.telegram.ui.Components.IdenticonDrawable;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -124,6 +125,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private boolean playProfileAnimation;
     private boolean allowProfileAnimation = true;
     private int extraHeight;
+    private View toolbarbg;
     private int initialAnimationExtraHeight;
     private float animationProgress;
 
@@ -219,6 +221,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public boolean onFragmentCreate() {
+
         user_id = arguments.getInt("user_id", 0);
         chat_id = getArguments().getInt("chat_id", 0);
         if (user_id != 0) {
@@ -550,6 +553,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
         };
         FrameLayout frameLayout = (FrameLayout) fragmentView;
+        //frameLayout.setBackgroundColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
 
         listView = new RecyclerListView(context) {
             @Override
@@ -559,7 +563,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         };
         listView.setTag(6);
         listView.setPadding(0, AndroidUtilities.dp(88), 0, 0);
-        listView.setBackgroundColor(0xffffffff);
+        listView.setBackgroundColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
         listView.setVerticalScrollBarEnabled(false);
         listView.setItemAnimator(null);
         listView.setLayoutAnimation(null);
@@ -788,6 +792,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         topView = new TopView(context);
         topView.setBackgroundColor(AvatarDrawable.getProfileBackColorForId(user_id != 0 || ChatObject.isChannel(chat_id) && !currentChat.megagroup ? 5 : chat_id));
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            actionBar.setElevation(AndroidUtilities.dp(9.0f));
+            topView.setElevation(AndroidUtilities.dp(9.0f));
+        }
+
         frameLayout.addView(topView);
 
         frameLayout.addView(actionBar);
@@ -796,6 +806,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarImage.setRoundRadius(AndroidUtilities.dp(21));
         avatarImage.setPivotX(0);
         avatarImage.setPivotY(0);
+        if (Build.VERSION.SDK_INT >= 21) {
+            avatarImage.setElevation(AndroidUtilities.dp(9.0f));
+        }
         frameLayout.addView(avatarImage, LayoutHelper.createFrame(42, 42, Gravity.TOP | Gravity.LEFT, 64, 0, 0, 0));
         avatarImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -821,8 +834,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 continue;
             }
             nameTextView[a] = new SimpleTextView(context);
-            nameTextView[a].setTextColor(0xffffffff);
+            nameTextView[a].setTextColor(kg_Themes.getColor(kg_Themes.TOOLBAR_TEXT_PRIMARY));
             nameTextView[a].setTextSize(18);
+            if (Build.VERSION.SDK_INT >= 21) {
+                nameTextView[a].setElevation(AndroidUtilities.dp(9.0f));
+            }
             nameTextView[a].setGravity(Gravity.LEFT);
             nameTextView[a].setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             nameTextView[a].setLeftDrawableTopPadding(-AndroidUtilities.dp(1.3f));
@@ -832,37 +848,53 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             frameLayout.addView(nameTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, 0, a == 0 ? 48 : 0, 0));
 
             onlineTextView[a] = new SimpleTextView(context);
-            onlineTextView[a].setTextColor(AvatarDrawable.getProfileTextColorForId(user_id != 0 || ChatObject.isChannel(chat_id) && !currentChat.megagroup ? 5 : chat_id));
+            onlineTextView[a].setTextColor(kg_Themes.getColor(kg_Themes.TOOLBAR_TEXT_SECONDARY));
             onlineTextView[a].setTextSize(14);
+            if (Build.VERSION.SDK_INT >= 21) {
+                onlineTextView[a].setElevation(AndroidUtilities.dp(9.0f));
+            }
             onlineTextView[a].setGravity(Gravity.LEFT);
             frameLayout.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, 0, a == 0 ? 48 : 8, 0));
+        }
+
+        toolbarbg = new View(context);
+        toolbarbg.setBackgroundColor(AvatarDrawable.getProfileBackColorForId(user_id != 0 || ChatObject.isChannel(chat_id) && !currentChat.megagroup ? 5 : chat_id));
+        //toolbarbg.setBackgroundColor(0xff000000);
+        toolbarbg.setPivotY(0);
+
+        //ViewGroup.LayoutParams params = toolbarbg.getLayoutParams();
+        //params.height = AndroidUtilities.dp(30f);
+        //toolbarbg.setLayoutParams(params);
+        if (Build.VERSION.SDK_INT >=21) {
+            frameLayout.addView(toolbarbg, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 8));
+            toolbarbg.setElevation(8f);
         }
 
         if (user_id != 0 || chat_id >= 0 && !ChatObject.isLeftFromChat(currentChat)) {
             writeButton = new ImageView(context);
             try {
-                writeButton.setBackgroundResource(R.drawable.floating_user_states);
+                writeButton.setBackgroundResource(kg_Themes.getDrawable("floating_user_states", context));
             } catch (Throwable e) {
                 FileLog.e("tmessages", e);
             }
             writeButton.setScaleType(ImageView.ScaleType.CENTER);
             if (user_id != 0) {
-                writeButton.setImageResource(R.drawable.floating_message);
+                writeButton.setImageResource(kg_Themes.getDrawable("floating_message", context));
                 writeButton.setPadding(0, AndroidUtilities.dp(3), 0, 0);
             } else if (chat_id != 0) {
                 boolean isChannel = ChatObject.isChannel(currentChat);
                 if (isChannel && !currentChat.creator && (!currentChat.megagroup || !currentChat.editor) || !isChannel && !currentChat.admin && !currentChat.creator && currentChat.admins_enabled) {
-                    writeButton.setImageResource(R.drawable.floating_message);
+                    writeButton.setImageResource(kg_Themes.getDrawable("floating_message", context));
                     writeButton.setPadding(0, AndroidUtilities.dp(3), 0, 0);
                 } else {
-                    writeButton.setImageResource(R.drawable.floating_camera);
+                    writeButton.setImageResource(kg_Themes.getDrawable("floating_camera", context));
                 }
             }
             frameLayout.addView(writeButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.TOP, 0, 0, 16, 0));
             if (Build.VERSION.SDK_INT >= 21) {
                 StateListAnimator animator = new StateListAnimator();
-                animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
-                animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
+                animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(9), AndroidUtilities.dp(11)).setDuration(200));
+                animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(11), AndroidUtilities.dp(9)).setDuration(200));
                 writeButton.setStateListAnimator(animator);
                 writeButton.setOutlineProvider(new ViewOutlineProvider() {
                     @SuppressLint("NewApi")
@@ -1190,6 +1222,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void needLayout() {
         FrameLayout.LayoutParams layoutParams;
         int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
+
+        if (Build.VERSION.SDK_INT >= 21) toolbarbg.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight-AndroidUtilities.dp(8f));
+
         if (listView != null && !openAnimationInProgress) {
             layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
             if (layoutParams.topMargin != newTop) {
@@ -1554,7 +1589,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (onlineTextView[a] == null) {
                 continue;
             }
-            onlineTextView[a].setTextColor(Color.rgb(r + rD, g + gD, b + bD));
+            onlineTextView[a].setTextColor(kg_Themes.getColor(kg_Themes.TOOLBAR_TEXT_SECONDARY));
         }
         extraHeight = (int) (initialAnimationExtraHeight * progress);
         color = AvatarDrawable.getProfileColorForId(user_id != 0 ? user_id : chat_id);
@@ -2364,7 +2399,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 case 6:
                     view = new TextInfoPrivacyCell(mContext);
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) view;
-                    cell.setBackgroundResource(R.drawable.greydivider);
+                    cell.setBackgroundResource(kg_Themes.getDrawable("greydivider", mContext));
                     cell.setText(AndroidUtilities.replaceTags(LocaleController.formatString("ConvertGroupInfo", R.string.ConvertGroupInfo, LocaleController.formatPluralString("Members", MessagesController.getInstance().maxMegagroupCount))));
                     break;
                 case 7:
@@ -2419,7 +2454,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         } else {
                             text = LocaleController.getString("NumberUnknown", R.string.NumberUnknown);
                         }
-                        textDetailCell.setTextAndValueAndIcon(text, LocaleController.getString("PhoneMobile", R.string.PhoneMobile), R.drawable.phone_grey);
+                        textDetailCell.setTextAndValueAndIcon(text, LocaleController.getString("PhoneMobile", R.string.PhoneMobile), kg_Themes.getDrawable("phone_grey", mContext));
                     } else if (i == usernameRow) {
                         String text;
                         final TLRPC.User user = MessagesController.getInstance().getUser(user_id);
@@ -2441,7 +2476,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     break;
                 case 3:
                     TextCell textCell = (TextCell) holder.itemView;
-                    textCell.setTextColor(0xff212121);
+                    textCell.setTextColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
 
                     if (i == sharedMediaRow) {
                         String value;
@@ -2451,7 +2486,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             value = String.format("%d", totalMediaCount + (totalMediaCountMerge != -1 ? totalMediaCountMerge : 0));
                         }
                         if (user_id != 0 && UserConfig.getClientUserId() == user_id) {
-                            textCell.setTextAndValueAndIcon(LocaleController.getString("SharedMedia", R.string.SharedMedia), value, R.drawable.profile_list);
+                            textCell.setTextAndValueAndIcon(LocaleController.getString("SharedMedia", R.string.SharedMedia), value, kg_Themes.getDrawable("profile_list", mContext));
                         } else {
                             textCell.setTextAndValue(LocaleController.getString("SharedMedia", R.string.SharedMedia), value);
                         }
@@ -2465,7 +2500,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                         textCell.setTextAndValue(LocaleController.getString("MessageLifetime", R.string.MessageLifetime), value);
                     } else if (i == settingsNotificationsRow) {
-                        textCell.setTextAndIcon(LocaleController.getString("NotificationsAndSounds", R.string.NotificationsAndSounds), R.drawable.profile_list);
+                        textCell.setTextAndIcon(LocaleController.getString("NotificationsAndSounds", R.string.NotificationsAndSounds), kg_Themes.getDrawable("profile_list", mContext));
                     } else if (i == startSecretChatRow) {
                         textCell.setText(LocaleController.getString("StartEncryptedChat", R.string.StartEncryptedChat));
                         textCell.setTextColor(0xff37a919);
@@ -2533,20 +2568,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 userCell.setIsAdmin(0);
                             }
                         }
-                        userCell.setData(MessagesController.getInstance().getUser(part.user_id), null, null, i == emptyRowChat2 + 1 ? R.drawable.menu_newgroup : 0);
+                        userCell.setData(MessagesController.getInstance().getUser(part.user_id), null, null, i == emptyRowChat2 + 1 ? kg_Themes.getDrawable("menu_newgroup", mContext) : 0);
                     }
                     break;
                 case 8:
                     AboutLinkCell aboutLinkCell = (AboutLinkCell) holder.itemView;
                     if (i == userInfoRow) {
                         String about = MessagesController.getInstance().getUserAbout(user_id);
-                        aboutLinkCell.setTextAndIcon(about, R.drawable.bot_info);
+                        aboutLinkCell.setTextAndIcon(about, kg_Themes.getDrawable("bot_info", mContext));
                     } else if (i == channelInfoRow) {
                         String text = info.about;
                         while (text.contains("\n\n\n")) {
                             text = text.replace("\n\n\n", "\n\n");
                         }
-                        aboutLinkCell.setTextAndIcon(text, R.drawable.bot_info);
+                        aboutLinkCell.setTextAndIcon(text, kg_Themes.getDrawable("bot_info", mContext));
                     }
                     break;
                 default:

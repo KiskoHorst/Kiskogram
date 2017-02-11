@@ -22,6 +22,7 @@ import org.telegram.ui.Cells.DrawerActionCell;
 import org.telegram.ui.Cells.DividerCell;
 import org.telegram.ui.Cells.EmptyCell;
 import org.telegram.ui.Cells.DrawerProfileCell;
+import org.telegram.ui.Components.kg_Themes;
 
 public class DrawerLayoutAdapter extends BaseAdapter {
 
@@ -43,7 +44,7 @@ public class DrawerLayoutAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return UserConfig.isClientActivated() ? 10 : 0;
+        return UserConfig.isClientActivated() ? 11 : 0;
     }
 
     @Override
@@ -86,19 +87,21 @@ public class DrawerLayoutAdapter extends BaseAdapter {
             }
             DrawerActionCell actionCell = (DrawerActionCell) view;
             if (i == 2) {
-                actionCell.setTextAndIcon(LocaleController.getString("NewGroup", R.string.NewGroup), R.drawable.menu_newgroup);
+                actionCell.setTextAndIcon(LocaleController.getString("NewGroup", R.string.NewGroup), kg_Themes.getDrawable("menu_newgroup", mContext));
             } else if (i == 3) {
-                actionCell.setTextAndIcon(LocaleController.getString("NewSecretChat", R.string.NewSecretChat), R.drawable.menu_secret);
+                actionCell.setTextAndIcon(LocaleController.getString("NewSecretChat", R.string.NewSecretChat), kg_Themes.getDrawable("menu_secret", mContext));
             } else if (i == 4) {
-                actionCell.setTextAndIcon(LocaleController.getString("NewChannel", R.string.NewChannel), R.drawable.menu_broadcast);
+                actionCell.setTextAndIcon(LocaleController.getString("NewChannel", R.string.NewChannel), kg_Themes.getDrawable("menu_broadcast", mContext));
             } else if (i == 6) {
-                actionCell.setTextAndIcon(LocaleController.getString("Contacts", R.string.Contacts), R.drawable.menu_contacts);
+                actionCell.setTextAndIcon(LocaleController.getString("Contacts", R.string.Contacts), kg_Themes.getDrawable("menu_contacts", mContext));
             } else if (i == 7) {
-                actionCell.setTextAndIcon(LocaleController.getString("InviteFriends", R.string.InviteFriends), R.drawable.menu_invite);
+                actionCell.setTextAndIcon(LocaleController.getString("InviteFriends", R.string.InviteFriends), kg_Themes.getDrawable("menu_invite", mContext));
             } else if (i == 8) {
-                actionCell.setTextAndIcon(LocaleController.getString("Settings", R.string.Settings), R.drawable.menu_settings);
+                actionCell.setTextAndIcon(LocaleController.getString("Settings", R.string.Settings), kg_Themes.getDrawable("menu_settings", mContext));
             } else if (i == 9) {
-                actionCell.setTextAndIcon(LocaleController.getString("TelegramFaq", R.string.TelegramFaq), R.drawable.menu_help);
+                actionCell.setTextAndIcon(LocaleController.getString("cosogram", R.string.cosogram), kg_Themes.getDrawable("menu_laptop", mContext));
+            } else if (i == 10) {
+                actionCell.setTextAndIcon(LocaleController.getString("TelegramFaq", R.string.TelegramFaq), kg_Themes.getDrawable("menu_help", mContext));
             }
         }
 

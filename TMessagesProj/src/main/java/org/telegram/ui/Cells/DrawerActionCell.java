@@ -17,6 +17,7 @@ import android.widget.TextView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.kg_Themes;
 
 public class DrawerActionCell extends FrameLayout {
 
@@ -26,7 +27,7 @@ public class DrawerActionCell extends FrameLayout {
         super(context);
 
         textView = new TextView(context);
-        textView.setTextColor(0xff444444);
+        textView.setTextColor(kg_Themes.getColor(kg_Themes.DRAWER_TEXT));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
         textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         textView.setLines(1);

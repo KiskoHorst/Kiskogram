@@ -511,7 +511,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
 
     public ChatActivityEnterView(Activity context, SizeNotifierFrameLayout parent, ChatActivity fragment, boolean isChat) {
         super(context);
-        backgroundDrawable = context.getResources().getDrawable(R.drawable.compose_panel);
+        backgroundDrawable = context.getResources().getDrawable(kg_Themes.getDrawable("compose_panel", context));
         dotDrawable = context.getResources().getDrawable(R.drawable.bluecircle);
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -561,7 +561,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             emojiButton.setBackgroundDrawable(Theme.createBarSelectorDrawable(Theme.INPUT_FIELD_SELECTOR_COLOR));
         }
         setEmojiButtonImage();
-        frameLayout.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 3, 0, 0, 0));
+        if (isChat)
+            frameLayout.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 3, 0, 0, 0));
         emojiButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -578,16 +579,15 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         messageEditText = new EditTextCaption(context);
         updateFieldHint();
         messageEditText.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        messageEditText.setInputType(messageEditText.getInputType() | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE);
-        messageEditText.setSingleLine(false);
+        messageEditText.setInputType(messageEditText.getInputType() | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES | EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE | EditorInfo.TYPE_TEXT_VARIATION_SHORT_MESSAGE);messageEditText.setSingleLine(false);
         messageEditText.setMaxLines(4);
         messageEditText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
         messageEditText.setGravity(Gravity.BOTTOM);
         messageEditText.setPadding(0, AndroidUtilities.dp(11), 0, AndroidUtilities.dp(12));
         messageEditText.setBackgroundDrawable(null);
-        messageEditText.setTextColor(0xff000000);
-        messageEditText.setHintTextColor(0xffb2b2b2);
-        frameLayout.addView(messageEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 52, 0, isChat ? 50 : 2, 0));
+        messageEditText.setTextColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
+        messageEditText.setHintTextColor(kg_Themes.getColor(kg_Themes.TEXT_HINT));
+        frameLayout.addView(messageEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 52 : 8, 0, isChat ? 50 : 2, 0));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             boolean ctrlPressed = false;
@@ -711,7 +711,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             frameLayout.addView(attachButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 48, Gravity.BOTTOM | Gravity.RIGHT));
 
             botButton = new ImageView(context);
-            botButton.setImageResource(R.drawable.bot_keyboard2);
+            botButton.setImageResource(kg_Themes.getDrawable("bot_keyboard2", ApplicationLoader.applicationContext));
             botButton.setScaleType(ImageView.ScaleType.CENTER);
             botButton.setVisibility(GONE);
             if (Build.VERSION.SDK_INT >= 21) {
@@ -875,8 +875,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
 
         audioSendButton = new ImageView(context);
         audioSendButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        audioSendButton.setImageResource(R.drawable.mic);
-        audioSendButton.setBackgroundColor(0xffffffff);
+        audioSendButton.setImageResource(kg_Themes.getDrawable("mic", context));
+        audioSendButton.setBackgroundColor(kg_Themes.getColor(kg_Themes.COMPOSE_PANEL));
         audioSendButton.setSoundEffectsEnabled(false);
         audioSendButton.setPadding(0, 0, AndroidUtilities.dp(4), 0);
         sendButtonContainer.addView(audioSendButton, LayoutHelper.createFrame(48, 48));
@@ -992,7 +992,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         sendButton = new ImageView(context);
         sendButton.setVisibility(INVISIBLE);
         sendButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        sendButton.setImageResource(R.drawable.ic_send);
+        sendButton.setImageResource(kg_Themes.getDrawable("ic_send", context));
         sendButton.setSoundEffectsEnabled(false);
         sendButton.setScaleX(0.1f);
         sendButton.setScaleY(0.1f);
@@ -1276,7 +1276,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             canWriteToChannel = ChatObject.isChannel(currentChat) && (currentChat.creator || currentChat.editor) && !currentChat.megagroup;
             if (notifyButton != null) {
                 notifyButton.setVisibility(canWriteToChannel ? VISIBLE : GONE);
-                notifyButton.setImageResource(silent ? R.drawable.notify_members_off : R.drawable.notify_members_on);
+                int d = (silent ? kg_Themes.getDrawable("notify_members_off", ApplicationLoader.applicationContext) : kg_Themes.getDrawable("notify_members_on", ApplicationLoader.applicationContext));
+                notifyButton.setImageResource(d);
                 attachButton.setPivotX(AndroidUtilities.dp((botButton == null || botButton.getVisibility() == GONE) && (notifyButton == null || notifyButton.getVisibility() == GONE) ? 48 : 96));
             }
             if (attachButton != null) {
@@ -2013,12 +2014,12 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             }
             if (botReplyMarkup != null) {
                 if (isPopupShowing() && currentPopupContentType == 1) {
-                    botButton.setImageResource(R.drawable.ic_msg_panel_kb);
+                    botButton.setImageResource(kg_Themes.getDrawable("ic_msg_panel_kb", ApplicationLoader.applicationContext));
                 } else {
-                    botButton.setImageResource(R.drawable.bot_keyboard2);
+                    botButton.setImageResource(kg_Themes.getDrawable("bot_keyboard2", ApplicationLoader.applicationContext));
                 }
             } else {
-                botButton.setImageResource(R.drawable.bot_keyboard);
+                botButton.setVisibility(GONE);
             }
         } else {
             botButton.setVisibility(GONE);
@@ -2385,7 +2386,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 emojiPadding = currentHeight;
                 sizeNotifierLayout.requestLayout();
                 if (contentType == 0) {
-                    emojiButton.setImageResource(R.drawable.ic_msg_panel_kb);
+                    emojiButton.setImageResource(kg_Themes.getDrawable("ic_msg_panel_kb", ApplicationLoader.applicationContext));
                 } else if (contentType == 1) {
                     setEmojiButtonImage();
                 }
@@ -2415,19 +2416,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
     }
 
     private void setEmojiButtonImage() {
-        int currentPage;
-        if (emojiView == null) {
-            currentPage = getContext().getSharedPreferences("emoji", Activity.MODE_PRIVATE).getInt("selected_page", 0);
-        } else {
-            currentPage = emojiView.getCurrentPage();
-        }
-        if (currentPage == 0 || !allowStickers && !allowGifs) {
-            emojiButton.setImageResource(R.drawable.ic_msg_panel_smiles);
-        } else if (currentPage == 1) {
-            emojiButton.setImageResource(R.drawable.ic_msg_panel_stickers);
-        } else if (currentPage == 2) {
-            emojiButton.setImageResource(R.drawable.ic_msg_panel_gif);
-        }
+        emojiButton.setImageResource(kg_Themes.getDrawable("ic_msg_panel_stickers", ApplicationLoader.applicationContext));
     }
 
     public void hidePopup(boolean byBackButton) {

@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.kg_Themes;
 
 public class TextInfoCell extends FrameLayout {
 
@@ -25,7 +26,7 @@ public class TextInfoCell extends FrameLayout {
         super(context);
 
         textView = new TextView(context);
-        textView.setTextColor(0xffa3a3a3);
+        textView.setTextColor(kg_Themes.getColor(kg_Themes.TEXT_HINT));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         textView.setGravity(Gravity.CENTER);
         textView.setPadding(0, AndroidUtilities.dp(19), 0, AndroidUtilities.dp(19));

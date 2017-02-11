@@ -35,6 +35,7 @@ import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -147,6 +148,7 @@ public class LanguageSelectActivity extends BaseFragment {
         listView.setVerticalScrollBarEnabled(false);
         listView.setDivider(null);
         listView.setDividerHeight(0);
+        listView.setBackgroundColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
         listView.setAdapter(listAdapter);
         ((FrameLayout) fragmentView).addView(listView);
         layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();

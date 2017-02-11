@@ -23,6 +23,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.kg_Themes;
 
 public class TextColorCell extends FrameLayout {
 
@@ -38,14 +39,14 @@ public class TextColorCell extends FrameLayout {
 
         if (paint == null) {
             paint = new Paint();
-            paint.setColor(0xffd9d9d9);
-            paint.setStrokeWidth(1);
+            paint.setColor(kg_Themes.getColor(kg_Themes.DRAWER_DIVIDER));
+            paint.setStrokeWidth(AndroidUtilities.dp(1));
         }
 
         colorDrawable = getResources().getDrawable(R.drawable.switch_to_on2);
 
         textView = new TextView(context);
-        textView.setTextColor(0xff212121);
+        textView.setTextColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         textView.setLines(1);
         textView.setMaxLines(1);

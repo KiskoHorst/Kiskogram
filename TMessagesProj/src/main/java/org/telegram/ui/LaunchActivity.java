@@ -77,6 +77,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.PasscodeView;
 import org.telegram.ui.Components.StickersAlert;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -316,7 +317,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 return false;
             }
         };
-        listView.setBackgroundColor(0xffffffff);
+        listView.setBackgroundColor(kg_Themes.getColor(kg_Themes.DRAWER_BACKGROUND));
         listView.setAdapter(drawerLayoutAdapter = new DrawerLayoutAdapter(this));
         listView.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
         listView.setDivider(null);
@@ -382,6 +383,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     presentFragment(new SettingsActivity());
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (position == 9) {
+                    Browser.openUrl(LaunchActivity.this, "https://memmove.net/eta/cos/cosogram/webogram/app/#/im");
+                    drawerLayoutContainer.closeDrawer(false);
+                } else if (position == 10) {
                     Browser.openUrl(LaunchActivity.this, LocaleController.getString("TelegramFaqUrl", R.string.TelegramFaqUrl));
                     drawerLayoutContainer.closeDrawer(false);
                 }
@@ -1625,7 +1629,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                 }
 
                 if (sendingText != null) {
-                    SendMessagesHelper.prepareSendingText(sendingText, dialog_id);
+                    fragment.setReplyText(sendingText);
                 }
 
                 if (documentsPathsArray != null || documentsUrisArray != null) {

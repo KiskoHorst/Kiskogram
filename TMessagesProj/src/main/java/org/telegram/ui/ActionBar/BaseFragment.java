@@ -14,10 +14,12 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.tgnet.ConnectionsManager;
 
@@ -128,6 +130,9 @@ public class BaseFragment {
         ActionBar actionBar = new ActionBar(context);
         actionBar.setBackgroundColor(Theme.ACTION_BAR_COLOR);
         actionBar.setItemsBackgroundColor(Theme.ACTION_BAR_SELECTOR_COLOR);
+        if (Build.VERSION.SDK_INT >= 21) {
+            actionBar.setElevation(AndroidUtilities.dp(4.0f));
+        }
         return actionBar;
     }
 

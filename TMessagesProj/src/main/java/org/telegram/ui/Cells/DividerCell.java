@@ -13,6 +13,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.ui.Components.kg_Themes;
 
 public class DividerCell extends BaseCell {
 
@@ -22,8 +23,8 @@ public class DividerCell extends BaseCell {
         super(context);
         if (paint == null) {
             paint = new Paint();
-            paint.setColor(0xffd9d9d9);
-            paint.setStrokeWidth(1);
+            paint.setColor(kg_Themes.getColor(kg_Themes.DRAWER_DIVIDER));
+            paint.setStrokeWidth(AndroidUtilities.dp(1));
         }
     }
 

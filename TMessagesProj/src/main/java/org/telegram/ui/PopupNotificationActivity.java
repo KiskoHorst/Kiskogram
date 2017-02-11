@@ -181,6 +181,8 @@ public class PopupNotificationActivity extends Activity implements NotificationC
         typingDotsDrawable = new TypingDotsDrawable();
         recordStatusDrawable = new RecordStatusDrawable();
 
+
+
         SizeNotifierFrameLayout contentView = new SizeNotifierFrameLayout(this) {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -291,6 +293,7 @@ public class PopupNotificationActivity extends Activity implements NotificationC
             chatActivityEnterView.onDestroy();
         }
         chatActivityEnterView = new ChatActivityEnterView(this, contentView, null, false);
+
         popupContainer.addView(chatActivityEnterView, LayoutHelper.createRelative(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, RelativeLayout.ALIGN_PARENT_BOTTOM));
         chatActivityEnterView.setDelegate(new ChatActivityEnterView.ChatActivityEnterViewDelegate() {
             @Override

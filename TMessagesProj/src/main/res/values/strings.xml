@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-
-<resources>
-    <string name="AppName">Telegram</string>
+<resources tools:ignore="MissingTranslation" xmlns:tools="http://schemas.android.com/tools">
+    <string name="theme_restart_title">Application restart required</string>
+    <string name="theme_restart_desc">Kiskogram needs to be restarted to apply the new theme.</string>
+    <string name="theme_restart">Restart</string>
+    <string name="theme_restart_cancel">Cancel</string>
+    <string name="AppName">Kiskogram</string>
     <string name="AppNameBeta">Telegram Beta</string>
     <string name="LanguageName">English</string>
     <string name="LanguageNameInEnglish">English</string>
@@ -1296,4 +1299,10 @@
     <string name="formatterDay24H">HH:mm</string>
     <string name="formatterDay12H">h:mm a</string>
     <string name="formatDateAtTime">%1$s at %2$s</string>
+    <string name="cosogram">Desktop version (Cosogram)</string>
+    <string name="inline_bot_via">via</string>
+    <string name="Theme">Theme</string>
+    <string name="Theme_Light">Light</string>
+    <string name="Theme_Dark">Dark</string>
+    <string name="Theme_Black">AMOLED Black</string>
 </resources>

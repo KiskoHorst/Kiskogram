@@ -136,6 +136,7 @@ import org.telegram.ui.Components.URLSpanNoUnderline;
 import org.telegram.ui.Components.URLSpanReplacement;
 import org.telegram.ui.Components.URLSpanUserMention;
 import org.telegram.ui.Components.WebFrameLayout;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.io.File;
 import java.net.URLDecoder;
@@ -837,6 +838,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     int previousUid = 0;
                     for (int a = 1; a >= 0; a--) {
                         ArrayList<Integer> ids = new ArrayList<>(selectedMessagesCanCopyIds[a].keySet());
+                        boolean name = ids.size() > 1;
                         if (currentEncryptedChat == null) {
                             Collections.sort(ids);
                         } else {
@@ -848,7 +850,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                             if (str.length() != 0) {
                                 str += "\n\n";
                             }
-                            str += getMessageContent(messageObject, previousUid, true);
+                            str += getMessageContent(messageObject, previousUid, name);
                             previousUid = messageObject.messageOwner.from_id;
                         }
                     }
@@ -1082,7 +1084,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
         attachItem = menu.addItem(chat_menu_attach, R.drawable.ic_ab_other).setOverrideMenuClick(true).setAllowCloseAnimation(false);
         attachItem.setVisibility(View.GONE);
-        menuItem = menu.addItem(chat_menu_attach, R.drawable.ic_ab_attach).setAllowCloseAnimation(false);
+        menuItem = menu.addItem(chat_menu_attach, kg_Themes.getDrawable("ic_ab_attach", context)).setAllowCloseAnimation(false);
         menuItem.setBackgroundDrawable(null);
 
         actionModeViews.clear();
@@ -2472,7 +2474,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         chatActivityEnterView.addTopView(replyLayout, 48);
 
         View lineView = new View(context);
-        lineView.setBackgroundColor(0xffe8e8e8);
+        lineView.setBackgroundColor(kg_Themes.getColor(kg_Themes.DRAWER_DIVIDER));
         replyLayout.addView(lineView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 1, Gravity.BOTTOM | Gravity.LEFT));
 
         replyIconImageView = new ImageView(context);
@@ -4699,6 +4701,10 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         return chatActivityEnterView.processSendingText(text);
     }
 
+    public void setReplyText(String text) {
+        chatActivityEnterView.setFieldText(text);
+    }
+
     @Override
     public void didReceivedNotification(int id, final Object... args) {
         if (id == NotificationCenter.messagesDidLoaded) {
@@ -5822,17 +5828,19 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 if (getParentActivity() == null || closeChatDialog != null) {
                     return;
                 }
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                //AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                //builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                String toastText = "";
                 if (reason == 0) {
-                    builder.setMessage(LocaleController.getString("ChannelCantOpenPrivate", R.string.ChannelCantOpenPrivate));
+                    toastText = (LocaleController.getString("ChannelCantOpenPrivate", R.string.ChannelCantOpenPrivate));
                 } else if (reason == 1) {
-                    builder.setMessage(LocaleController.getString("ChannelCantOpenNa", R.string.ChannelCantOpenNa));
+                    toastText = (LocaleController.getString("ChannelCantOpenNa", R.string.ChannelCantOpenNa));
                 } else if (reason == 2) {
-                    builder.setMessage(LocaleController.getString("ChannelCantOpenBanned", R.string.ChannelCantOpenBanned));
+                    toastText = (LocaleController.getString("ChannelCantOpenBanned", R.string.ChannelCantOpenBanned));
                 }
-                builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
-                showDialog(closeChatDialog = builder.create());
+                //builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), null);
+                //showDialog(closeChatDialog = builder.create());
+                Toast.makeText(ApplicationLoader.applicationContext, toastText, Toast.LENGTH_LONG).show();
 
                 loading = false;
                 if (progressView != null) {

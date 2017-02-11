@@ -16,6 +16,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -26,7 +27,7 @@ import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.Locale;
 
-public class SessionCell extends FrameLayout {
+public class SessionCell extends LinearLayout {
 
     private TextView nameTextView;
     private TextView onlineTextView;
@@ -37,6 +38,7 @@ public class SessionCell extends FrameLayout {
 
     public SessionCell(Context context) {
         super(context);
+        setOrientation(VERTICAL);
 
         if (paint == null) {
             paint = new Paint();
@@ -47,7 +49,8 @@ public class SessionCell extends FrameLayout {
         LinearLayout linearLayout = new LinearLayout(context);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         linearLayout.setWeightSum(1);
-        addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 30, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 11, 11, 0));
+        linearLayout.setPadding(AndroidUtilities.dp(16f),AndroidUtilities.dp(12f),AndroidUtilities.dp(16f),AndroidUtilities.dp(4f));
+        addView(linearLayout);
 
         nameTextView = new TextView(context);
         nameTextView.setTextColor(0xff212121);
@@ -74,28 +77,24 @@ public class SessionCell extends FrameLayout {
         detailTextView = new TextView(context);
         detailTextView.setTextColor(0xff212121);
         detailTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        detailTextView.setLines(1);
-        detailTextView.setMaxLines(1);
-        detailTextView.setSingleLine(true);
         detailTextView.setEllipsize(TextUtils.TruncateAt.END);
         detailTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        addView(detailTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 36, 17, 0));
+        detailTextView.setPadding(AndroidUtilities.dp(16f),0,AndroidUtilities.dp(16f),0);
+        addView(detailTextView);
 
         detailExTextView = new TextView(context);
         detailExTextView.setTextColor(0xff999999);
         detailExTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        detailExTextView.setLines(1);
-        detailExTextView.setMaxLines(1);
-        detailExTextView.setSingleLine(true);
         detailExTextView.setEllipsize(TextUtils.TruncateAt.END);
         detailExTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        addView(detailExTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 17, 59, 17, 0));
+        detailExTextView.setPadding(AndroidUtilities.dp(16f),AndroidUtilities.dp(2f),AndroidUtilities.dp(16f),AndroidUtilities.dp(14f));
+        addView(detailExTextView);
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(90) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
-    }
+    //@Override
+    //protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    //    super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(90) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
+    //}
 
     public void setSession(TLRPC.TL_authorization session, boolean divider) {
         needDivider = divider;

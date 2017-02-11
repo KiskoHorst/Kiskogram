@@ -61,6 +61,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.Adapters.DialogsAdapter;
 import org.telegram.ui.Adapters.DialogsSearchAdapter;
+import org.telegram.ui.Cells.GreySectionCell;
 import org.telegram.ui.Cells.HintDialogCell;
 import org.telegram.ui.Cells.ProfileSearchCell;
 import org.telegram.ui.Cells.UserCell;
@@ -75,6 +76,7 @@ import org.telegram.ui.Components.EmptyTextProgressView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.util.ArrayList;
 
@@ -88,7 +90,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private ProgressBar progressView;
     private LinearLayout emptyView;
     private ActionBarMenuItem passcodeItem;
-    private ImageView floatingButton;
+    private LinearLayout floatingButton;
 
     private AlertDialog permissionDialog;
 
@@ -320,6 +322,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         FrameLayout frameLayout = new FrameLayout(context);
         fragmentView = frameLayout;
+
+        frameLayout.setBackgroundColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
         
         listView = new RecyclerListView(context);
         listView.setVerticalScrollBarEnabled(true);
@@ -650,16 +654,21 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         progressView.setVisibility(View.GONE);
         frameLayout.addView(progressView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
 
-        floatingButton = new ImageView(context);
+        ImageView fabicon = new ImageView(context);
+        fabicon.setImageResource(R.drawable.newmsg);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.height = AndroidUtilities.dp(24);
+        params.width = AndroidUtilities.dp(24);
+        params.leftMargin = AndroidUtilities.dp(16);
+        params.rightMargin = AndroidUtilities.dp(16);
+        params.topMargin = AndroidUtilities.dp(19);
+        params.bottomMargin = AndroidUtilities.dp(13);
+        fabicon.setLayoutParams(params);
+        floatingButton = new LinearLayout(context);
         floatingButton.setVisibility(onlySelect ? View.GONE : View.VISIBLE);
-        floatingButton.setScaleType(ImageView.ScaleType.CENTER);
-        floatingButton.setBackgroundResource(R.drawable.floating_states);
-        floatingButton.setImageResource(R.drawable.floating_pencil);
+        floatingButton.setBackgroundResource(R.drawable.floating_button);
         if (Build.VERSION.SDK_INT >= 21) {
-            StateListAnimator animator = new StateListAnimator();
-            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(floatingButton, "translationZ", AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
-            animator.addState(new int[]{}, ObjectAnimator.ofFloat(floatingButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
-            floatingButton.setStateListAnimator(animator);
+            floatingButton.setElevation(AndroidUtilities.dp(8.0f));
             floatingButton.setOutlineProvider(new ViewOutlineProvider() {
                 @SuppressLint("NewApi")
                 @Override
@@ -668,7 +677,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             });
         }
-        frameLayout.addView(floatingButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, LocaleController.isRTL ? 14 : 0, 0, LocaleController.isRTL ? 0 : 14, 14));
+        floatingButton.addView(fabicon);
+        frameLayout.addView(floatingButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, LocaleController.isRTL ? 16 : 0, 0, LocaleController.isRTL ? 0 : 16, 16));
         floatingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

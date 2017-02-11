@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -271,7 +272,7 @@ public class WallpapersActivity extends BaseFragment implements NotificationCent
                     Bitmap bitmap = ImageLoader.loadBitmap(currentPicturePath, null, screenSize.x, screenSize.y, true);
                     File toFile = new File(ApplicationLoader.getFilesDirFixed(), "wallpaper-temp.jpg");
                     stream = new FileOutputStream(toFile);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 87, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     selectedBackground = -1;
                     selectedColor = 0;
                     Drawable drawable = backgroundImage.getDrawable();
@@ -297,7 +298,7 @@ public class WallpapersActivity extends BaseFragment implements NotificationCent
                     Bitmap bitmap = ImageLoader.loadBitmap(null, data.getData(), screenSize.x, screenSize.y, true);
                     File toFile = new File(ApplicationLoader.getFilesDirFixed(), "wallpaper-temp.jpg");
                     FileOutputStream stream = new FileOutputStream(toFile);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 87, stream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     selectedBackground = -1;
                     selectedColor = 0;
                     Drawable drawable = backgroundImage.getDrawable();

@@ -35,6 +35,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.LinkPath;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.URLSpanNoUnderline;
+import org.telegram.ui.Components.kg_Themes;
 
 public class AboutLinkCell extends FrameLayout {
 
@@ -62,7 +63,7 @@ public class AboutLinkCell extends FrameLayout {
 
         textPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTextSize(AndroidUtilities.dp(16));
-        textPaint.setColor(0xff000000);
+        textPaint.setColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
         textPaint.linkColor = Theme.MSG_LINK_TEXT_COLOR;
 
         urlPaint = new Paint();

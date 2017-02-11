@@ -96,6 +96,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.NumberPicker;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -128,6 +129,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     private int notificationRow;
     private int backgroundRow;
     private int languageRow;
+    private int kg_themeRow;
     private int privacyRow;
     private int mediaDownloadSection;
     private int mediaDownloadSection2;
@@ -244,6 +246,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         privacyRow = rowCount++;
         backgroundRow = rowCount++;
         languageRow = rowCount++;
+        kg_themeRow = rowCount++;
         enableAnimationsRow = rowCount++;
         mediaDownloadSection = rowCount++;
         mediaDownloadSection2 = rowCount++;
@@ -370,6 +373,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         FrameLayout frameLayout = (FrameLayout) fragmentView;
 
         listView = new RecyclerListView(context);
+        listView.setBackgroundColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
         listView.setVerticalScrollBarEnabled(false);
         listView.setLayoutManager(layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setGlowColor(AvatarDrawable.getProfileBackColorForId(5));
@@ -479,6 +483,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     presentFragment(new PrivacySettingsActivity());
                 } else if (position == languageRow) {
                     presentFragment(new LanguageSelectActivity());
+                } else if (position == kg_themeRow) {
+                    presentFragment(new kg_ThemeSelectActivity());
                 } else if (position == switchBackendButtonRow) {
                     if (getParentActivity() == null) {
                         return;
@@ -749,16 +755,22 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         extraHeightView = new View(context);
         extraHeightView.setPivotY(0);
         extraHeightView.setBackgroundColor(AvatarDrawable.getProfileBackColorForId(5));
+        if (Build.VERSION.SDK_INT >= 21) {
+            extraHeightView.setElevation(AndroidUtilities.dp(4.0f));
+        }
         frameLayout.addView(extraHeightView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 88));
 
         shadowView = new View(context);
         shadowView.setBackgroundResource(R.drawable.header_shadow);
-        frameLayout.addView(shadowView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3));
+        //frameLayout.addView(shadowView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3));
 
         avatarImage = new BackupImageView(context);
         avatarImage.setRoundRadius(AndroidUtilities.dp(21));
         avatarImage.setPivotX(0);
         avatarImage.setPivotY(0);
+        if (Build.VERSION.SDK_INT >= 21) {
+            avatarImage.setElevation(AndroidUtilities.dp(4.0f));
+        }
         frameLayout.addView(avatarImage, LayoutHelper.createFrame(42, 42, Gravity.TOP | Gravity.LEFT, 64, 0, 0, 0));
         avatarImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -782,6 +794,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         nameTextView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         nameTextView.setPivotX(0);
         nameTextView.setPivotY(0);
+        if (Build.VERSION.SDK_INT >= 21) {
+            nameTextView.setElevation(AndroidUtilities.dp(4.0f));
+        }
         frameLayout.addView(nameTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, 0, 48, 0));
 
         onlineTextView = new TextView(context);
@@ -792,6 +807,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         onlineTextView.setSingleLine(true);
         onlineTextView.setEllipsize(TextUtils.TruncateAt.END);
         onlineTextView.setGravity(Gravity.LEFT);
+        if (Build.VERSION.SDK_INT >= 21) {
+            onlineTextView.setElevation(AndroidUtilities.dp(4.0f));
+        }
         frameLayout.addView(onlineTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, 0, 48, 0));
 
         writeButton = new ImageView(context);
@@ -800,8 +818,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         writeButton.setScaleType(ImageView.ScaleType.CENTER);
         if (Build.VERSION.SDK_INT >= 21) {
             StateListAnimator animator = new StateListAnimator();
-            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
-            animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
+            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(6)).setDuration(200));
+            animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(6), AndroidUtilities.dp(4)).setDuration(200));
             writeButton.setStateListAnimator(animator);
             writeButton.setOutlineProvider(new ViewOutlineProvider() {
                 @SuppressLint("NewApi")
@@ -1277,6 +1295,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndValue(LocaleController.getString("TextSize", R.string.TextSize), String.format("%d", size), true);
                     } else if (position == languageRow) {
                         textCell.setTextAndValue(LocaleController.getString("Language", R.string.Language), LocaleController.getCurrentLanguageName(), true);
+                    } else if (position == kg_themeRow) {
+                        textCell.setTextAndValue(LocaleController.getString("Theme", R.string.Theme), kg_Themes.getThemeName(kg_Themes.currentTheme), true);
                     } else if (position == contactsSortRow) {
                         String value;
                         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
@@ -1436,7 +1456,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             if (checkBackground) {
                 if (position == textSizeRow || position == enableAnimationsRow || position == notificationRow || position == backgroundRow || position == numberRow ||
                         position == askQuestionRow || position == sendLogsRow || position == sendByEnterRow || position == autoplayGifsRow || position == privacyRow || position == wifiDownloadRow ||
-                        position == mobileDownloadRow || position == clearLogsRow || position == roamingDownloadRow || position == languageRow || position == usernameRow ||
+                        position == mobileDownloadRow || position == clearLogsRow || position == roamingDownloadRow || position == languageRow|| position == kg_themeRow || position == usernameRow ||
                         position == switchBackendButtonRow || position == telegramFaqRow || position == contactsSortRow || position == contactsReimportRow || position == saveToGalleryRow ||
                         position == stickersRow || position == cacheRow || position == raiseToSpeakRow || position == privacyPolicyRow || position == customTabsRow || position == directShareRow || position == versionRow ||
                         position == emojiRow) {
@@ -1504,7 +1524,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     };
                     try {
                         PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-                        int code = pInfo.versionCode / 10;
+                        int code = (int)Math.floor(pInfo.versionCode / 100);
                         String abi = "";
                         switch (pInfo.versionCode % 10) {
                             case 0:
@@ -1520,7 +1540,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                                 abi = "universal";
                                 break;
                         }
-                        ((TextInfoCell) view).setText(String.format(Locale.US, "Telegram for Android v%s (%d) %s", pInfo.versionName, code, abi));
+                        ((TextInfoCell) view).setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v3.13.1 (%d)", pInfo.versionName, code, abi));
                     } catch (Exception e) {
                         FileLog.e("tmessages", e);
                     }
@@ -1552,7 +1572,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 return 1;
             } else if (position == enableAnimationsRow || position == sendByEnterRow || position == saveToGalleryRow || position == autoplayGifsRow || position == raiseToSpeakRow || position == customTabsRow || position == directShareRow) {
                 return 3;
-            } else if (position == notificationRow || position == backgroundRow || position == askQuestionRow || position == sendLogsRow || position == privacyRow || position == clearLogsRow || position == switchBackendButtonRow || position == telegramFaqRow || position == contactsReimportRow || position == textSizeRow || position == languageRow || position == contactsSortRow || position == stickersRow || position == cacheRow || position == privacyPolicyRow || position == emojiRow) {
+            } else if (position == notificationRow || position == backgroundRow || position == askQuestionRow || position == sendLogsRow || position == privacyRow || position == clearLogsRow || position == switchBackendButtonRow || position == telegramFaqRow || position == contactsReimportRow || position == textSizeRow || position == languageRow|| position == kg_themeRow || position == contactsSortRow || position == stickersRow || position == cacheRow || position == privacyPolicyRow || position == emojiRow) {
                 return 2;
             } else if (position == versionRow) {
                 return 5;

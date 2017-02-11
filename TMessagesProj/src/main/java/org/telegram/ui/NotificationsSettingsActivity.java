@@ -50,6 +50,7 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.Components.ColorPickerView;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.kg_Themes;
 
 public class NotificationsSettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
 
@@ -179,6 +180,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
 
         listView = new ListView(context);
         listView.setDivider(null);
+        listView.setBackgroundColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
         listView.setDividerHeight(0);
         listView.setVerticalScrollBarEnabled(false);
         frameLayout.addView(listView);
@@ -406,7 +408,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                         colorPickerView.setOldCenterColor(preferences.getInt("GroupLed", 0xff00ff00));
                     }
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), kg_Themes.getAlertDialogTheme(kg_Themes.currentTheme));
                     builder.setTitle(LocaleController.getString("LedColor", R.string.LedColor));
                     builder.setView(linearLayout);
                     builder.setPositiveButton(LocaleController.getString("Set", R.string.Set), new DialogInterface.OnClickListener() {
@@ -444,7 +446,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     });
                     showDialog(builder.create());
                 } else if (i == messagePopupNotificationRow || i == groupPopupNotificationRow) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), kg_Themes.getAlertDialogTheme(kg_Themes.currentTheme));
                     builder.setTitle(LocaleController.getString("PopupNotification", R.string.PopupNotification));
                     builder.setItems(new CharSequence[]{
                             LocaleController.getString("NoPopup", R.string.NoPopup),
@@ -470,7 +472,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                     showDialog(builder.create());
                 } else if (i == messageVibrateRow || i == groupVibrateRow) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), kg_Themes.getAlertDialogTheme(kg_Themes.currentTheme));
                     builder.setTitle(LocaleController.getString("Vibrate", R.string.Vibrate));
                     builder.setItems(new CharSequence[]{
                             LocaleController.getString("VibrationDisabled", R.string.VibrationDisabled),
@@ -507,7 +509,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                     showDialog(builder.create());
                 } else if (i == messagePriorityRow || i == groupPriorityRow) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), kg_Themes.getAlertDialogTheme(kg_Themes.currentTheme));
                     builder.setTitle(LocaleController.getString("NotificationsPriority", R.string.NotificationsPriority));
                     builder.setItems(new CharSequence[]{
                             LocaleController.getString("NotificationsPriorityDefault", R.string.NotificationsPriorityDefault),
@@ -530,7 +532,7 @@ public class NotificationsSettingsActivity extends BaseFragment implements Notif
                     builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
                     showDialog(builder.create());
                 } else if (i == repeatRow) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), kg_Themes.getAlertDialogTheme(kg_Themes.currentTheme));
                     builder.setTitle(LocaleController.getString("RepeatNotifications", R.string.RepeatNotifications));
                     builder.setItems(new CharSequence[]{
                             LocaleController.getString("RepeatDisabled", R.string.RepeatDisabled),

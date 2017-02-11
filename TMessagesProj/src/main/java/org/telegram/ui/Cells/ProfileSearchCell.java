@@ -33,6 +33,7 @@ import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.kg_Themes;
 
 public class ProfileSearchCell extends BaseCell {
 
@@ -94,7 +95,7 @@ public class ProfileSearchCell extends BaseCell {
 
         if (namePaint == null) {
             namePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-            namePaint.setColor(0xff212121);
+            namePaint.setColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
             namePaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
 
             nameEncryptedPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
@@ -105,22 +106,23 @@ public class ProfileSearchCell extends BaseCell {
             onlinePaint.setColor(Theme.MSG_LINK_TEXT_COLOR);
 
             offlinePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-            offlinePaint.setColor(0xff999999);
+            offlinePaint.setColor(kg_Themes.getColor(kg_Themes.TEXT_SECONDARY));
 
             linePaint = new Paint();
-            linePaint.setColor(0xffdcdcdc);
+            linePaint.setStrokeWidth(AndroidUtilities.dp(1));
+            linePaint.setColor(kg_Themes.getColor(kg_Themes.DRAWER_DIVIDER));
 
             countPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
             countPaint.setColor(0xffffffff);
             countPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
 
-            broadcastDrawable = getResources().getDrawable(R.drawable.list_broadcast);
+            broadcastDrawable = getResources().getDrawable(kg_Themes.getDrawable("list_broadcast", context));
             lockDrawable = getResources().getDrawable(R.drawable.list_secret);
-            groupDrawable = getResources().getDrawable(R.drawable.list_group);
+            groupDrawable = getResources().getDrawable(kg_Themes.getDrawable("list_group", context));
             countDrawable = getResources().getDrawable(R.drawable.dialogs_badge);
             countDrawableGrey = getResources().getDrawable(R.drawable.dialogs_badge2);
             checkDrawable = getResources().getDrawable(R.drawable.check_list);
-            botDrawable = getResources().getDrawable(R.drawable.bot_list);
+            botDrawable = getResources().getDrawable(kg_Themes.getDrawable("bot_list", context));
         }
 
         namePaint.setTextSize(AndroidUtilities.dp(17));

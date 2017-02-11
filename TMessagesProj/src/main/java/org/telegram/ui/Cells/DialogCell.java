@@ -39,6 +39,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
+import org.telegram.ui.Components.kg_Themes;
 
 import java.util.ArrayList;
 
@@ -137,7 +138,7 @@ public class DialogCell extends BaseCell {
         if (namePaint == null) {
             namePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
 
-            namePaint.setColor(0xff212121);
+            namePaint.setColor(kg_Themes.getColor(kg_Themes.TEXT_PRIMARY));
             namePaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
 
             nameEncryptedPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
@@ -149,7 +150,7 @@ public class DialogCell extends BaseCell {
             messagePaint.linkColor = Theme.DIALOGS_MESSAGE_TEXT_COLOR;
 
             linePaint = new Paint();
-            linePaint.setColor(0xffdcdcdc);
+            linePaint.setColor(kg_Themes.getColor(kg_Themes.DRAWER_DIVIDER));
 
             backPaint = new Paint();
             backPaint.setColor(0x0f000000);
@@ -158,10 +159,10 @@ public class DialogCell extends BaseCell {
             messagePrintingPaint.setColor(Theme.DIALOGS_PRINTING_TEXT_COLOR);
 
             timePaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-            timePaint.setColor(0xff999999);
+            timePaint.setColor(kg_Themes.getColor(kg_Themes.TEXT_HINT));
 
             countPaint = new TextPaint(TextPaint.ANTI_ALIAS_FLAG);
-            countPaint.setColor(0xffffffff);
+            countPaint.setColor(kg_Themes.getColor(kg_Themes.BACKGROUND));
             countPaint.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
 
             lockDrawable = getResources().getDrawable(R.drawable.list_secret);
@@ -171,11 +172,11 @@ public class DialogCell extends BaseCell {
             errorDrawable = getResources().getDrawable(R.drawable.dialogs_warning);
             countDrawable = getResources().getDrawable(R.drawable.dialogs_badge);
             countDrawableGrey = getResources().getDrawable(R.drawable.dialogs_badge2);
-            groupDrawable = getResources().getDrawable(R.drawable.list_group);
-            broadcastDrawable = getResources().getDrawable(R.drawable.list_broadcast);
+            groupDrawable = getResources().getDrawable(kg_Themes.getDrawable("list_group", context));
+            broadcastDrawable = getResources().getDrawable(kg_Themes.getDrawable("list_broadcast", context));
             muteDrawable = getResources().getDrawable(R.drawable.mute_grey);
             verifiedDrawable = getResources().getDrawable(R.drawable.check_list);
-            botDrawable = getResources().getDrawable(R.drawable.bot_list);
+            botDrawable = getResources().getDrawable(kg_Themes.getDrawable("bot_list", context));
         }
 
         namePaint.setTextSize(AndroidUtilities.dp(17));
@@ -968,9 +969,13 @@ public class DialogCell extends BaseCell {
 
         if (useSeparator) {
             if (LocaleController.isRTL) {
-                canvas.drawLine(0, getMeasuredHeight() - 1, getMeasuredWidth() - AndroidUtilities.dp(AndroidUtilities.leftBaseline), getMeasuredHeight() - 1, linePaint);
+                //canvas.drawLine(0, getMeasuredHeight() - 1, getMeasuredWidth() - AndroidUtilities.dp(AndroidUtilities.leftBaseline), getMeasuredHeight() - 1, linePaint);
+                canvas.drawRect(0,getMeasuredHeight()-AndroidUtilities.dp(1),getMeasuredWidth()-AndroidUtilities.dp(AndroidUtilities.leftBaseline), getMeasuredHeight(), linePaint);
             } else {
-                canvas.drawLine(AndroidUtilities.dp(AndroidUtilities.leftBaseline), getMeasuredHeight() - 1, getMeasuredWidth(), getMeasuredHeight() - 1, linePaint);
+                //canvas.drawLine(AndroidUtilities.dp(AndroidUtilities.leftBaseline), getMeasuredHeight() - 1, getMeasuredWidth(), getMeasuredHeight() - 1, linePaint);
+                canvas.drawRect(AndroidUtilities.dp(AndroidUtilities.leftBaseline),getMeasuredHeight()-AndroidUtilities.dp(1),getMeasuredWidth(), getMeasuredHeight(), linePaint);
+
+
             }
         }
 
