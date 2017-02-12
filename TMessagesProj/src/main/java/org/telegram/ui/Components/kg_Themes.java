@@ -16,9 +16,9 @@ import org.telegram.messenger.volley.toolbox.AndroidAuthenticator;
  */
 public class kg_Themes {
 
-    static SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
-    public static int currentTheme = preferences.getInt("kg_theme", 0);
-    public static int count = 3;
+    //static SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+    public static int currentTheme = 0;
+    public static int count = 1;
 
     public static final int BACKGROUND = 0;
     public static final int DRAWER_BACKGROUND = 1;
@@ -41,7 +41,7 @@ public class kg_Themes {
     public static final int GREYSECTION_TEXT = 14;
 
     public static String getThemeName(int id) {
-        switch (id) {
+        switch (0) {
             case 0: return LocaleController.getString("Theme_Light", R.string.Theme_Light);
             case 1: return LocaleController.getString("Theme_Dark", R.string.Theme_Dark);
             case 2: return LocaleController.getString("Theme_Black", R.string.Theme_Black);
@@ -51,9 +51,9 @@ public class kg_Themes {
 
     public static void setCurrentTheme(int id) {
         //currentTheme = id;
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("kg_theme", id);
-        editor.commit();
+        //SharedPreferences.Editor editor = preferences.edit();
+        //editor.putInt("kg_theme", id);
+        //editor.commit();
     }
 
     public static int getColor(int i) {

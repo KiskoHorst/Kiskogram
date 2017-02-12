@@ -1,5 +1,0 @@
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/floating3_profile_pressed_dark" android:state_pressed="true" />
-    <item android:drawable="@drawable/floating3_profile_pressed_dark" android:state_selected="true" />
-    <item android:drawable="@drawable/floating3_profile_dark" />
-</selector>

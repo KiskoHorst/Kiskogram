@@ -383,9 +383,6 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                     presentFragment(new SettingsActivity());
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (position == 9) {
-                    Browser.openUrl(LaunchActivity.this, "https://memmove.net/eta/cos/cosogram/webogram/app/#/im");
-                    drawerLayoutContainer.closeDrawer(false);
-                } else if (position == 10) {
                     Browser.openUrl(LaunchActivity.this, LocaleController.getString("TelegramFaqUrl", R.string.TelegramFaqUrl));
                     drawerLayoutContainer.closeDrawer(false);
                 }

@@ -44,7 +44,7 @@ public class DrawerLayoutAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return UserConfig.isClientActivated() ? 11 : 0;
+        return UserConfig.isClientActivated() ? 10 : 0;
     }
 
     @Override
@@ -99,8 +99,6 @@ public class DrawerLayoutAdapter extends BaseAdapter {
             } else if (i == 8) {
                 actionCell.setTextAndIcon(LocaleController.getString("Settings", R.string.Settings), kg_Themes.getDrawable("menu_settings", mContext));
             } else if (i == 9) {
-                actionCell.setTextAndIcon(LocaleController.getString("cosogram", R.string.cosogram), kg_Themes.getDrawable("menu_laptop", mContext));
-            } else if (i == 10) {
                 actionCell.setTextAndIcon(LocaleController.getString("TelegramFaq", R.string.TelegramFaq), kg_Themes.getDrawable("menu_help", mContext));
             }
         }

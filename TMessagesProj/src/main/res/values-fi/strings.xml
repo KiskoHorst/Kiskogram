@@ -305,22 +305,22 @@
   <!--privacy settings-->
   <string name="PrivacySettings">Yksityisyys ja turvallisuus</string>
   <string name="PrivacyTitle">Yksityisyys</string>
-  <string name="PrivacyLastSeen">Nähty</string>
+  <string name="PrivacyLastSeen">Viimeksi nähty</string>
   <string name="LastSeenEverybody">Kaikki</string>
   <string name="LastSeenContacts">Yhteystietoni</string>
   <string name="LastSeenNobody">Ei kukaan</string>
-  <string name="LastSeenEverybodyMinus">Kaikki paitsi %1$d</string>
-  <string name="LastSeenContactsPlus">Yhteystietoni ja %1$d</string>
-  <string name="LastSeenContactsMinus">Yhteystietoni paitsi %1$d</string>
-  <string name="LastSeenContactsMinusPlus">Yhteystietoni ja %2$d paitsi %1$d</string>
-  <string name="LastSeenNobodyPlus">Ei kukaan paitsi %1$d</string>
+  <string name="LastSeenEverybodyMinus">Kaikki (-%1$d)</string>
+  <string name="LastSeenContactsPlus">Yhteystietoni (+%1$d)</string>
+  <string name="LastSeenContactsMinus">Yhteystietoni (-%1$d)</string>
+  <string name="LastSeenContactsMinusPlus">Yhteystietoni (-%1$d, +%2$d)</string>
+  <string name="LastSeenNobodyPlus">Ei kukaan (+%1$d)</string>
   <string name="SecurityTitle">Turvallisuus</string>
   <string name="DeleteAccountTitle">Tunnuksen itsetuho</string>
   <string name="DeleteAccountIfAwayFor">Jos olet poissa</string>
   <string name="DeleteAccountHelp">Jos et kirjaudu tänä aikana kertaakaan, kaikki viestisi, ryhmäsi, mediasi ja yhteystietosi poistetaan.</string>
   <string name="DeleteAccountNowConfirmation">Haluatko poistaa tunnuksesi?</string>
   <string name="LastSeenHelp">Kuka saa nähdä, milloin viimeksi olit paikalla?.</string>
-  <string name="LastSeenTitle">Kuka saa nähdä viimeksi nähty-aikasi?</string>
+  <string name="LastSeenTitle">Kuka saa nähdä Viimeksi nähty-aikasi?</string>
   <string name="AddExceptions">Lisää poikkeuksia</string>
   <string name="CustomHelp">Tärkeää: Et näe viimeksi nähty-aikaa niiltä, joille et jaa omaasi. Sen sijaan näet suurpiirteisen ajan (esim. viime päivinä, tässä kuussa)</string>
   <string name="AlwaysShareWith">Jaa aina</string>
@@ -1010,7 +1010,6 @@
   <string name="SaveToGIFs">Tallenna GIF-kuviin</string>
   <string name="TapHereGifs">Kosketa tätä käyttääksesi tallennettuja GIF-kuvia</string>
   <string name="UnsupportedMedia">Tämä viesti ei ole tuettu Telegram-versiossasi. Päivitä sovellus nähdäksesi sen: https://telegram.org/update</string>
-  <string name="cosogram">Työpöytäversio (Cosogram)</string>
   <string name="inline_bot_via">botilla</string>
   <string name="AlwaysAllow">Salli aina</string>
   <string name="AlwaysAllowPlaceholder">Salli aina...</string>
@@ -1052,7 +1051,7 @@
   <string name="TintHighlights">KOHOKOHDAT</string>
   <string name="TintShadows">VARJOT</string>
   <string name="WhoCanAddMe">Kuka voi lisätä minut ryhmäkeskusteluihin?</string>
-  <string name="WhoCanAddMeInfo">Voit säätää, kuka voi lisätä sinut ryhmiin ja kanaville.</string>
+  <string name="WhoCanAddMeInfo">Voit rajoittaa kuka voi lisätä sinut ryhmiin ja kanaville.</string>
   <string name="WhoCanAddMembers">Kuka voi lisätä uusia jäseniä?</string>
   <string name="WhoCanAddMembersAdmins">Vain valvojat</string>
   <string name="WhoCanAddMembersAllMembers">Kaikki jäsenet</string>
