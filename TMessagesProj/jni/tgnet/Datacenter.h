@@ -46,21 +46,23 @@ public:
     void suspendConnections();
     void getSessions(std::vector<int64_t> &sessions);
     void recreateSessions();
+    void resetAddressAndPortNum();
     bool isHandshaking();
     bool hasAuthKey();
     bool isExportingAuthorization();
 
-    Connection *getDownloadConnection(uint32_t num, bool create);
-    Connection *getUploadConnection(bool create);
+    Connection *getDownloadConnection(uint8_t num, bool create);
+    Connection *getUploadConnection(uint8_t num, bool create);
     Connection *getGenericConnection(bool create);
     Connection *getPushConnection(bool create);
     Connection *getConnectionByType(uint32_t connectionType, bool create);
+
+    static void aesIgeEncryption(uint8_t *buffer, uint8_t *key, uint8_t *iv, bool encrypt, bool changeIv, uint32_t length);
 
 private:
     void onHandshakeConnectionClosed(Connection *connection);
     void onHandshakeConnectionConnected(Connection *connection);
     void processHandshakeResponse(TLObject *message, int64_t messageId);
-    void aesIgeEncryption(uint8_t *buffer, uint8_t *key, uint8_t *iv, bool encrypt, bool changeIv, uint32_t length);
     NativeByteBuffer *createRequestsData(std::vector<std::unique_ptr<NetworkMessage>> &requests, int32_t *quickAckId, Connection *connection);
     bool decryptServerResponse(int64_t keyId, uint8_t *key, uint8_t *data, uint32_t length);
     TLObject *getCurrentHandshakeRequest();
@@ -71,7 +73,7 @@ private:
     uint32_t datacenterId;
     Connection *genericConnection = nullptr;
     Connection *downloadConnections[DOWNLOAD_CONNECTIONS_COUNT];
-    Connection *uploadConnection = nullptr;
+    Connection *uploadConnection[UPLOAD_CONNECTIONS_COUNT];
     Connection *pushConnection = nullptr;
 
     uint32_t lastInitVersion = 0;
@@ -99,8 +101,8 @@ private:
     const uint32_t configVersion = 5;
     const uint32_t paramsConfigVersion = 1;
 
-    Connection *createDownloadConnection(uint32_t num);
-    Connection *createUploadConnection();
+    Connection *createDownloadConnection(uint8_t num);
+    Connection *createUploadConnection(uint8_t num);
     Connection *createGenericConnection();
     Connection *createPushConnection();
     Connection *createConnectionByType(uint32_t connectionType);

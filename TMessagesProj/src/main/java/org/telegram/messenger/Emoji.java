@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2016.
+ * Copyright Nikolai Kudashov, 2013-2017.
  */
 
 package org.telegram.messenger;
@@ -42,11 +42,11 @@ public class Emoji {
     private static boolean loadingEmoji[][] = new boolean[5][splitCount];
 
     private static final int[][] cols = {
-            {12, 12, 12, 12},
+            {15, 15, 15, 15},
             {6, 6, 6, 6},
+            {8, 8, 8, 8},
             {9, 9, 9, 9},
-            {9, 9, 9, 9},
-            {8, 8, 8, 7}
+            {10, 10, 10, 10}
     };
 
     static {
@@ -111,7 +111,7 @@ public class Emoji {
                     }
                 }
             }
-            FileLog.e("tmessages", q);*/
+            FileLog.e(q);*/
 
             String imageName;
             File imageFile;
@@ -129,7 +129,7 @@ public class Emoji {
                         imageFile.delete();
                     }
                 }
-                for (int a = 8; a < 10; a++) {
+                for (int a = 8; a < 11; a++) {
                     imageName = String.format(Locale.US, "v%d_emoji%.01fx_%d.png", a, scale, page);
                     imageFile = ApplicationLoader.applicationContext.getFileStreamPath(imageName);
                     if (imageFile.exists()) {
@@ -137,18 +137,18 @@ public class Emoji {
                     }
                 }
             } catch (Exception e) {
-                FileLog.e("tmessages", e);
+                FileLog.e(e);
             }
             Bitmap bitmap = null;
             try {
-                InputStream is = ApplicationLoader.applicationContext.getAssets().open("emoji/" + String.format(Locale.US, "v10_emoji%.01fx_%d_%d.png", scale, page, page2));
+                InputStream is = ApplicationLoader.applicationContext.getAssets().open("emoji/" + String.format(Locale.US, "v11_emoji%.01fx_%d_%d.png", scale, page, page2));
                 BitmapFactory.Options opts = new BitmapFactory.Options();
                 opts.inJustDecodeBounds = false;
                 opts.inSampleSize = imageResize;
                 bitmap = BitmapFactory.decodeStream(is, null, opts);
                 is.close();
             } catch (Throwable e) {
-                FileLog.e("tmessages", e);
+                FileLog.e(e);
             }
 
             final Bitmap finalBitmap = bitmap;
@@ -160,7 +160,7 @@ public class Emoji {
                 }
             });
         } catch (Throwable x) {
-            FileLog.e("tmessages", "Error loading emoji", x);
+            FileLog.e("Error loading emoji", x);
         }
     }
 
@@ -209,7 +209,7 @@ public class Emoji {
     public static EmojiDrawable getEmojiDrawable(CharSequence code) {
         DrawableInfo info = rects.get(code);
         if (info == null) {
-            FileLog.e("tmessages", "No drawable for emoji " + code);
+            FileLog.e("No drawable for emoji " + code);
             return null;
         }
         EmojiDrawable ed = new EmojiDrawable(info);
@@ -334,6 +334,7 @@ public class Emoji {
         if (MessagesController.getInstance().useSystemEmoji || cs == null || cs.length() == 0) {
             return cs;
         }
+        //String str = "\"\uD83D\uDC68\uD83C\uDFFB\u200D\uD83C\uDFA4\""
         //SpannableStringLight.isFieldsAvailable();
         //SpannableStringLight s = new SpannableStringLight(cs.toString());
         Spannable s;
