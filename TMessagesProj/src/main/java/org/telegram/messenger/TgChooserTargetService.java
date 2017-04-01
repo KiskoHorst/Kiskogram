@@ -24,6 +24,7 @@ import android.graphics.Shader;
 import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.service.chooser.ChooserTarget;
 import android.service.chooser.ChooserTargetService;
 import android.text.TextUtils;
@@ -46,6 +47,7 @@ public class TgChooserTargetService extends ChooserTargetService {
 
     @Override
     public List<ChooserTarget> onGetChooserTargets(ComponentName targetActivityName, IntentFilter matchedFilter) {
+
         final List<ChooserTarget> targets = new ArrayList<>();
         if (!UserConfig.isClientActivated()) {
             return targets;

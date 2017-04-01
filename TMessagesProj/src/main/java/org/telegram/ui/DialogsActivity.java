@@ -101,7 +101,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private LinearLayout emptyView;
     private ActionBarMenuItem passcodeItem;
 
-    private LinearLayout floatingButton;
+    private ImageView floatingButton;
     private RecyclerView sideMenu;
     private FragmentContextView fragmentContextView;
 
@@ -706,22 +706,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         progressView.setVisibility(View.GONE);
         frameLayout.addView(progressView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER));
 
-        ImageView fabicon = new ImageView(context);
-        fabicon.setImageResource(R.drawable.newmsg);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.height = AndroidUtilities.dp(24);
-        params.width = AndroidUtilities.dp(24);
-        params.leftMargin = AndroidUtilities.dp(16);
-        params.rightMargin = AndroidUtilities.dp(16);
-        params.topMargin = AndroidUtilities.dp(19);
-        params.bottomMargin = AndroidUtilities.dp(13);
-        fabicon.setLayoutParams(params);
-        fabicon.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionIcon), PorterDuff.Mode.MULTIPLY));
-        floatingButton = new LinearLayout(context);
+        floatingButton = new ImageView(context);
         floatingButton.setVisibility(onlySelect ? View.GONE : View.VISIBLE);
-
-        floatingButton.setBackgroundResource(R.drawable.floating_button);
-        floatingButton.getBackground().setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionBackground), PorterDuff.Mode.MULTIPLY));
+        floatingButton.setScaleType(ImageView.ScaleType.CENTER);
 
         Drawable drawable = Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Theme.getColor(Theme.key_chats_actionBackground), Theme.getColor(Theme.key_chats_actionPressedBackground));
         if (Build.VERSION.SDK_INT < 21) {
@@ -731,9 +718,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             combinedDrawable.setIconSize(AndroidUtilities.dp(56), AndroidUtilities.dp(56));
             drawable = combinedDrawable;
         }
-
+        floatingButton.setBackgroundDrawable(drawable);
+        floatingButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chats_actionIcon), PorterDuff.Mode.MULTIPLY));
+        floatingButton.setImageResource(R.drawable.floating_pencil);
         if (Build.VERSION.SDK_INT >= 21) {
-            floatingButton.setElevation(AndroidUtilities.dp(8.0f));
+            StateListAnimator animator = new StateListAnimator();
+            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(floatingButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(6)).setDuration(200));
+            animator.addState(new int[]{}, ObjectAnimator.ofFloat(floatingButton, "translationZ", AndroidUtilities.dp(6), AndroidUtilities.dp(4)).setDuration(200));
+            floatingButton.setStateListAnimator(animator);
             floatingButton.setOutlineProvider(new ViewOutlineProvider() {
                 @SuppressLint("NewApi")
                 @Override
@@ -742,8 +734,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             });
         }
-        floatingButton.addView(fabicon);
-        frameLayout.addView(floatingButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, LocaleController.isRTL ? 16 : 0, 0, LocaleController.isRTL ? 0 : 16, 16));
+        frameLayout.addView(floatingButton, LayoutHelper.createFrame(Build.VERSION.SDK_INT >= 21 ? 56 : 60, Build.VERSION.SDK_INT >= 21 ? 56 : 60,(LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.BOTTOM, LocaleController.isRTL ? 16 : 0, 0, LocaleController.isRTL ? 0 : 16, 16));
         floatingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
