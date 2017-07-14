@@ -211,7 +211,7 @@ public class LocaleController {
         localeInfo.nameEnglish = "Finnish";
         localeInfo.shortName = "fi";
         localeInfo.pathToFile = null;
-        sortedLanguages.add(localeInfo);
+        languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
 
         localeInfo = new LocaleInfo();

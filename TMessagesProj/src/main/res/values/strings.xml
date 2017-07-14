@@ -2,10 +2,6 @@
 
 
 <resources tools:ignore="MissingTranslation" xmlns:tools="http://schemas.android.com/tools">
-    <string name="theme_restart_title">Application restart required</string>
-    <string name="theme_restart_desc">Kiskogram needs to be restarted to apply the new theme.</string>
-    <string name="theme_restart">Restart</string>
-    <string name="theme_restart_cancel">Cancel</string>
     <string name="AppName">Kiskogram</string>
     <string name="AppNameBeta">Telegram Beta</string>
     <string name="LanguageName">English</string>

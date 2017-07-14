@@ -1367,7 +1367,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                                 abi = "universal";
                                 break;
                         }
-                        ((TextInfoCell) view).setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v3.18.0 (%d)", pInfo.versionName, code, abi));
+                        ((TextInfoCell) view).setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v4.1.1 (%d)", pInfo.versionName, code, abi));
 
                     } catch (Exception e) {
                         FileLog.e(e);
