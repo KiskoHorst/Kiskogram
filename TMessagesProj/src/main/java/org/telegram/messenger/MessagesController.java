@@ -160,6 +160,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
     public int callConnectTimeout = 30000;
     public int callPacketTimeout = 10000;
     public int maxPinnedDialogsCount = 5;
+    public boolean extraPins;
 
     private ArrayList<TLRPC.TL_disabledFeature> disabledFeatures = new ArrayList<>();
 
@@ -275,6 +276,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         enableJoined = preferences.getBoolean("EnableContactJoined", true);
 
         preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+        SharedPreferences preferences2 = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", Activity.MODE_PRIVATE);
         secretWebpagePreview = preferences.getInt("secretWebpage2", 2);
         maxGroupCount = preferences.getInt("maxGroupCount", 200);
         maxMegagroupCount = preferences.getInt("maxMegagroupCount", 10000);
@@ -293,6 +295,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         callConnectTimeout = preferences.getInt("callConnectTimeout", 30000);
         callPacketTimeout = preferences.getInt("callPacketTimeout", 10000);
         maxPinnedDialogsCount = preferences.getInt("maxPinnedDialogsCount", 5);
+        extraPins = preferences2.getBoolean("KG_ExtraPins", false);
 
         String disabledFeaturesString = preferences.getString("disabledFeatures", null);
         if (disabledFeaturesString != null && disabledFeaturesString.length() != 0) {
@@ -5757,7 +5760,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                 count++;
             }
         }
-        return count < maxPinnedDialogsCount;
+        return (count < maxPinnedDialogsCount || extraPins);
     }
 
     public boolean pinDialog(long did, boolean pin, TLRPC.InputPeer peer, long taskId) {

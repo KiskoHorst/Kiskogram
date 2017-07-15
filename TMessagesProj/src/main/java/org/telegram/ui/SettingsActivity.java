@@ -132,6 +132,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     private int settingsSectionRow;
     private int settingsSectionRow2;
     private int enableAnimationsRow;
+    private int KG_ExtraPinsRow;
     private int notificationRow;
     private int backgroundRow;
     private int themeRow;
@@ -252,6 +253,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         languageRow = rowCount++;
         //kg_themeRow = rowCount++;
         enableAnimationsRow = rowCount++;
+        KG_ExtraPinsRow = rowCount++;
         messagesSectionRow = rowCount++;
         messagesSectionRow2 = rowCount++;
         customTabsRow = rowCount++;
@@ -300,7 +302,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     }
 
     @Override
-    public View createView(Context context) {
+    public View createView(final Context context) {
         actionBar.setBackgroundColor(Theme.getColor(Theme.key_avatar_backgroundActionBarBlue));
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_avatar_actionBarSelectorBlue), false);
         actionBar.setItemsColor(Theme.getColor(Theme.key_avatar_actionBarIconBlue), false);
@@ -416,7 +418,30 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     if (view instanceof TextCheckCell) {
                         ((TextCheckCell) view).setChecked(!animations);
                     }
-                } else if (position == notificationRow) {
+                } else if (position == KG_ExtraPinsRow) {
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", Activity.MODE_PRIVATE);
+                    boolean pins = preferences.getBoolean("KG_ExtraPins", true);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putBoolean("KG_ExtraPins", !pins);
+                    editor.commit();
+                    MessagesController.getInstance().extraPins = !pins;
+                    if (view instanceof TextCheckCell) {
+                        ((TextCheckCell) view).setChecked(!pins);
+                    }
+                    if (!pins) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
+                        builder.setMessage(LocaleController.getString("KG_PinMoreChats", R.string.KG_PinMoreChats));
+                        builder.setPositiveButton(LocaleController.getString("KG_PinMoreOk", R.string.KG_PinMoreOk), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                            }
+                        });
+                        builder.show();
+                    }
+
+                }else if (position == notificationRow) {
                     presentFragment(new NotificationsSettingsActivity());
                 } else if (position == backgroundRow) {
                     presentFragment(new WallpapersActivity());
@@ -1252,8 +1277,11 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 case 3: {
                     TextCheckCell textCell = (TextCheckCell) holder.itemView;
                     SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
+                    SharedPreferences preferences2 = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", Activity.MODE_PRIVATE);
                     if (position == enableAnimationsRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("EnableAnimations", R.string.EnableAnimations), preferences.getBoolean("view_animations", true), false);
+                        textCell.setTextAndCheck(LocaleController.getString("EnableAnimations", R.string.EnableAnimations), preferences.getBoolean("view_animations", true), true);
+                    } else if (position == KG_ExtraPinsRow) {
+                        textCell.setTextAndCheck(LocaleController.getString("KG_ExtraPins", R.string.KG_ExtraPins), preferences2.getBoolean("KG_ExtraPins", false), false);
                     } else if (position == sendByEnterRow) {
                         textCell.setTextAndCheck(LocaleController.getString("SendByEnter", R.string.SendByEnter), preferences.getBoolean("send_by_enter", false), true);
                     } else if (position == saveToGalleryRow) {
@@ -1313,7 +1341,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == textSizeRow || position == enableAnimationsRow || position == notificationRow || position == backgroundRow || position == numberRow ||
+            return position == textSizeRow || position == enableAnimationsRow || position == notificationRow || position == KG_ExtraPinsRow || position == backgroundRow || position == numberRow ||
                     position == askQuestionRow || position == sendLogsRow || position == sendByEnterRow || position == autoplayGifsRow || position == privacyRow ||
                     position == clearLogsRow || position == languageRow || position == usernameRow ||
                     position == switchBackendButtonRow || position == telegramFaqRow || position == contactsSortRow || position == contactsReimportRow || position == saveToGalleryRow ||
@@ -1389,7 +1417,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             }
             if (position == settingsSectionRow || position == supportSectionRow || position == messagesSectionRow || position == contactsSectionRow) {
                 return 1;
-            } else if (position == enableAnimationsRow || position == sendByEnterRow || position == saveToGalleryRow || position == autoplayGifsRow || position == raiseToSpeakRow || position == customTabsRow || position == directShareRow || position == dumpCallStatsRow) {
+            } else if (position == enableAnimationsRow || position == KG_ExtraPinsRow || position == sendByEnterRow || position == saveToGalleryRow || position == autoplayGifsRow || position == raiseToSpeakRow || position == customTabsRow || position == directShareRow || position == dumpCallStatsRow) {
                 return 3;
             } else if (position == notificationRow || position == themeRow || position == backgroundRow || position == askQuestionRow || position == sendLogsRow || position == privacyRow || position == clearLogsRow || position == switchBackendButtonRow || position == telegramFaqRow || position == contactsReimportRow || position == textSizeRow || position == languageRow || position == contactsSortRow || position == stickersRow || position == privacyPolicyRow || position == emojiRow || position == dataRow) {
 

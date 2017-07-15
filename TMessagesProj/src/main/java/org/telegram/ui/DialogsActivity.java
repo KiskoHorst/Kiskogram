@@ -517,7 +517,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 selectedDialog = dialog.id;
                 final boolean pinned = dialog.pinned;
 
-                BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity());
+                final BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity());
                 int lower_id = (int) selectedDialog;
                 int high_id = (int) (selectedDialog >> 32);
 
@@ -542,12 +542,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     }
                     builder.setItems(items, icons, new DialogInterface.OnClickListener() {
                         @Override
-                        public void onClick(DialogInterface dialog, final int which) {
-                            if (which == 0) {
-                                if (MessagesController.getInstance().pinDialog(selectedDialog, !pinned, null, 0) && !pinned) {
-                                    listView.smoothScrollToPosition(0);
-                                }
-                            } else {
+                            public void onClick(DialogInterface dialog, final int which) {
+                                if (which == 0) {
+                                    if (MessagesController.getInstance().pinDialog(selectedDialog, !pinned, null, 0) && !pinned) {
+                                        listView.smoothScrollToPosition(0);
+                                    }
+                                } else {
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                                 builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
                                 if (which == 1) {

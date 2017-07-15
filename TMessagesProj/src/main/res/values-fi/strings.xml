@@ -9,14 +9,14 @@
   <string name="LanguageCode">fi</string>
   <!--signin view-->
   <string name="YourPhone">Puhelinnumerosi</string>
-  <string name="StartText">Ole hyvä, ja syötä puhelinnumerosi.</string>
+  <string name="StartText">Varmista maakoodisi ja syötä puhelinnumerosi.</string>
   <string name="ChooseCountry">Valitse maa</string>
   <string name="WrongCountry">Väärä maakoodi</string>
   <!--code enter view-->
   <string name="YourCode">Koodisi</string>
   <string name="SentSmsCode">Lähetimme puhelimeesi SMS-viestin joka sisältää koodisi.</string>
   <string name="CallText">Soitamme sinulle %1$d:%2$02d kuluttua</string>
-  <string name="Calling">Soitetaan sinulle...</string>
+  <string name="Calling">Soitamme sinulle...</string>
   <string name="Code">Koodi</string>
   <string name="WrongNumber">Väärä numero?</string>
   <string name="DidNotGetTheCode">Etkö saanut koodiasi?</string>
@@ -25,7 +25,7 @@
   <string name="RegisterText">Aseta etu- ja sukunimesi.</string>
   <!--<string name="RegisterText">Set up your name and picture</string>-->
   <string name="FirstName">Etunimi (vaaditaan)</string>
-  <string name="LastName">Sukunimi (vapaaehtoinen)</string>
+  <string name="LastName">Sukunimi (valinnainen)</string>
   <string name="CancelRegistration">Peruuta rekisteröinti</string>
   <!--chats view-->
   <string name="Settings">Asetukset</string>
@@ -241,7 +241,7 @@
   <string name="Language">Kieli</string>
   <string name="AskAQuestionInfo">Huomioithan, että Telegramin tuki on vapaaehtoisten tarjoama. Pyrimme vastaamaan nopeasti, mutta emme lupaa mitään.<![CDATA[<br><br>]]>Vilkaisethan <![CDATA[<a href=\"http://telegram.org/faq#general\">Usein Kysyttyjä Kysymyksiä</a>]]>: ne sisältävät ratkaisut useimpiin ongelmiin.</string>
   <string name="AskButton">Kysy vapaaehtoiselta</string>
-  <string name="TelegramFaq">Usein kysytyt kysymykset</string>
+  <string name="TelegramFaq">Telegram UKK</string>
   <string name="TelegramFaqUrl">https://telegram.org/faq</string>
   <string name="DeleteLocalization">Poista lokalisaatio?</string>
   <string name="IncorrectLocalization">Virheellinen lokalisaatiotiedosto</string>
@@ -389,7 +389,7 @@
   <string name="InvalidLastName">Virheellinen sukunimi</string>
   <string name="Loading">Ladataan...</string>
   <string name="NoPlayerInstalled">Sinulla ei ole videosoitinta. Ole hyvä, ja asenna sellainen.</string>
-  <string name="NoMailInstalled">Lähetä sähköpostia osoitteeseen sms@telegram.org ja kerro meille ongelmastasi.</string>
+  <string name="NoMailInstalled">Lähetä sähköpostia osoitteeseen sms@stel.com ja kerro meille ongelmastasi.</string>
   <string name="NoHandleAppInstalled">Sinulla ei ole sovellusta, jolla voisi avata %1$s-tiedostoja. Ole hyvä, ja asenna sellainen.</string>
   <string name="InviteUser">Tällä käyttäjällä ei vielä ole Telegram-tunnusta. Haluatko kutsua hänet?</string>
   <string name="AreYouSure">Oletko varma?</string>
@@ -624,7 +624,7 @@
   <string name="FromChats_other">%1$d keskustelusta.</string>
   <string name="FromChats_two">%1$d keskustelusta.</string>
   <string name="FromChats_zero">Ei yhdestäkään keskustelusta</string>
-  <string name="GalleryInfo">Lähettääksesi kuvia ilman pakkausta</string>
+  <string name="GalleryInfo">Lähetä kuvia ilman pakkausta</string>
   <string name="GettingLinkInfo">Haetaan linkin tietoja...</string>
   <string name="Grain">Rakeisuus</string>
   <string name="Hashtags">HASHTAGIT</string>
@@ -683,7 +683,7 @@
   <string name="PleaseEnterPassword">Syötä uusi salasanasi</string>
   <string name="PleaseReEnterPassword">Syötä salasanasi uudelleen</string>
   <string name="ReEnterYourPasscode">Syötä pääsykoodisi uudelleen</string>
-  <string name="RecordingAudio">nauhoitetaan ääntä...</string>
+  <string name="RecordingAudio">nauhoittaa ääntä...</string>
   <string name="RecoveryEmail">Palautussähköposti</string>
   <string name="RepeatDisabled">Pois</string>
   <string name="ResetMyAccount">NOLLAA TUNNUKSENI</string>
@@ -826,7 +826,7 @@
   <string name="ChannelAlertCreate">LUO KANAVA</string>
   <string name="ChannelAlertText">Kanavat ovat uusi työkalu viestiesi lähettämiseen suurille yleisöille.</string>
   <string name="ChannelAlertTitle">Mikä on kanava?</string>
-  <string name="ChannelBlockedUsers">Estetyt käyttäjät</string>
+  <string name="ChannelBlockedUsers">Porttikiellon saaneet käyttäjät</string>
   <string name="ChannelBroadcast">Lähetä</string>
   <string name="ChannelCantOpenPrivate">Tämä keskustelu ei ole enää saatavilla.</string>
   <string name="ChannelCantSendMessage">Et voi lähettää viestejä tälle kanavalle.</string>
@@ -954,7 +954,7 @@
   <string name="MegaDeleteAlert">Odota! Ryhmän poistaminen poistaa kaikki jäsenet ja viestit. Haluatko siitä huolimatta poistaa ryhmän?</string>
   <string name="MegaDeleteInfo">Menetät kaikki viestit tässä ryhmässä.</string>
   <string name="MegaLeaveAlert">Haluatko varmasti poistua ryhmästä?</string>
-  <string name="NoBlockedGroup">Estetyt käyttäjät poistetaan ryhmästä, ja voivat tulla takaisin vain, jos valvoja kutsuu heidät. Kutsulinkit eivät toimi heille.</string>
+  <string name="NoBlockedGroup">Porttikiellon saaneet käyttäjät poistetaan ryhmästä, ja voivat palata vain, jos valvoja kutsuu heidät. Kutsulinkit eivät toimi heille.</string>
   <string name="SendContactTo">Lähetä yhteystieto käyttäjälle %1$s?</string>
   <string name="SendContactToGroup">Lähetä yhteystieto ryhmään %1$s?</string>
   <string name="SetAdmins">Aseta valvojat</string>
@@ -1027,7 +1027,7 @@
   <string name="RaiseToSpeak">Nosta puhuaksesi</string>
   <string name="RaiseToSpeakAlert">Haluatko ottaa "Nosta puhuaksesi"-tilan käyttöön ääniviesteille?</string>
   <string name="SecretChat">Salaiset keskustelut</string>
-  <string name="SecretChatContextBotAlert">Huomaathan, että inline-botit ovat kolmannen osapuolen kehittäjien tekemiä. Jotta botit toimisivat, kaikki botin käyttäjänimen jälkeen kirjoitetut merkit lähetetään botin kehittäjälle.</string>
+  <string name="SecretChatContextBotAlert">Huomaathan, että viestibotit ovat kolmannen osapuolen kehittäjien tekemiä. Jotta botit toimisivat, kaikki botin käyttäjänimen jälkeen kirjoitetut merkit lähetetään botin kehittäjälle.</string>
   <string name="SecretLinkPreviewAlert">Haluatko ottaa laajennetut linkin esikatselut käyttöön Salaisissa keskusteluissa? Huomaa, että linkkien esikatselut luodaan Telegramin palvelimilla.</string>
   <string name="SecretWebPage">Linkkien esikatselut</string>
   <string name="SoftUserLimitAlert">Voit lisätä lisää käyttäjiä luomalla ryhmän ja muuttamalla sen superryhmäksi.</string>
@@ -1143,7 +1143,7 @@
   <string name="NotificationsServiceInfo">Käynnistä sovellus uudelleen, jos käyttäjä tai järjestelmä sulkee sen. Tämä varmistaa, että sovellus voi näyttää ilmoituksia.</string>
   <string name="PermissionNoLocationPosition">Telegram tarvitsee pääsyn sijaintiisi.</string>
   <string name="PinnedMessages">Kiinnitetyt viestit</string>
-  <string name="SendingAudio">lähetetään ääntä...</string>
+  <string name="SendingAudio">lähettää ääntä...</string>
   <string name="ShareYouLocationInfo">Tämä lähettää nykyisen sijaintisi botille.</string>
   <string name="ShareYouLocationInline">Tämä botti haluaisi tietää sijaintisi joka kerta, kun lähetät sille pyynnön. Tätä voidaan käyttää sijaintipohjaisia tuloksia varten.</string>
   <string name="ShareYouLocationTitle">Jaa sijaintisi?</string>
@@ -1482,9 +1482,9 @@
   <string name="formatterStats12H">dd. MMM yyyy, h:mm a</string>
   <string name="formatterStats24H">dd. MMM yyyy, HH:mm</string>
   <string name="ActionPinnedRound">un1 kiinnitti videoviestin</string>
-  <string name="AddAdminErrorBlacklisted">Valitettavasti et voi lisätä tätä käyttäjää valvojaksi, koska hänet on estetty etkä voi poistaa estoa.</string>
-  <string name="AddAdminErrorNotAMember">Valitettavasti et voi lisätä tätä käyttäjää valvojaksi, koska hän ei ole ryhmän jäsen etkä voi kutsua häntä.</string>
-  <string name="AddBannedErrorAdmin">Valitettavasti et voi antaa tälle käyttäjälle porttikieltoa, koska hän on ryhmän valvoja etkä voi alentaa häntä.</string>
+  <string name="AddAdminErrorBlacklisted">Valitettavasti et voi lisätä tätä käyttäjää valvojaksi, koska hänellä on porttikielto, eikä sinulla ole oikeuksia poistaa sitä.</string>
+  <string name="AddAdminErrorNotAMember">Valitettavasti et voi lisätä tätä käyttäjää valvojaksi, koska hän ei ole ryhmän jäsen, eikä sinulla ole oikeuksia kutsua häntä.</string>
+  <string name="AddBannedErrorAdmin">Valitettavasti et voi antaa tälle käyttäjälle porttikieltoa, koska hän on ryhmän valvoja eikä sinulla ole oikeuksia alentaa häntä.</string>
   <string name="AllMedia">Kaikki media</string>
   <string name="AttachInlineRestricted">Ryhmän valvojat ovat estäneet sinua lähettämästä viestibottisisältöä tänne %1$s asti.</string>
   <string name="AttachInlineRestrictedForever">Ryhmän valvojat ovat estäneet sinua lähettämästä viestibottisisältöä tänne.</string>
@@ -1501,7 +1501,7 @@
   <string name="CallReportLogsExplain">Tämä ei paljasta keskustelusi sisältöä, mutta auttaa meitä ratkaisemaan ongelman nopeammin.</string>
   <string name="CallReportSent">Kiitos, että autat meitä tekemään Telegram-puheluista parempia.</string>
   <string name="ChangeLanguageLater">Voit vaihtaa kieltä myöhemmin asetuksissa.</string>
-  <string name="ChannelBlacklist">Estolista</string>
+  <string name="ChannelBlacklist">Porttikiellot</string>
   <string name="ChannelBlockUser">Anna käyttäjälle porttikielto</string>
   <string name="ChannelMessageGroupRound">%1$s lähetti videoviestin kanavalle %2$s</string>
   <string name="ChannelMessageRound">%1$s lähetti videoviestin</string>
@@ -1545,10 +1545,10 @@
   <string name="English">Englanti</string>
   <string name="ErrorSendRestrictedMedia">Valitettavasti ryhmän valvojat ovat estäneet sinua lähettämästä mediaa.</string>
   <string name="ErrorSendRestrictedStickers">Valitettavasti ryhmän valvojat ovat estäneet sinua lähettämästä tarroja.</string>
-  <string name="EventLog">Viimeaikaiset toiminnat</string>
+  <string name="EventLog">Viimeaikaiset toimenpiteet</string>
   <string name="EventLogAdded">un1 lisäsi käyttäjän un2</string>
   <string name="EventLogAllAdmins">Kaikki valvojat</string>
-  <string name="EventLogAllEvents">Kaikki toiminnot</string>
+  <string name="EventLogAllEvents">Kaikki toimenpiteet</string>
   <string name="EventLogChangedChannelLink">un1 muutti kanavan linkkiä:</string>
   <string name="EventLogChangedGroupLink">un1 muutti ryhmän linkkiä:</string>
   <string name="EventLogChannelJoined">un1 liittyi kanavalle</string>
@@ -1563,8 +1563,8 @@
   <string name="EventLogEditedGroupPhoto">un1 asetti uuden ryhmäkuvan</string>
   <string name="EventLogEditedGroupTitle">un1 vaihtoi ryhmän nimeksi \"%1$s\"</string>
   <string name="EventLogEditedMessages">un1 muokkasi tätä viestiä:</string>
-  <string name="EventLogEmpty"><![CDATA[<b>]]>Ei toimintoja täällä vielä<![CDATA[</b>]]>\n\nRyhmän jäsenet ja valvojat\neivät ole tehneet palvelutoimenpiteitä\nviimeisen 48 tunnin aikana.</string>
-  <string name="EventLogEmptyChannel"><![CDATA[<b>]]>Ei toimintoja täällä vielä<![CDATA[</b>]]>\n\nKanavan valvojat\neivät ole tehneet palvelutoimenpiteitä\nviimeisen 48 tunnin aikana.</string>
+  <string name="EventLogEmpty"><![CDATA[<b>]]>Ei toimenpiteitä<![CDATA[</b>]]>\n\nRyhmän jäsenet ja valvojat\neivät ole tehneet palvelutoimenpiteitä\nviimeisen 48 tunnin aikana.</string>
+  <string name="EventLogEmptyChannel"><![CDATA[<b>]]>Ei toimenpiteitä<![CDATA[</b>]]>\n\nKanavan valvojat\neivät ole tehneet palvelutoimenpiteitä\nviimeisen 48 tunnin aikana.</string>
   <string name="EventLogEmptySearch"><![CDATA[<b>]]>Toimenpiteitä ei löytynyt<![CDATA[</b>]]>\n\nViimeaikaisia toimenpiteitä, jotka\nvastaavat hakuasi ei löytynyt.</string>
   <string name="EventLogEmptyTextSearch">Viimeaikaisia toimenpiteitä, jotka sisältävät \'<![CDATA[<b>]]>%1$s<![CDATA[</b>]]>\' löydettiin.</string>
   <string name="EventLogFilterAll">Kaikki toimenpiteet</string>
@@ -1645,8 +1645,8 @@
   <string name="OnlineCount_other">%1$d paikalla</string>
   <string name="OnlineCount_two">%1$d paikalla</string>
   <string name="OnlineCount_zero">%1$d paikalla</string>
-  <string name="OpenChannel">AVOIN KANAVA</string>
-  <string name="OpenGroup">AVOIN RYHMÄ</string>
+  <string name="OpenChannel">AVAA KANAVA</string>
+  <string name="OpenGroup">AVAA RYHMÄ</string>
   <string name="PaymentCheckoutProvider">Maksun tarjoaja</string>
   <string name="PaymentWarning">Varoitus</string>
   <string name="PaymentWarningText">Telegram ja %1$s eivät kumpikaan pääse käsiksi pankkikorttisi tietoihin. Pankkikorttitiedot käsitellään pavlelun %2$s maksujärjestelmässä.\n\nMaksu menee suoraan botin %1$s kehittäjälle. Telegram ei voit tarjota minkäänlaista takuuta, joten jatka omalla vastuullasi. Ongelmien sattuessa ota yhteyttä botin %1$s kehittäjään tai pankkiisi.</string>
@@ -1659,7 +1659,7 @@
   <string name="PrivacyPaymentsClearInfo">Voit poistaa toimitustietosi ja pyytää kaikkia maksuntarjoajia poistamaan tallennetut pankkikorttisi. Huomaa, että Telegram ei koskaan tallenna pankkikorttisi tietoja.</string>
   <string name="Proxy">Välityspalvelin</string>
   <string name="ProxySettings">Välityspalvelimen asetukset</string>
-  <string name="RecordingRound">nauhoitetaan videoviestiä...</string>
+  <string name="RecordingRound">nauhoittaa videoviestiä...</string>
   <string name="SearchMembers">Hae jäseniä</string>
   <string name="SendAsFile">Lähetä tiedostona</string>
   <string name="SendAsFiles">Lähetä tiedostoina</string>
@@ -1687,7 +1687,7 @@
   <string name="UserRestrictionsRead">Lue viestejä</string>
   <string name="UserRestrictionsSend">Lähetä viestejä</string>
   <string name="UserRestrictionsSendMedia">Lähetä mediaa</string>
-  <string name="UserRestrictionsSendStickers">Lähetä tarrjoja ja GIF-kuvia</string>
+  <string name="UserRestrictionsSendStickers">Lähetä tarroja ja GIF-kuvia</string>
   <string name="UserRestrictionsUntil">Porttikiellossa </string>
   <string name="UserRestrictionsUntilForever">Ikuisesti</string>
   <string name="UserRestrictionsUntilRemove">Poista</string>
@@ -1696,4 +1696,8 @@
   <string name="formatterBannedUntil24H">dd. MMM yyyy, HH:mm asti</string>
   <string name="formatterBannedUntilThisYear12H">dd. MMM yyyy, h:mm a asti</string>
   <string name="formatterBannedUntilThisYear24H">dd. MMM yyyy, HH:mm asti</string>
+  <string name="KG_ExtraPins">Loputtomat kiinnitykset</string>
+  <string name="KG_PinMoreChats">Telegram antaa sinun kiinnittää vain viisi keskustelua keskustelulistan yläosaan. Tämä asetus poistaa tämän rajoituksen, mutta vain viisi ensimmäistä kiinnitystä tallennetaan Telegramin palvelimille.</string>
+  <string name="KG_PinMoreDoNotShowAgain">ÄLÄ NÄYTÄ UUDELLEEN</string>
+  <string name="KG_PinMoreOk">OK</string>
 </resources>
