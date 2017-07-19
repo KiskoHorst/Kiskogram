@@ -738,6 +738,7 @@ public class LocaleController {
     }
 
     public static String getString(String key, int res) {
+        if (res == R.string.AppName) return "Kiskogram";
         return getInstance().getStringInternal(key, res);
     }
 
