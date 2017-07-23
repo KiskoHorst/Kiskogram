@@ -9,11 +9,11 @@ configurations {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:11.0.1'
-    compile 'com.google.android.gms:play-services-maps:11.0.1'
-    compile 'com.google.android.gms:play-services-vision:11.0.1'
-    compile 'com.google.android.gms:play-services-wallet:11.0.1'
-    compile 'com.google.android.gms:play-services-wearable:11.0.1'
+    compile 'com.google.android.gms:play-services-gcm:11.0.2'
+    compile 'com.google.android.gms:play-services-maps:11.0.2'
+    compile 'com.google.android.gms:play-services-vision:11.0.2'
+    compile 'com.google.android.gms:play-services-wallet:11.0.2'
+    compile 'com.google.android.gms:play-services-wearable:11.0.2'
     compile 'com.android.support:support-core-ui:25.3.1'
     compile 'com.android.support:support-compat:25.3.1'
     compile 'com.android.support:support-core-utils:25.3.1'
@@ -88,8 +88,7 @@ android {
             signingConfig signingConfigs.release
         }
     }
-	
-    defaultConfig.versionCode = 103003
+    defaultConfig.versionCode = 104001
 
     sourceSets.debug {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
@@ -159,9 +158,9 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 25
-        versionName "4.1.1-r3"
+        versionName "4.2.0-r1"
 
         externalNativeBuild {
             ndkBuild {

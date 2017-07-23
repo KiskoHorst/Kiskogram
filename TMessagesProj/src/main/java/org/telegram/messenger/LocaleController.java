@@ -1292,6 +1292,9 @@ public class LocaleController {
                         localeInfo.version = difference.version;
                     }
                     saveOtherLanguages();
+                    if (currentLocaleInfo != null && currentLocaleInfo.isLocal()) {
+                        return;
+                    }
                     try {
                         Locale newLocale;
                         String[] args = localeInfo.shortName.split("_");

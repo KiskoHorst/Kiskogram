@@ -121,6 +121,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
     private boolean gettingNewDeleteTask;
     private int currentDeletingTaskTime;
     private ArrayList<Integer> currentDeletingTaskMids;
+    private int currentDeletingTaskChannelId;
     private Runnable currentDeleteTaskRunnable;
 
     public boolean loadingDialogs;
@@ -271,6 +272,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.FileDidLoaded);
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.FileDidFailedLoad);
         NotificationCenter.getInstance().addObserver(this, NotificationCenter.messageReceivedByServer);
+        NotificationCenter.getInstance().addObserver(this, NotificationCenter.updateMessageMedia);
         addSupportUser();
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
         enableJoined = preferences.getBoolean("EnableContactJoined", true);
@@ -581,6 +583,16 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             if (obj != null) {
                 dialogMessagesByIds.put(newMsgId, obj);
             }
+        } else if (id == NotificationCenter.updateMessageMedia) {
+            TLRPC.Message message = (TLRPC.Message) args[0];
+            MessageObject existMessageObject = dialogMessagesByIds.get(message.id);
+            if (existMessageObject != null) {
+                existMessageObject.messageOwner.media = message.media;
+                if (message.media.ttl_seconds != 0 && (message.media.photo instanceof TLRPC.TL_photoEmpty || message.media.document instanceof TLRPC.TL_documentEmpty)) {
+                    existMessageObject.setType();
+                    NotificationCenter.getInstance().postNotificationName(NotificationCenter.notificationsSettingsUpdated);
+                }
+            }
         }
     }
 
@@ -647,6 +659,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
 
         currentDeletingTaskTime = 0;
         currentDeletingTaskMids = null;
+        currentDeletingTaskChannelId = 0;
         gettingNewDeleteTask = false;
         loadingDialogs = false;
         dialogsEndReached = false;
@@ -1549,12 +1562,12 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         }
     }
 
-    public void didAddedNewTask(final int minDate, final SparseArray<ArrayList<Integer>> mids) {
+    public void didAddedNewTask(final int minDate, final SparseArray<ArrayList<Long>> mids) {
         Utilities.stageQueue.postRunnable(new Runnable() {
             @Override
             public void run() {
                 if (currentDeletingTaskMids == null && !gettingNewDeleteTask || currentDeletingTaskTime != 0 && minDate < currentDeletingTaskTime) {
-                    getNewDeleteTask(null);
+                    getNewDeleteTask(null, 0);
                 }
             }
         });
@@ -1566,12 +1579,12 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         });
     }
 
-    public void getNewDeleteTask(final ArrayList<Integer> oldTask) {
+    public void getNewDeleteTask(final ArrayList<Integer> oldTask, final int channelId) {
         Utilities.stageQueue.postRunnable(new Runnable() {
             @Override
             public void run() {
                 gettingNewDeleteTask = true;
-                MessagesStorage.getInstance().getNewTask(oldTask);
+                MessagesStorage.getInstance().getNewTask(oldTask, channelId);
             }
         });
     }
@@ -1585,15 +1598,19 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                 Utilities.stageQueue.cancelRunnable(currentDeleteTaskRunnable);
             }
             currentDeleteTaskRunnable = null;
+            final ArrayList<Integer> mids = new ArrayList<>(currentDeletingTaskMids);
             AndroidUtilities.runOnUIThread(new Runnable() {
                 @Override
                 public void run() {
-                    deleteMessages(currentDeletingTaskMids, null, null, 0, false);
-
+                    if (!mids.isEmpty() && mids.get(0) > 0) {
+                        MessagesStorage.getInstance().emptyMessagesMedia(mids);
+                    } else {
+                        deleteMessages(mids, null, null, 0, false);
+                    }
                     Utilities.stageQueue.postRunnable(new Runnable() {
                         @Override
                         public void run() {
-                            getNewDeleteTask(currentDeletingTaskMids);
+                            getNewDeleteTask(mids, currentDeletingTaskChannelId);
                             currentDeletingTaskTime = 0;
                             currentDeletingTaskMids = null;
                         }
@@ -1605,7 +1622,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         return false;
     }
 
-    public void processLoadedDeleteTask(final int taskTime, final ArrayList<Integer> messages) {
+    public void processLoadedDeleteTask(final int taskTime, final ArrayList<Integer> messages, final int channelId) {
         Utilities.stageQueue.postRunnable(new Runnable() {
             @Override
             public void run() {
@@ -3282,7 +3299,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             @Override
             public void run() {
                 if (!firstGettingTask) {
-                    getNewDeleteTask(null);
+                    getNewDeleteTask(null, 0);
                     firstGettingTask = true;
                 }
 
@@ -3973,7 +3990,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             messageId |= ((long) message.to_id.channel_id) << 32;
         }
         arrayList.add(messageId);
-        MessagesStorage.getInstance().markMessagesContentAsRead(arrayList);
+        MessagesStorage.getInstance().markMessagesContentAsRead(arrayList, 0);
         Utilities.stageQueue.postRunnable(new Runnable() {
             @Override
             public void run() {
@@ -4005,7 +4022,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             messageId |= ((long) messageObject.messageOwner.to_id.channel_id) << 32;
         }
         arrayList.add(messageId);
-        MessagesStorage.getInstance().markMessagesContentAsRead(arrayList);
+        MessagesStorage.getInstance().markMessagesContentAsRead(arrayList, 0);
         NotificationCenter.getInstance().postNotificationName(NotificationCenter.messagesReadContent, arrayList);
         if (messageObject.getId() < 0) {
             markMessageAsRead(messageObject.getDialogId(), messageObject.messageOwner.random_id, Integer.MIN_VALUE);
@@ -4022,6 +4039,25 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                 }
             });
         }
+    }
+
+    public void markMessageAsRead(final int mid, final int channelId, int ttl) {
+        if (mid == 0 || ttl <= 0) {
+            return;
+        }
+        int time = ConnectionsManager.getInstance().getCurrentTime();
+        MessagesStorage.getInstance().createTaskForMid(mid, channelId, time, time, ttl, false);
+        TLRPC.TL_messages_readMessageContents req = new TLRPC.TL_messages_readMessageContents();
+        req.id.add(mid);
+        ConnectionsManager.getInstance().sendRequest(req, new RequestDelegate() {
+            @Override
+            public void run(TLObject response, TLRPC.TL_error error) {
+                if (error == null) {
+                    TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
+                    processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
+                }
+            }
+        });
     }
 
     public void markMessageAsRead(final long dialog_id, final long random_id, int ttl) {
@@ -7890,7 +7926,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             MessagesStorage.getInstance().markMessagesAsRead(markAsReadMessagesInbox, markAsReadMessagesOutbox, markAsReadEncrypted, true);
         }
         if (!markAsReadMessages.isEmpty()) {
-            MessagesStorage.getInstance().markMessagesContentAsRead(markAsReadMessages);
+            MessagesStorage.getInstance().markMessagesContentAsRead(markAsReadMessages, ConnectionsManager.getInstance().getCurrentTime());
         }
         if (deletedMessages.size() != 0) {
             for (int a = 0; a < deletedMessages.size(); a++) {
