@@ -418,14 +418,12 @@
   <string name="Page4Title">Turvallinen</string>
   <string name="Page5Title">Tehokas</string>
   <string name="Page6Title">Pilvi</string>
-  <string name="Page7Title">Yksityinen</string>
   <string name="Page1Message">Maailman <![CDATA[<b>nopein</b>]]> viestintäpalvelu. <![CDATA[<br/>]]>Se on <![CDATA[<b>ilmainen</b>]]> ja <![CDATA[<b>turvallinen</b>]]>.</string>
   <string name="Page2Message"><![CDATA[<b>Telegram</b>]]> toimittaa viestit perille nopeammin <![CDATA[<br/>]]>kuin mikään muu sovellus.</string>
   <string name="Page3Message"><![CDATA[<b>Telegram</b>]]> on ikuisesti ilmainen. Ei mainoksia, <![CDATA[<br/>]]>ei tilausmaksuja.</string>
   <string name="Page4Message"><![CDATA[<b>Telegram</b>]]> pitää viestisi turvassa<![CDATA[<br/>]]>from hacker attacks.</string>
   <string name="Page5Message"><![CDATA[<b>Telegram</b>]]> ei rajoita viestiesi tai mediasi <![CDATA[<br/>]]>kokoa tai määrää.</string>
   <string name="Page6Message"><![CDATA[<b>Telegram</b>]]> toimii saumattomasti usealla <![CDATA[<br/>]]>laitteella samanaikaisesti.</string>
-  <string name="Page7Message"><![CDATA[<b>Telegram</b>]]>-viestit ovat salattuja, ja voivat<![CDATA[<br/>]]>tuhoutua automaattisesti.</string>
   <string name="StartMessaging">Aloita viestittely</string>
   <!--plural-->
   <string name="Members_zero">Ei jäseniä</string>
@@ -1700,4 +1698,15 @@
   <string name="KG_PinMoreChats">Telegram antaa sinun kiinnittää vain viisi keskustelua keskustelulistan yläosaan. Tämä asetus poistaa tämän rajoituksen, mutta vain viisi ensimmäistä kiinnitystä tallennetaan Telegramin palvelimille.</string>
   <string name="KG_PinMoreDoNotShowAgain">ÄLÄ NÄYTÄ UUDELLEEN</string>
   <string name="KG_PinMoreOk">OK</string>
+  <string name="AttachPhotoExpired">Kuva on vanhentunut</string>
+  <string name="AttachVideoExpired">Video on vanhentunut</string>
+  <string name="DisappearingPhoto">Salainen kuva</string>
+  <string name="DisappearingVideo">Salainen video</string>
+  <string name="MessageLifetimePhoto">Jos asetat ajastimen, kuva tuhoutuu itsestään katselun jälkeen.</string>
+  <string name="MessageLifetimeVideo">Jos asetat ajastimen, video tuhoutuu itsestään katselun jälkeen.</string>
+  <string name="NotificationMessageSDPhoto">%1$s lähetti sinulle itsestään tuhoutuvan kuvan</string>
+  <string name="NotificationMessageSDVideo">%1$s lähetti sinulle itsestään tuhoutuvan videon</string>
+  <string name="UserBio">Kuvaus</string>
+  <string name="UserBioEmpty">Ei mitään</string>
+  <string name="UserBioInfo">Voit lisätä muutaman rivin itsestäsi. Kuka vain, joka avaa profiilisi näkee tämän tekstin.</string>
 </resources>

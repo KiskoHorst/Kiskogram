@@ -763,13 +763,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             }
                         } else {
                             TLRPC.WebPage webPage = currentMessageObject.messageOwner.media.webpage;
-<<<<<<< HEAD
                             if (false) {
                                 delegate.needOpenWebView(webPage.embed_url, webPage.site_name, webPage.description, webPage.url, webPage.embed_width, webPage.embed_height);
-=======
-                            if (webPage != null && !TextUtils.isEmpty(webPage.embed_url)) {
-                                delegate.needOpenWebView(webPage.embed_url, webPage.site_name, webPage.title, webPage.url, webPage.embed_width, webPage.embed_height);
->>>>>>> master
                             } else if (buttonState == -1) {
                                 delegate.didPressedImage(this);
                                 playSoundEffect(SoundEffectConstants.CLICK);
