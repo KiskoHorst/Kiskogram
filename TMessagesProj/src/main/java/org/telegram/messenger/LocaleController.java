@@ -209,7 +209,7 @@ public class LocaleController {
         localeInfo = new LocaleInfo();
         localeInfo.name = "Suomi";
         localeInfo.nameEnglish = "Finnish";
-        localeInfo.shortName = "fi";
+        localeInfo.shortName = "fi_kg";
         localeInfo.pathToFile = null;
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);

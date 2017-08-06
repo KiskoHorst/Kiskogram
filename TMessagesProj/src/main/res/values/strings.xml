@@ -1723,5 +1723,4 @@
     <string name="KG_ExtraPins">Infinite pins</string>
     <string name="KG_PinMoreChats">Telegram only allows you to pin five chats to the top of the chat list. This setting removes that restriction, but only the first five pins will get saved on Telegram servers.</string>
     <string name="KG_PinMoreOk">OK</string>
-    <string name="KG_PinMoreDoNotShowAgain">DO NOT SHOW AGAIN</string>
 </resources>
