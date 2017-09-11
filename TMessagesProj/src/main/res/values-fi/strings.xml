@@ -1,11 +1,11 @@
 ﻿<?xml version='1.0' encoding='UTF-8'?>
 <resources>
   <string name="AppName">Kiskogram</string>
-  <string name="AppNameBeta">Telegram Beta</string>
+  <string name="AppNameBeta">Kiskogram Beta</string>
   <string name="LanguageName">Suomi</string>
   <string name="English">Englanti</string>
   <string name="LanguageNameInEnglish">Finnish</string>
-  <string name="LanguageCode">fi_kg</string>
+  <string name="LanguageCode">fi</string>
   <string name="ContinueOnThisLanguage">Jatka suomeksi</string>
   <!--signin view-->
   <string name="YourPhone">Puhelimesi</string>
@@ -25,7 +25,7 @@
   <string name="WrongNumber">Väärä numero?</string>
   <string name="DidNotGetTheCode">Etkö saanut koodia?</string>
   <string name="CancelAccountReset">Keskeytä tilin nollaaminen</string>
-  <string name="CancelAccountResetInfo">Joku, jolla on pääsy puhelinnumeroosi <![CDATA[<b>]]>%1$s<![CDATA[</b>]]> on pyytänyt Telegram-tilisi poistoa ja kaksivaiheisen varmistuksesi salasanan nollaamista.\n\nJos se olit sinä, anna tähän koodi, jonka juuri lähetimme sinulle tekstiviestissä.</string>
+  <string name="CancelAccountResetInfo">Joku, jolla on pääsy puhelinnumeroosi <![CDATA[<b>]]>%1$s<![CDATA[</b>]]> on pyytänyt Telegram-tilisi poistoa ja kaksivaiheisen todennuksen salasanan nollaamista.\n\nJos se olit sinä, anna tähän koodi, jonka juuri lähetimme sinulle tekstiviestissä.</string>
   <string name="ResetAccount">Nollaa tili</string>
   <string name="ResetAccountInfo">Koska tili <![CDATA[<b>]]>%1$s<![CDATA[</b>]]> on aktiivinen ja suojattu salasanalla, poistamme tilin turvallisuussyistä vasta 1 viikon kuluttua.\n\nTuona aikana tilin poistamisen voi vielä perua.</string>
   <string name="ResetAccountStatus">Tilisi nollaaminen onnistuu ajassa:</string>
@@ -70,12 +70,12 @@
   <string name="PaymentCardName">Nimi Sukunimi</string>
   <string name="PaymentCardSavePaymentInformation">Tallenna maksutiedot</string>
   <string name="PaymentCardSavePaymentInformationInfoLine1">Voit tallentaa maksutietosi myöhempää käyttöä varten.</string>
-  <string name="PaymentCardSavePaymentInformationInfoLine2">Ole hyvä ja ota käyttöön *kaksivaiheinen varmistus*, jotta voit ottaa tämän käyttöön.</string>
+  <string name="PaymentCardSavePaymentInformationInfoLine2">Ole hyvä ja ota käyttöön *kaksivaiheinen todennus*, jotta voit ottaa tämän käyttöön.</string>
   <string name="PaymentTransactionReview">Tapahtuman yhteenveto</string>
   <string name="PaymentTransactionMessage">Haluatko varmasti siirtää %1$s botille %2$s tuotteesta %3$s?</string>
   <string name="PaymentTransactionTotal">Yhteensä</string>
   <string name="PaymentInvoice">LASKU</string>
-  <string name="PaymentTestInvoice">TESTILASKU</string>
+  <string name="PaymentTestInvoice">KOELASKU</string>
   <string name="PaymentCheckoutPay">MAKSA %1$s</string>
   <string name="PaymentCheckoutMethod">Maksutapa</string>
   <string name="PaymentCheckoutProvider">Maksupalveluntarjoaja</string>
@@ -85,7 +85,7 @@
   <string name="PaymentCheckoutShippingMethod">Toimitustapa</string>
   <string name="PaymentReceipt">Kuitti</string>
   <string name="PaymentConfirmationNewCard">Valitse muu kortti</string>
-  <string name="PaymentConfirmationMessage">Korttisi %1$s on tallennettuna. Syötä kaksivaiheisen varmistuksen salasanasi maksaaksesi tällä kortilla.</string>
+  <string name="PaymentConfirmationMessage">Korttisi %1$s on tallennettuna. Syötä kaksivaiheisen todennuksen salasanasi maksaaksesi tällä kortilla.</string>
   <string name="PaymentPrecheckoutFailed">Valitettavasti botti perui maksun.</string>
   <string name="PaymentFailed">Valitettavasti maksu hylättiin.</string>
   <string name="PaymentConnectionFailed">Maksupalvelimeen ei saada yhteyttä. Tarkista verkkoyhteytesi ja yritä uudelleen.</string>
@@ -125,12 +125,12 @@
   <string name="PhotoTip">Paina pitkään katsoaksesi</string>
   <string name="DisappearingPhoto">Salainen kuva</string>
   <string name="DisappearingVideo">Salainen video</string>
-  <string name="CompatibilityChat">%1$s käyttää Telegramin vanhempaa versiota, joten salaiset kuvat näytetään yhteensopivuustilassa.\n\nKun %2$s päivittää Telegraminsa, minuuttiin tai sen alle ajastetut kuvat toimivat \'Paina pitkään katsoaksesi\'-tilassa ja saat ilmoituksen jos toinen osapuoli ottaa kuvakaappauksen.</string>
+  <string name="CompatibilityChat">%1$s käyttää Telegramin vanhempaa versiota, joten salaiset kuvat näytetään yhteensopivuustilassa.\n\nKun %2$s päivittää Telegraminsa, ajastetut kuvat joilla on vähemmän kuin minuutti katseluaikaa toimivat \'Paina pitkään katsoaksesi\' -tilassa ja saat ilmoituksen aina kun toinen osapuoli ottaa kuvakaappauksen.</string>
   <string name="SearchMessages">VIESTIT</string>
   <string name="Search">Haku</string>
   <string name="MuteNotifications">Hiljennä ilmoitukset</string>
   <string name="MuteFor">Hiljennä ajaksi %1$s</string>
-  <string name="UnmuteNotifications">Ilmoitukset päälle</string>
+  <string name="UnmuteNotifications">Poista mykistys</string>
   <string name="WillUnmuteIn">%1$s kuluttua</string>
   <string name="MuteDisable">Poista käytöstä</string>
   <string name="Hashtags">AVAINSANAT</string>
@@ -138,13 +138,13 @@
   <string name="ChatHints">KESKUSTELUT</string>
   <string name="ChatHintsDelete">Poista %1$s ehdotuksista?</string>
   <string name="LinkPreview">Linkin esikatselu</string>
-  <string name="Draft">Vedos</string>
+  <string name="Draft">Luonnos</string>
   <string name="HistoryCleared">Historiatiedot tyhjennetty</string>
   <string name="ArticleByAuthor">kirjoittanut %1$s</string>
   <string name="ArticleDateByAuthor">%1$s, kirjoittanut %2$s</string>
   <string name="PreviewFeedback">Jätä palautetta tästä esikatselusta</string>
   <string name="SendStickerPreview">Lähetä tarra</string>
-  <string name="ViewPackPreview">Näytä paketti</string>
+  <string name="ViewPackPreview">Näytä kokoelma</string>
   <string name="PinToTop">Kiinnitä ylös</string>
   <string name="UnpinFromTop">Irrota ylhäältä</string>
   <string name="Bold">Lihavoitu</string>
@@ -168,7 +168,7 @@
   <string name="MegaDeleteAlert">Odota! Jos poistat tämän ryhmän, erotat kaikki jäsenet ja kaikki viestit katoavat. Poistetaanko ryhmä silti?</string>
   <string name="ActionCreateMega">Ryhmä luotu</string>
   <string name="MegaAddedBy">un1 lisäsi sinut tähän ryhmään</string>
-  <string name="MegaLeaveAlert">Oletko varma että haluat poistua ryhmästä?</string>
+  <string name="MegaLeaveAlert">Haluatko varmasti poistua ryhmästä?</string>
   <string name="GroupUserCantAdd">Pahoittelemme, et voi lisätä tätä käyttäjää ryhmiin.</string>
   <string name="GroupUserAddLimit">Pahoittelut, ryhmä on täynnä.</string>
   <string name="GroupUserLeftError">Valitettavasti käyttäjä on päättänyt poistua tästä ryhmästä, joten et voi kutsua häntä takaisin.</string>
@@ -239,7 +239,7 @@
   <string name="ChannelDelete">Poista kanava</string>
   <string name="ChannelDeleteMenu">Poista kanava</string>
   <string name="ChannelDeleteAlert">Odota! Jos poistat tämän kanavan, poistat kaikki jäsenet ja kaikki viestit katoavat. Poistetaanko kanava silti?</string>
-  <string name="ChannelLeaveAlert">Oletko varma, että haluat poistua kanavalta?</string>
+  <string name="ChannelLeaveAlert">Haluatko varmasti poistua kanavalta?</string>
   <string name="ChannelDeleteInfo">Menetät kaikki viestit tällä kanavalla.</string>
   <string name="ChannelEdit">Muokkaa</string>
   <string name="MegaWasPrivateAlert">Huomaathan että jos valitset julkisen linkin ryhmällesi, kuka tahansa voi löytää sen hakemalla ja liittyä.\n\nÄlä luo linkkiä, jos haluat superryhmäsi pysyvän yksityisenä.</string>
@@ -249,11 +249,11 @@
   <string name="ActionChannelChangedPhoto">Kanavakuva vaihdettu</string>
   <string name="ActionChannelRemovedPhoto">Kanavakuva poistettu</string>
   <string name="ActionChannelChangedTitle">Kanavan nimeksi vaihdettu un2</string>
-  <string name="ChangePublicLimitReached">Olet varannut liian monta julkista käyttäjänimeä. Voit mitätöidä linkkejä joistain muista ryhmistäsi tai kanavistasi tai voit tehdä tästä linkistä yksityisen.</string>
+  <string name="ChangePublicLimitReached">Valitettavasti olet varannut liian monta julkista käyttäjänimeä. Voit mitätöidä linkkejä joistain vanhemmista ryhmistäsi tai kanavistasi, tai voit tehdä tästä yksityisen.</string>
   <string name="ChannelCreator">Luoja</string>
   <string name="ChannelEditor">Valvoja</string>
   <string name="ChannelMute">VAIMENNA</string>
-  <string name="ChannelUnmute">VAIMENNUS POIS</string>
+  <string name="ChannelUnmute">POISTA VAIMENNUS</string>
   <string name="ChannelAddAdmin">Lisää valvoja</string>
   <string name="ChannelBlockUser">Anna porttikielto</string>
   <string name="Unban">Poista porttikielto</string>
@@ -267,7 +267,7 @@
   <string name="ChannelAdminsInfo">Voit lisätä valvojia auttamaan kanavasi hallitsemisessa. Paina pitkään poistaaksesi valvojia.</string>
   <string name="ChannelJoinTo">Haluatko liittyä kanavalle \'%1$s\'?</string>
   <string name="ChannelCantOpenPrivate">Valitettavasti tämä keskustelu ei ole enää käytettävissä.</string>
-  <string name="ChannelCantOpenBanned">Sinut on estetty liittymästä julkisiin ryhmiin.</string>
+  <string name="ChannelCantOpenBanned">Valitettavasti sinua on estetty liittymästä julkisiin ryhmiin.</string>
   <string name="ChannelCantOpenNa">Tämä keskustelu ei valitettavasti ole enää saatavilla.</string>
   <string name="ChannelAddTo">Lisää %1$s kanavalle?</string>
   <string name="ChannelUserLeftError">Valitettavasti käyttäjä on päättänyt poistua tältä kanavalta, joten et voi kutsua häntä takaisin.</string>
@@ -309,8 +309,8 @@
   <string name="WhoCanAddMembers">Kuka voi lisätä uusia jäseniä?</string>
   <string name="WhoCanAddMembersAllMembers">Kaikki jäsenet</string>
   <string name="WhoCanAddMembersAdmins">Ainoastaan valvojat</string>
-  <string name="ChannelNotifyMembersInfoOn">Jäsenet saavat ilmoituksen kun lähetät viestin</string>
-  <string name="ChannelNotifyMembersInfoOff">Jäsenet eivät saa ilmoitusta kun lähetät viestin</string>
+  <string name="ChannelNotifyMembersInfoOn">Jäsenille ilmoitetaan kun lähetät viestin</string>
+  <string name="ChannelNotifyMembersInfoOff">Jäsenille ei ilmoiteta kun lähetät viestin</string>
   <string name="ChannelSignMessages">Allekirjoita viestit</string>
   <string name="ChannelSignMessagesInfo">Lisää valvojien nimet heidän lähettämiinsä viesteihin.</string>
   <string name="EditAdmin">Muokkaa valvojaa</string>
@@ -380,8 +380,8 @@
   <string name="EventLogDeletedMessages">un1 poisti viestin:</string>
   <string name="EventLogChangedGroupLink">un1 vaihtoi ryhmän linkkiä:</string>
   <string name="EventLogChangedChannelLink">un1 vaihtoi kanavan linkkiä:</string>
-  <string name="EventLogRemovedGroupLink">un1 poisti ryhmälinkin</string>
-  <string name="EventLogRemovedChannelLink">un1 poisti kanavalinkin</string>
+  <string name="EventLogRemovedGroupLink">un1 poisti ryhmän linkin</string>
+  <string name="EventLogRemovedChannelLink">un1 poisti kanavan linkin</string>
   <string name="EventLogPreviousLink">Edellinen linkki</string>
   <string name="EventLogEditedGroupDescription">un1 muutti ryhmän kuvausta:</string>
   <string name="EventLogEditedChannelDescription">un1 muutti kanavan kuvausta:</string>
@@ -418,7 +418,7 @@
   <string name="EventLogFilterPinnedMessages">Kiinnitetyt viestit</string>
   <string name="EventLogFilterLeavingMembers">Poistuneet jäsenet</string>
   <!--broadcasts-->
-  <string name="NewBroadcastList">Uusi vastaanottajalista</string>
+  <string name="NewBroadcastList">Uudet vastaanottajat</string>
   <string name="EnterListName">Luettelon nimi</string>
   <string name="YouCreatedBroadcastList">Perustit vastaanottajaluettelon</string>
   <string name="AddRecipient">Lisää vastaanottaja</string>
@@ -440,9 +440,10 @@
   <string name="InternalStorage">Sisäinen tallennustila</string>
   <string name="ExternalStorage">Ulkoinen tallennustila</string>
   <string name="SystemRoot">Järjestelmän juurikansio</string>
-  <string name="SdCard">SD-kortti</string>
+  <string name="SdCard">Muistikortti</string>
   <string name="Folder">Kansio</string>
   <string name="GalleryInfo">Lähetä kuvia ilman pakkausta</string>
+  <!--group stickers-->
   <!--chat view-->
   <string name="Invisible">näkymätön</string>
   <string name="Typing">kirjoittaa...</string>
@@ -478,16 +479,16 @@
   <string name="From">Lähettäjä</string>
   <string name="NoRecent">Ei viimeaikaisia</string>
   <string name="Message">Viesti</string>
-  <string name="TypeMessage">Viesti</string>
+  <string name="TypeMessage">Viestitä</string>
   <string name="ShareMyContactInfo">Jaa yhteystietoni</string>
   <string name="AddToContacts">Lisää yhteystietoihin</string>
   <string name="EncryptedPlaceholderTitleIncoming">%s kutsui sinut salaiseen keskusteluun.</string>
   <string name="EncryptedPlaceholderTitleOutgoing">Kutsuit käyttäjän %s salaiseen keskusteluun.</string>
   <string name="EncryptedDescriptionTitle">Salaiset keskustelut:</string>
-  <string name="EncryptedDescription1">Käyttävät päästä-päähän -salausta</string>
+  <string name="EncryptedDescription1">Käyttävät päästä päähän -salausta</string>
   <string name="EncryptedDescription2">Eivät jätä palvelimillemme tietoja</string>
   <string name="EncryptedDescription3">Sisältävät itsetuhoajastimen</string>
-  <string name="EncryptedDescription4">Estävät viestien edelleenvälittämisen</string>
+  <string name="EncryptedDescription4">Estävät viestien välittämisen</string>
   <string name="YouWereKicked">Sinut poistettiin ryhmästä</string>
   <string name="YouLeft">Poistuit ryhmästä</string>
   <string name="DeleteThisGroup">Poista tämä ryhmä</string>
@@ -509,7 +510,7 @@
   <string name="CopyUrl">Kopioi URL-osoite</string>
   <string name="SendItems">Lähetä %1$s</string>
   <string name="SendAsFile">Tiedostona</string>
-  <string name="SendAsFiles">Lähetä tiedostoina</string>
+  <string name="SendAsFiles">Tiedostoina</string>
   <string name="OpenUrlAlert">Avaa osoite %1$s?</string>
   <string name="BotPermissionGameAlert">Annetaanko botille %1$s lupa Telegram-nimesi ja käyttäjänumerosi (ei puhelinnumerosi) sivuille, jotka avaat tämän botin kautta?</string>
   <string name="ReportSpam">ILMIANNA ROSKAPOSTISTA</string>
@@ -555,7 +556,7 @@
   <string name="ChatYourSelfDescription1">Välitä viestit tänne tallentaaksesi ne</string>
   <string name="ChatYourSelfDescription2">Lähetä mediaa ja tiedostoja tallentaaksesi ne</string>
   <string name="ChatYourSelfDescription3">Pääsy tähän keskusteluun kaikilta laitteilta</string>
-  <string name="ChatYourSelfDescription4">Käytä hakua nopeaan tietojen löytämiseen</string>
+  <string name="ChatYourSelfDescription4">Käytä hakua löytääksesi asiat nopeasti</string>
   <string name="ChatYourSelfTitle">Pilvitallennustilasi</string>
   <string name="JumpToDate">Hyppää päivämäärään</string>
   <string name="DeleteForUser">Poista henkilöltä %1$s</string>
@@ -596,7 +597,7 @@
   <string name="NotificationMessageAudio">%1$s lähetti sinulle ääniviestin</string>
   <string name="NotificationMessageRound">%1$s lähetti sinulle videoviestin</string>
   <string name="NotificationMessageMusic">%1$s lähetti sinulle raidan</string>
-  <string name="NotificationMessageSticker">%1$s lähetti tarran</string>
+  <string name="NotificationMessageSticker">%1$s lähetti sinulle tarran</string>
   <string name="NotificationMessageStickerEmoji">%1$s lähetti sinulle %2$s tarran</string>
   <string name="NotificationMessageGroupText">%1$s @ %2$s: %3$s</string>
   <string name="NotificationMessageGroupNoText">%1$s lähetti viestin ryhmään %2$s</string>
@@ -615,14 +616,14 @@
   <string name="NotificationInvitedToGroup">%1$s kutsui sinut ryhmään %2$s</string>
   <string name="NotificationEditedGroupName">%1$s muutti ryhmän %2$s nimeä</string>
   <string name="NotificationEditedGroupPhoto">%1$s muutti ryhmän %2$s ryhmäkuvaa</string>
-  <string name="NotificationGroupAddMember">%1$s kutsui %3$s ryhmään %2$s</string>
+  <string name="NotificationGroupAddMember">%1$s kutsui henkilön %3$s ryhmään %2$s</string>
   <string name="NotificationGroupAddSelf">%1$s palasi ryhmään %2$s</string>
   <string name="NotificationGroupAddSelfMega">%1$s liittyi ryhmään %2$s</string>
-  <string name="NotificationGroupKickMember">%1$s poisti %3$s ryhmästä %2$s</string>
+  <string name="NotificationGroupKickMember">%1$s poisti henkilön %3$s ryhmästä %2$s</string>
   <string name="NotificationGroupKickYou">%1$s poisti sinut ryhmästä %2$s</string>
   <string name="NotificationGroupLeftMember">%1$s poistui ryhmästä %2$s</string>
-  <string name="NotificationContactJoined">%1$s on liittynyt Telegramiin!</string>
-  <string name="NotificationUnrecognizedDevice">%1$s,\nHavaitsimme kirjautumisen tilillesi uudelta laitteelta %2$s\n\nLaite: %3$s\nSijainti: %4$s\n\nJos tämä ei ollut sinä, valitse Asetuksista - Yksityisyys ja tietoturva - Istunnot ja lopeta kyseinen istunto.\n\nJos sinusta tuntuu, että joku kirjautui tilillesi ilman lupaasi, voit ottaa käyttöön kaksivaiheisen varmistuksen Yksityisyys ja tietoturva-asetuksista.\n\nTerveisin,\nTelegram-tiimi</string>
+  <string name="NotificationContactJoined">%1$s liittyi Telegramiin!</string>
+  <string name="NotificationUnrecognizedDevice">%1$s,\nHavaitsimme kirjautumisen tilillesi uudelta laitteelta %2$s\n\nLaite: %3$s\nSijainti: %4$s\n\nJos tämä ei ollut sinä, valitse Asetuksista - Yksityisyys ja tietoturva - Istunnot ja lopeta kyseinen istunto.\n\nJos sinusta tuntuu, että joku kirjautui tilillesi ilman lupaasi, voit ottaa käyttöön kaksivaiheisen todennuksen Yksityisyys ja tietoturva-asetuksista.\n\nTerveisin,\nTelegram-tiimi</string>
   <string name="NotificationContactNewPhoto">%1$s päivitti profiilikuvansa</string>
   <string name="NotificationInvitedToGroupByLink">%1$s liittyi ryhmään %2$s kutsulinkin kautta</string>
   <string name="Reply">Vastaa</string>
@@ -641,7 +642,7 @@
   <string name="NotificationActionPinnedRound">%1$s kiinnitti videoviestin ryhmässä %2$s</string>
   <string name="NotificationActionPinnedContact">%1$s kiinnitti yhteystiedon ryhmässä %2$s</string>
   <string name="NotificationActionPinnedGeo">%1$s kiinnitti kartan ryhmässä %2$s</string>
-  <string name="NotificationActionPinnedGif">%1$s kiinnitti GIF-kuvan ryhmässä %2$s</string>
+  <string name="NotificationActionPinnedGif">%1$s kiinnitti GIF-kuvan ryhmässä %2$s </string>
   <string name="NotificationActionPinnedMusic">%1$s kiinnitti raidan ryhmässä %2$s</string>
   <string name="NotificationActionPinnedTextChannel">%1$s kiinnitti viestin \"%2$s\"</string>
   <string name="NotificationActionPinnedNoTextChannel">%1$s kiinnitti viestin</string>
@@ -663,7 +664,7 @@
   <string name="InviteText">Hei, vaihdetaan Telegramiin: https://telegram.org/dl</string>
   <string name="TodayAt">klo</string>
   <string name="YesterdayAt">eilen klo</string>
-  <string name="Online">linjoilla</string>
+  <string name="Online">paikalla</string>
   <string name="LastSeen">nähty viimeksi</string>
   <string name="LastSeenDate">nähty viimeksi</string>
   <string name="LastSeenNow">nähty viimeksi juuri nyt</string>
@@ -679,7 +680,7 @@
   <string name="SoftUserLimitAlert">Voit lisätä käyttäjiä, kun olet perustanut ryhmän ja muuttanut sen superryhmäksi.</string>
   <string name="EnterGroupNamePlaceholder">Anna ryhmälle nimi</string>
   <string name="GroupName">Ryhmän nimi</string>
-  <string name="MembersCount">%1$d/%2$d valittuna</string>
+  <string name="MembersCount">%1$d / %2$d valittuna</string>
   <string name="MembersCountZero">jopa %1$s</string>
   <string name="JoinToGroup">Haluatko liittyä ryhmään \'%1$s\'?</string>
   <string name="JoinToGroupErrorFull">Pahoittelut, ryhmä on täynnä.</string>
@@ -748,7 +749,7 @@
   <string name="ShortMessageLifetimeForever">Ei käytössä</string>
   <string name="EncryptionKeyDescription">Tämä kuva ja teksti on muodostettu sinun ja käyttäjän <![CDATA[<b>]]>%1$s<![CDATA[</b>]]> välisen salatun keskustelun salausavaimesta.\n\nJos se näyttää samalta kuin käyttäjän <![CDATA[<b>]]>%2$s<![CDATA[</b>]]> laitteella, keskusteluyhteys on salattu päästä päähän.\n\nLue lisää: telegram.org</string>
   <string name="EncryptionKeyLink">https://telegram.org/faq#secret-chats</string>
-  <string name="TapToEmojify">Paina ja muuta emojeiksi</string>
+  <string name="TapToEmojify">Napautus muuttaa emojeiksi</string>
   <string name="NumberUnknown">Tuntematon</string>
   <string name="Info">Tietoja</string>
   <string name="Phone">Puhelin</string>
@@ -786,13 +787,13 @@
   <string name="Masks">Maskit</string>
   <string name="MasksInfo">Voit lisätä lähettämiisi kuviisi maskeja avaamalla kuvan muokkaimessa ennen lähettämistä.</string>
   <string name="FeaturedStickers">Suositut tarrat</string>
-  <string name="FeaturedStickersInfo">Nämä tarrat ovat tällä hetkellä suosittuja Telegramissa. Voit lisätä omia tarroja @stickers -botin kautta.</string>
+  <string name="FeaturedStickersInfo">Nämä tarrat ovat tällä hetkellä suosittuja Telegramissa. Botilla @stickers voit lisätä omia tarroja.</string>
   <string name="ArchivedStickers">Arkistoidut tarrat</string>
   <string name="ArchivedMasks">Arkistoidut maskit</string>
   <string name="ArchivedStickersEmpty">Ei arkistoituja tarroja</string>
   <string name="ArchivedMasksEmpty">Ei arkistoituja maskeja</string>
-  <string name="ArchivedStickersInfo">Sinulla voi olla asennettuna enintään 200 tarrakokoelmaa. Käyttämättömät tarrat arkistoidaan kun lisäät uusia tarrakokoelmia.</string>
-  <string name="ArchivedMasksInfo">Sinulla voi olla asennettuna enintään 200 maskisettiä. Käyttämättömät maskit arkistoidaan kun lisäät uusia maskisettejä.</string>
+  <string name="ArchivedStickersInfo">Sinulla voi olla asennettuna enintään 200 tarrakokoelmaa. Käyttämättömät tarrat arkistoidaan, kun lisäät uusia tarrakokoelmia.</string>
+  <string name="ArchivedMasksInfo">Sinulla voi olla asennettuna enintään 200 maskikokoelmaa. Käyttämättömät maskit arkistoidaan, kun lisäät uusia maskikokoelmia.</string>
   <string name="SendSticker">LÄHETÄ TARRA</string>
   <string name="ArchivedStickersAlertTitle">Arkistoidut tarrat</string>
   <string name="ArchivedStickersAlertInfo">Joitain vanhoja tarrojasi on siirretty arkistoon. Voit ottaa ne uudelleen käyttöön tarrojen asetusten kautta.</string>
@@ -818,7 +819,7 @@
   <string name="ResetNotificationsText">Palauta kaikki ilmoitusasetukset oletuksiin</string>
   <string name="TextSize">Viestien tekstikoko</string>
   <string name="AskAQuestion">Kysy kysymys</string>
-  <string name="EnableAnimations">Animaatiot päällä</string>
+  <string name="EnableAnimations">Näytä animaatiot</string>
   <string name="Unblock">Poista esto</string>
   <string name="UnblockText">Paina käyttäjää pohjassa poistaaksesi eston.</string>
   <string name="NoBlocked">Ei estettyjä käyttäjiä</string>
@@ -827,14 +828,14 @@
   <string name="MessagePreview">Viestin esikatselu</string>
   <string name="GroupNotifications">Ryhmäilmoitukset</string>
   <string name="Sound">Ääni</string>
-  <string name="InAppNotifications">Sovelluksen sisäiset ilmoitukset</string>
-  <string name="InAppSounds">Sovelluksen äänet</string>
-  <string name="InAppVibrate">Sovelluksen värinä</string>
+  <string name="InAppNotifications">Ilmoitukset sovelluksen sisällä</string>
+  <string name="InAppSounds">Äänet sovelluksen sisällä</string>
+  <string name="InAppVibrate">Värinä sovelluksen sisällä</string>
   <string name="Vibrate">Värinä</string>
   <string name="InAppPreview">Sisäinen esikatselu</string>
   <string name="Reset">Nollaa</string>
   <string name="ResetAllNotifications">Palauta kaikki ilmoitukset ennalleen</string>
-  <string name="UndoAllCustom">Poista kaikki omat ilmoitusasetukset yhteystiedoilta ja ryhmiltä</string>
+  <string name="UndoAllCustom">Poista kaikki mukautetut ilmoitusasetukset yhteystiedoilta ja ryhmiltä</string>
   <string name="NotificationsAndSounds">Ilmoitukset ja äänet</string>
   <string name="CustomNotifications">Mukautetut ilmoitukset</string>
   <string name="ProfilePopupNotification">Ponnahdusilmoitukset</string>
@@ -845,7 +846,7 @@
   <string name="ColorRed">Punainen</string>
   <string name="ColorYellow">Keltainen</string>
   <string name="ColorGreen">Vihreä</string>
-  <string name="ColorCyan">Syaani</string>
+  <string name="ColorCyan">Sinivihreä</string>
   <string name="ColorWhite">Valkoinen</string>
   <string name="ColorSepia">Seepia</string>
   <string name="ColorDark">Tumma</string>
@@ -854,7 +855,7 @@
   <string name="ColorViolet">Violetti</string>
   <string name="ColorOrange">Oranssi</string>
   <string name="NotificationsLedInfo">Joissain laitteissa on pieni vilkkuva LED-valo, jolla voidaan ilmoittaa saapuneista viesteistä.</string>
-  <string name="PriorityInfo">Korkeamman prioriteetin ilmoitukset pääsevät läpi, vaikka puhelimesi olisi \"Älä häiritse\"-tilassa</string>
+  <string name="PriorityInfo">Korkeamman prioriteetin ilmoitukset pääsevät läpi, vaikka puhelimesi olisi \"Älä häiritse\" -tilassa</string>
   <string name="General">Yleistä</string>
   <string name="NotificationsOn">Päällä</string>
   <string name="NotificationsOff">Pois päältä</string>
@@ -919,7 +920,7 @@
   <string name="NotificationsPriorityDefault">Oletus</string>
   <string name="NotificationsPriorityLow">Matala</string>
   <string name="NotificationsPriorityHigh">Korkea</string>
-  <string name="NotificationsPriorityMax">Maksimi</string>
+  <string name="NotificationsPriorityMax">Korkein</string>
   <string name="RepeatNotificationsNever">Ei koskaan</string>
   <string name="RepeatNotifications">Toista ilmoitukset</string>
   <string name="PhoneNumberHelp">Täällä voit vaihtaa Telegramiin liitetyn numerosi. Tilisi ja kaikki siihen liittyvät pilveen säilötyt tiedot — viestit, media, yhteystiedot jne. siirretään uudelle numerolle.\n\n<![CDATA[<b>Tärkeää:</b>]]> kaikille Telegram-yhteystiedoillesi lähetetään <![CDATA[<b>uusi numerosi</b>]]>, mikäli heillä on vanha numerosi tallennettuna etkä ole estänyt heitä Telegramissa.</string>
@@ -1113,7 +1114,7 @@
   <string name="CropOriginal">Alkuperäinen</string>
   <string name="CropSquare">Neliö</string>
   <!--password view-->
-  <string name="TwoStepVerification">Kaksivaiheinen varmistus</string>
+  <string name="TwoStepVerification">Kaksivaiheinen todennus</string>
   <string name="SetAdditionalPassword">Aseta lisäsalasana</string>
   <string name="SetAdditionalPasswordInfo">Voit asettaa salasanan, joka vaaditaan, kun kirjaudut uudella laitteella. Salasanan lisäksi vaaditaan myös tekstiviestillä saapuva varmistuskoodi.</string>
   <string name="YourPassword">Salasanasi</string>
@@ -1128,19 +1129,19 @@
   <string name="YourEmailSkipWarning">Varoitus</string>
   <string name="YourEmailSkipWarningText">Ei, olen tosissani.\n\nJos unohdat salasanasi, menetät kokonaan pääsyn Telegram-tilillesi. Palautusmahdollisuutta ei ole.</string>
   <string name="YourEmailAlmostThere">Melkein valmista!</string>
-  <string name="YourEmailAlmostThereText">Tarkista sähköpostisi (Älä unohda tarkistaa myös roskapostia) suorittaaksesi kaksivaiheisen varmistuksen käyttöönoton loppuun.</string>
+  <string name="YourEmailAlmostThereText">Tarkista sähköpostisi (älä unohda tarkistaa myös roskapostia) suorittaaksesi kaksivaiheisen todennuksen käyttöönoton loppuun.</string>
   <string name="YourPasswordSuccess">Valmis!</string>
-  <string name="YourPasswordSuccessText">Salasanasi kaksivaiheiseen varmistukseen on nyt aktiivinen.</string>
+  <string name="YourPasswordSuccessText">Salasanasi kaksivaiheiseen todennukseen on nyt aktiivinen.</string>
   <string name="ChangePassword">Vaihda salasana</string>
   <string name="TurnPasswordOff">Poista salasana käytöstä</string>
   <string name="SetRecoveryEmail">Aseta palautussähköposti</string>
   <string name="ChangeRecoveryEmail">Vaihda palautussähköposti</string>
-  <string name="TurnPasswordOffQuestion">Oletko varma, että haluat poistaa salasanan käytöstä?</string>
+  <string name="TurnPasswordOffQuestion">Haluatko varmasti poistaa salasanan käytöstä?</string>
   <string name="PasswordHint">Salasanavihje</string>
   <string name="PasswordHintText">Luo vihje salasanalle</string>
   <string name="PasswordDoNotMatch">Salasanat eivät täsmää</string>
-  <string name="AbortPassword">Peruuta kaksivaiheisen varmistuksen käyttöönotto</string>
-  <string name="EmailPasswordConfirmText">Tee nämä vaiheet suorittaaksesi kaksivaiheisen varmistuksen käyttöönoton loppuun:\n\n1. Tarkista sähköpostisi (Älä unohda roskapostikansiota)\n%1$s\n\n2. Klikkaa vahvistuslinkkiä.</string>
+  <string name="AbortPassword">Peruuta kaksivaiheisen todennuksen käyttöönotto</string>
+  <string name="EmailPasswordConfirmText">Tee nämä vaiheet suorittaaksesi kaksivaiheisen todennuksen käyttöönoton loppuun:\n\n1. Tarkista sähköpostisi (älä unohda roskapostikansiota)\n%1$s\n\n2. Klikkaa vahvistuslinkkiä.</string>
   <string name="PasswordAsHintError">Vihje ei voi olla sama kuin salasanasi.</string>
   <string name="PasswordEmailInvalid">Virheellinen sähköpostiosoite</string>
   <string name="RestorePasswordNoEmailTitle">Pahoittelemme</string>
@@ -1155,12 +1156,12 @@
   <string name="ResetMyAccountWarningText">Tätä toimintoa ei voida kumota.\n\nJos nollaat käyttäjätilisi, kaikki viestisi ja keskustelusi poistetaan.</string>
   <string name="ResetMyAccountWarningReset">Nollaa</string>
   <string name="LoginPassword">Salasana</string>
-  <string name="LoginPasswordText">Olet ottanut käyttöön kaksivaiheisen varmistuksen, joten tilisi on suojattu lisäsalasanalla.</string>
+  <string name="LoginPasswordText">Olet ottanut käyttöön kaksivaiheisen todennuksen, joten tilisi on suojattu lisäsalasanalla.</string>
   <string name="ForgotPassword">Unohtuiko salasana?</string>
   <string name="PasswordRecovery">Salasanan palautus</string>
   <string name="PasswordCode">Koodi</string>
   <string name="PasswordReset">Salasana poistettu käytöstä</string>
-  <string name="EnabledPasswordText">Olet ottanut käyttöön kaksivaiheisen varmistuksen.\nTarvitset täällä asettamasi salasanan kirjautuaksesi Telegram-tilillesi.</string>
+  <string name="EnabledPasswordText">Olet ottanut käyttöön kaksivaiheisen todennuksen.\nTarvitset täällä asettamasi salasanan kirjautuaksesi Telegram-tilillesi.</string>
   <string name="PendingEmailText">Palautussähköposti %1$s ei ole vielä aktiivinen, sillä se odottaa vahvistusta.</string>
   <!--data settings-->
   <string name="DataSettings">Tiedot ja tallennustila</string>
@@ -1203,7 +1204,7 @@
   <string name="SecurityTitle">Tietoturva</string>
   <string name="DeleteAccountTitle">Tili itsetuhoutuu</string>
   <string name="DeleteAccountIfAwayFor">Jos olet poissa yli</string>
-  <string name="DeleteAccountHelp">Mikäli et kirjaudu kertaakaan tänä aikana, tilisi ja siihen kuuluvat ryhmät, viestit ja yhteystiedot poistetaan.</string>
+  <string name="DeleteAccountHelp">Mikäli et kirjaudu kertaakaan tänä aikana, tilisi ja siihen kuuluvat ryhmät, viestit sekä yhteystiedot poistetaan.</string>
   <string name="DeleteAccountNowConfirmation">Poistetaanko tilisi?</string>
   <string name="LastSeenHelp">Muuta, ketkä voivat nähdä viimeisimmän paikallaoloaikasi.</string>
   <string name="LastSeenTitle">Kuka voi nähdä viimeisimmän paikallaoloaikasi?</string>
@@ -1231,7 +1232,7 @@
   <string name="GroupsAndChannelsHelp">Valitse ketkä saavat lisätä sinut ryhmiin ja kanaville.</string>
   <string name="InviteToGroupError">Valitettavasti tämän käyttäjän yksityisyysasetukset estävät lisäämisen ryhmiin.</string>
   <string name="InviteToChannelError">Valitettavasti tämän käyttäjän yksityisyysasetukset estävät lisäämisen kanaville.</string>
-  <string name="CreateGroupError">Valitettavasti et voi luoda ryhmää näiden käyttäjien kanssa johtuen heidän yksityisyysasetuksista.</string>
+  <string name="CreateGroupError">Valitettavasti et voi luoda ryhmää näiden käyttäjien kanssa johtuen heidän yksityisyysasetuksistaan.</string>
   <string name="PrivacyCallsP2PTitle">Vertaisverkotettu</string>
   <string name="PrivacyCallsP2PHelp">Vertaisverkotuksen poistaminen käytöstä toimittaa puhelut Telegramin palvelinten kautta, joka piilottaa IP-osoitteesi, mutta äänenlaatu saattaa hieman kärsiä.</string>
   <!--edit video view-->
@@ -1266,7 +1267,7 @@
   <string name="Copy">Kopioi</string>
   <string name="Delete">Poista</string>
   <string name="DeleteAndStop">Poista ja pysäytä</string>
-  <string name="Forward">Välitä edelleen</string>
+  <string name="Forward">Välitä</string>
   <string name="Retry">Yritä uudelleen</string>
   <string name="FromCamera">Kamerasta</string>
   <string name="FromGalley">Galleriasta</string>
@@ -1289,10 +1290,10 @@
   <string name="ActionYouKickUser">Poistit käyttäjän un2</string>
   <string name="ActionYouLeftUser">Poistuit ryhmästä</string>
   <string name="ActionYouAddUser">Lisäsit käyttäjän un2</string>
-  <string name="ActionYouScored">Sait %1$s pistettä</string>
-  <string name="ActionUserScored">un1 sai %1$s pistettä</string>
-  <string name="ActionYouScoredInGame">Sait %1$s pistettä pelissä un2</string>
-  <string name="ActionUserScoredInGame">un1 sai %1$s pistettä pelissä un2</string>
+  <string name="ActionYouScored">Sait %1$s</string>
+  <string name="ActionUserScored">un1 sai %1$s</string>
+  <string name="ActionYouScoredInGame">Sait %1$s pelissä un2</string>
+  <string name="ActionUserScoredInGame">un1 sai %1$s pelissä un2</string>
   <string name="ActionYouRemovedPhoto">Poistit ryhmäkuvan</string>
   <string name="ActionYouChangedPhoto">Vaihdoit ryhmäkuvaa</string>
   <string name="ActionYouChangedTitle">Vaihdoit ryhmän nimeksi un2</string>
@@ -1354,7 +1355,7 @@
   <string name="ShareYouPhoneNumberTitle">Jaa puhelinnumerosi?</string>
   <string name="AreYouSureShareMyContactInfoBot">Tämä botti tulee tietämään puhelinnumerosi. Tästä voi olla hyötyä muiden palveluiden integroimisessa.</string>
   <string name="AreYouSureShareMyContactInfoUser">Haluatko varmasti jakaa puhelinnumerosi käyttäjän %1$s <![CDATA[<b>]]>%2$s<![CDATA[</b>]]> kanssa?</string>
-  <string name="AreYouSureShareMyContactInfo">Oletko varma, että haluat jakaa puhelinnumerosi?</string>
+  <string name="AreYouSureShareMyContactInfo">Haluatko varmasti jakaa puhelinnumerosi?</string>
   <string name="AreYouSureBlockContact">Haluatko varmasti estää tämän yhteystiedon?</string>
   <string name="AreYouSureUnblockContact">Haluatko varmasti poistaa eston tältä yhteystiedolta?</string>
   <string name="AreYouSureDeleteContact">Haluatko varmasti poistaa tämän yhteystiedon?</string>
@@ -1373,7 +1374,7 @@
   <string name="BotCantJoinGroups">Tätä bottia ei voi lisätä ryhmiin.</string>
   <string name="SecretLinkPreviewAlert">Haluaisitko käyttää monipuolisempaa linkin esikatselua salaisissa keskusteluissa? Huomaathan että esikatselut luodaan Telegramin palvelimilla.</string>
   <string name="SecretChatContextBotAlert">Huomaa, että tekstikenttäbotit ovat kolmansien osapuolien tuotoksia. Boteille kirjoittamasi viestit lähetetään botin kehittäjälle, jotta botti toimisi oikein.</string>
-  <string name="RaiseToSpeakAlert">Haluatko ottaa käyttöön \"Nosta puhuaksesi\"-toiminnon ääniviesteille?</string>
+  <string name="RaiseToSpeakAlert">Haluatko ottaa käyttöön \"Nosta puhuaksesi\" -toiminnon ääniviesteille?</string>
   <string name="EditMessageError">Pahoittelemme, et voi muokata tätä viestiä.</string>
   <string name="AllowReadSms">Anna Telegramin vastaanottaa tekstiviestejä, jotta voisimme syöttää koodin puolestasi.</string>
   <string name="AllowReadCall">Anna Telegramin vastaanottaa puheluita, jotta voisimme syöttää koodin puolestasi.</string>
@@ -1395,7 +1396,7 @@
   <string name="PermissionNoCamera">Telegram tarvitsee luvan käyttää kameraasi, jotta kuvien ja videoiden ottaminen onnistuisi.</string>
   <string name="PermissionNoLocation">Telegram tarvitsee pääsyn sijaintiisi, jotta voisit jakaa sen ystävillesi.</string>
   <string name="PermissionNoLocationPosition">Telegram vaatii pääsyn sijaintiisi.</string>
-  <string name="PermissionDrawAboveOtherApps">Telegram tarvitsee luvan piirtääkseen muiden ohjelmien päälle kuva kuvassa-tilan avulla.</string>
+  <string name="PermissionDrawAboveOtherApps">Telegram tarvitsee luvan piirtääkseen muiden ohjelmien päälle kuva kuvassa -tilan avulla.</string>
   <string name="PermissionOpenSettings">ASETUKSET</string>
   <!--Intro view-->
   <string name="Page1Title">Telegram</string>
@@ -1477,12 +1478,12 @@
   <string name="CallReportLogsExplain">Tämä ei paljasta keskustelusi sisältöä, mutta auttaa meitä ratkaisemaan ongelman nopeammin.</string>
   <string name="CallReportSent">Kiitos, että autat meitä parantamaan Telegram-puheluita.</string>
   <!--plural-->
-  <string name="OnlineCount_zero">%1$d linjoilla</string>
-  <string name="OnlineCount_one">%1$d linjoilla</string>
-  <string name="OnlineCount_two">%1$d linjoilla</string>
-  <string name="OnlineCount_few">%1$d linjoilla</string>
-  <string name="OnlineCount_many">%1$d linjoilla</string>
-  <string name="OnlineCount_other">%1$d linjoilla</string>
+  <string name="OnlineCount_zero">%1$d paikalla</string>
+  <string name="OnlineCount_one">%1$d paikalla</string>
+  <string name="OnlineCount_two">%1$d paikalla</string>
+  <string name="OnlineCount_few">%1$d paikalla</string>
+  <string name="OnlineCount_many">%1$d paikalla</string>
+  <string name="OnlineCount_other">%1$d paikalla</string>
   <string name="Members_zero">%1$d jäsentä</string>
   <string name="Members_one">%1$d jäsen</string>
   <string name="Members_two">%1$d jäsentä</string>
@@ -1718,6 +1719,6 @@
   <string name="formatterDay12H">h:mm a</string>
   <string name="formatDateAtTime">%1$s klo %2$s</string>
   <string name="inline_bot_via">botilla</string>
-  <string name="KG_ExtraPins">Loputtomat kiinnitykset</string>
   <string name="KG_PinMoreChats">Telegram antaa sinun kiinnittää vain viisi keskustelua keskustelulistan yläosaan. Tämä asetus poistaa tämän rajoituksen, mutta vain viisi ensimmäistä kiinnitystä tallennetaan Telegramin palvelimille.</string>
+  <string name="KG_ExtraPins">Loputtomat kiinnitykset</string>
 </resources>

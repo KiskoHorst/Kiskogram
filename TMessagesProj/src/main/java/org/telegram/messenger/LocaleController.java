@@ -209,7 +209,7 @@ public class LocaleController {
         localeInfo = new LocaleInfo();
         localeInfo.name = "Suomi";
         localeInfo.nameEnglish = "Finnish";
-        localeInfo.shortName = "fi_kg";
+        localeInfo.shortName = "fi";
         localeInfo.pathToFile = null;
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
@@ -453,6 +453,10 @@ public class LocaleController {
     public boolean applyLanguageFile(File file) {
         try {
             HashMap<String, String> stringMap = getLocaleFileStrings(file);
+
+            if (stringMap.get("LanguageCode") != null) {
+                stringMap.put("LanguageCode", stringMap.get("LanguageCode")+"_c");
+            }
 
             String languageName = stringMap.get("LanguageName");
             String languageNameInEnglish = stringMap.get("LanguageNameInEnglish");

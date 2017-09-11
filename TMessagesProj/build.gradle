@@ -25,8 +25,8 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
 
     useLibrary 'org.apache.http.legacy'
     defaultConfig.applicationId = "li.peeloi.kisko.kiskogram"
@@ -88,7 +88,7 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    defaultConfig.versionCode = 104301
+    defaultConfig.versionCode = 104302
 
     sourceSets.debug {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
@@ -159,8 +159,8 @@ android {
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 25
-        versionName "4.2.1-r1"
+        targetSdkVersion 26
+        versionName "4.2.1-r2"
 
         externalNativeBuild {
             ndkBuild {
