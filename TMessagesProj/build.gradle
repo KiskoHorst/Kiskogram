@@ -9,11 +9,11 @@ configurations {
 }
 
 dependencies {
-    compile 'com.google.android.gms:play-services-gcm:11.0.2'
-    compile 'com.google.android.gms:play-services-maps:11.0.2'
-    compile 'com.google.android.gms:play-services-vision:11.0.2'
-    compile 'com.google.android.gms:play-services-wallet:11.0.2'
-    compile 'com.google.android.gms:play-services-wearable:11.0.2'
+    compile 'com.google.android.gms:play-services-gcm:11.0.4'
+    compile 'com.google.android.gms:play-services-maps:11.0.4'
+    compile 'com.google.android.gms:play-services-vision:11.0.4'
+    compile 'com.google.android.gms:play-services-wallet:11.0.4'
+    compile 'com.google.android.gms:play-services-wearable:11.0.4'
     compile 'com.android.support:support-core-ui:25.3.1'
     compile 'com.android.support:support-compat:25.3.1'
     compile 'com.android.support:support-core-utils:25.3.1'
@@ -26,7 +26,7 @@ dependencies {
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    buildToolsVersion '26.0.2'
 
     useLibrary 'org.apache.http.legacy'
     defaultConfig.applicationId = "li.peeloi.kisko.kiskogram"
@@ -88,7 +88,7 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    defaultConfig.versionCode = 104302
+    defaultConfig.versionCode = 115501
 
     sourceSets.debug {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
@@ -101,6 +101,8 @@ android {
     sourceSets.foss {
         manifest.srcFile 'config/foss/AndroidManifest.xml'
     }
+
+    flavorDimensions "minApi"
 
     productFlavors {
         x86 {
@@ -153,14 +155,21 @@ android {
     }
 
     applicationVariants.all { variant ->
-        def abiVersion = variant.productFlavors.get(0).versionCode
-        variant.mergedFlavor.versionCode = defaultConfig.versionCode;
+        variant.outputs.all { output ->
+            output.processManifest.doLast {
+                def abiVersion = variant.productFlavors.get(0).versionCode
+                String manifestPath = "$manifestOutputDirectory/AndroidManifest.xml"
+                def manifestContent = file(manifestPath).getText()
+                manifestContent = manifestContent.replace(String.format('android:versionCode="%d"', abiVersion), String.format('android:versionCode="%s"', defaultConfig.versionCode))
+                file(manifestPath).write(manifestContent)
+            }
+        }
     }
 
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 26
-        versionName "4.2.1-r2"
+        versionName "4.6.0-r1"
 
         externalNativeBuild {
             ndkBuild {
