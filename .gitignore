@@ -2,6 +2,7 @@
 .gradle/
 build/
 obj/
+projectFilesBackup/
 *.iml
 local.properties
 *.keystore

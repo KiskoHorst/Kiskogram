@@ -20,6 +20,5 @@ public class BuildVars {
     public static String BING_SEARCH_KEY = ""; //obtain your own KEY at https://www.bing.com/dev/en-us/dev-center
     public static String FOURSQUARE_API_KEY = ""; //obtain your own KEY at https://developer.foursquare.com/
     public static String FOURSQUARE_API_ID = ""; //obtain your own API_ID at https://developer.foursquare.com/
-    public static String GOOGLE_API_KEY = "";
     public static String FOURSQUARE_API_VERSION = "20150326";
 }
