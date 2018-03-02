@@ -88,7 +88,7 @@ android {
             signingConfig signingConfigs.release
         }
     }
-    defaultConfig.versionCode = 115501
+    defaultConfig.versionCode = 115502
 
     sourceSets.debug {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
@@ -168,8 +168,8 @@ android {
 
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 26
-        versionName "4.6.0-r1"
+        targetSdkVersion 25
+        versionName "4.6.0-r2"
 
         externalNativeBuild {
             ndkBuild {
