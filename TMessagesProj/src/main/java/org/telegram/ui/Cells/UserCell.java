@@ -11,6 +11,7 @@ package org.telegram.ui.Cells;
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.Typeface;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -47,12 +48,14 @@ public class UserCell extends FrameLayout {
 
     private CharSequence currentName;
     private CharSequence currrntStatus;
+    private int currentId;
     private int currentDrawable;
 
     private String lastName;
     private int lastStatus;
     private TLRPC.FileLocation lastAvatar;
 
+    private int currentAccount = UserConfig.selectedAccount;
 
     private int statusColor;
     private int statusOnlineColor;
@@ -84,6 +87,7 @@ public class UserCell extends FrameLayout {
 
         imageView = new ImageView(context);
         imageView.setScaleType(ImageView.ScaleType.CENTER);
+        imageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon), PorterDuff.Mode.MULTIPLY));
         imageView.setVisibility(GONE);
         addView(imageView, LayoutHelper.createFrame(LayoutParams.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 0 : 16, 0, LocaleController.isRTL ? 16 : 0, 0));
 
@@ -121,7 +125,7 @@ public class UserCell extends FrameLayout {
     }
 
     public void setData(TLObject user, CharSequence name, CharSequence status, int resId) {
-        if (user == null) {
+        if (user == null && name == null && status == null) {
             currrntStatus = null;
             currentName = null;
             currentObject = null;
@@ -135,6 +139,14 @@ public class UserCell extends FrameLayout {
         currentObject = user;
         currentDrawable = resId;
         update(0);
+    }
+
+    public void setNameTypeface(Typeface typeface) {
+        nameTextView.setTypeface(typeface);
+    }
+
+    public void setCurrentId(int id) {
+        currentId = id;
     }
 
     public void setChecked(boolean checked, boolean animated) {
@@ -176,9 +188,6 @@ public class UserCell extends FrameLayout {
     }
 
     public void update(int mask) {
-        if (currentObject == null) {
-            return;
-        }
         TLRPC.FileLocation photo = null;
         String newName = null;
         TLRPC.User currentUser = null;
@@ -188,7 +197,7 @@ public class UserCell extends FrameLayout {
             if (currentUser.photo != null) {
                 photo = currentUser.photo.photo_small;
             }
-        } else {
+        } else if (currentObject instanceof TLRPC.Chat) {
             currentChat = (TLRPC.Chat) currentObject;
             if (currentChat.photo != null) {
                 photo = currentChat.photo.photo_small;
@@ -233,8 +242,12 @@ public class UserCell extends FrameLayout {
             } else {
                 lastStatus = 0;
             }
-        } else {
+        } else if (currentChat != null) {
             avatarDrawable.setInfo(currentChat);
+        } else if (currentName != null) {
+            avatarDrawable.setInfo(currentId, currentName.toString(), null, false);
+        } else {
+            avatarDrawable.setInfo(currentId, "#", null, false);
         }
 
         if (currentName != null) {
@@ -260,12 +273,12 @@ public class UserCell extends FrameLayout {
                     statusTextView.setText(LocaleController.getString("BotStatusCantRead", R.string.BotStatusCantRead));
                 }
             } else {
-                if (currentUser.id == UserConfig.getClientUserId() || currentUser.status != null && currentUser.status.expires > ConnectionsManager.getInstance().getCurrentTime() || MessagesController.getInstance().onlinePrivacy.containsKey(currentUser.id)) {
+                if (currentUser.id == UserConfig.getInstance(currentAccount).getClientUserId() || currentUser.status != null && currentUser.status.expires > ConnectionsManager.getInstance(currentAccount).getCurrentTime() || MessagesController.getInstance(currentAccount).onlinePrivacy.containsKey(currentUser.id)) {
                     statusTextView.setTextColor(statusOnlineColor);
                     statusTextView.setText(LocaleController.getString("Online", R.string.Online));
                 } else {
                     statusTextView.setTextColor(statusColor);
-                    statusTextView.setText(LocaleController.formatUserStatus(currentUser));
+                    statusTextView.setText(LocaleController.formatUserStatus(currentAccount, currentUser));
                 }
             }
         }
