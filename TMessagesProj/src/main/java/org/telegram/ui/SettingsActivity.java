@@ -477,12 +477,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                         ((TextCheckCell) view).setChecked(!animations);
                     }
                 } else if (position == KG_ExtraPinsRow) {
-                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", Activity.MODE_PRIVATE);
+                    SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", android.app.Activity.MODE_PRIVATE);
                     boolean pins = preferences.getBoolean("KG_ExtraPins", true);
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putBoolean("KG_ExtraPins", !pins);
                     editor.commit();
-                    MessagesController.getInstance().extraPins = !pins;
+                    MessagesController.getInstance(currentAccount).extraPins = !pins;
                     if (view instanceof TextCheckCell) {
                         ((TextCheckCell) view).setChecked(!pins);
                     }
@@ -1323,7 +1323,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 case 3: {
                     TextCheckCell textCell = (TextCheckCell) holder.itemView;
                     SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                    SharedPreferences preferences2 = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", Activity.MODE_PRIVATE);
+                    SharedPreferences preferences2 = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", android.app.Activity.MODE_PRIVATE);
 
                     if (position == enableAnimationsRow) {
                         textCell.setTextAndCheck(LocaleController.getString("EnableAnimations", R.string.EnableAnimations), preferences.getBoolean("view_animations", true), true);
@@ -1461,7 +1461,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                                 abi = "universal " + Build.CPU_ABI + " " + Build.CPU_ABI2;
                                 break;
                         }
-                        ((TextInfoCell) view).setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v4.6.0 (%d)", pInfo.versionName, code, abi));
+                        ((TextInfoCell) view).setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v4.9.0 (%d)", pInfo.versionName, code, abi));
 
                     } catch (Exception e) {
                         FileLog.e(e);

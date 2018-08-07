@@ -222,6 +222,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
     private SharedPreferences notificationsPreferences;
     private SharedPreferences mainPreferences;
     private SharedPreferences emojiPreferences;
+    private SharedPreferences kiskogramPreferences;
 
     private class UserActionUpdatesSeq extends TLRPC.Updates {
 
@@ -377,10 +378,12 @@ public class MessagesController implements NotificationCenter.NotificationCenter
             notificationsPreferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications", Activity.MODE_PRIVATE);
             mainPreferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
             emojiPreferences = ApplicationLoader.applicationContext.getSharedPreferences("emoji", Activity.MODE_PRIVATE);
+            kiskogramPreferences = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", Activity.MODE_PRIVATE);
         } else {
             notificationsPreferences = ApplicationLoader.applicationContext.getSharedPreferences("Notifications" + currentAccount, Activity.MODE_PRIVATE);
             mainPreferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig" + currentAccount, Activity.MODE_PRIVATE);
             emojiPreferences = ApplicationLoader.applicationContext.getSharedPreferences("emoji" + currentAccount, Activity.MODE_PRIVATE);
+            kiskogramPreferences = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram" + currentAccount, Activity.MODE_PRIVATE);
         }
 
         enableJoined = notificationsPreferences.getBoolean("EnableContactJoined", true);
@@ -398,7 +401,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         callConnectTimeout = mainPreferences.getInt("callConnectTimeout", 30000);
         callPacketTimeout = mainPreferences.getInt("callPacketTimeout", 10000);
         maxPinnedDialogsCount = mainPreferences.getInt("maxPinnedDialogsCount", 5);
-		extraPins = preferences2.getBoolean("KG_ExtraPins", false);
+		extraPins = kiskogramPreferences.getBoolean("KG_ExtraPins", false);
         maxMessageLength = mainPreferences.getInt("maxMessageLength", 4096);
         maxCaptionLength = mainPreferences.getInt("maxCaptionLength", 200);
         mapProvider = mainPreferences.getInt("mapProvider", 0);

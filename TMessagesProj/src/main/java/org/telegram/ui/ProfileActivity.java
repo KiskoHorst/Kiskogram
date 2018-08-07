@@ -1161,7 +1161,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
 
         toolbarbg = new View(context);
-        toolbarbg.setBackgroundColor(AvatarDrawable.getProfileBackColorForId(user_id != 0 || ChatObject.isChannel(chat_id) && !currentChat.megagroup ? 5 : chat_id));
+        toolbarbg.setBackgroundColor(AvatarDrawable.getProfileBackColorForId(user_id != 0 || ChatObject.isChannel(chat_id, currentAccount) && !currentChat.megagroup ? 5 : chat_id));
         toolbarbg.setPivotY(0);
 
         if (Build.VERSION.SDK_INT >=21) {

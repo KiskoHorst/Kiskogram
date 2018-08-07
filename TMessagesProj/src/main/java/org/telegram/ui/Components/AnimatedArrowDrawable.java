@@ -37,9 +37,9 @@ public class AnimatedArrowDrawable extends Drawable {
     private void updatePath() {
         path.reset();
         float p = animProgress * 2 - 1;
-        path.moveTo(AndroidUtilities.dp(3), AndroidUtilities.dp(12) - AndroidUtilities.dp(4) * p);
+        path.moveTo(AndroidUtilities.dp(5), AndroidUtilities.dp(12) - AndroidUtilities.dp(4) * p);
         path.lineTo(AndroidUtilities.dp(13), AndroidUtilities.dp(12) + AndroidUtilities.dp(4) * p);
-        path.lineTo(AndroidUtilities.dp(23), AndroidUtilities.dp(12) - AndroidUtilities.dp(4) * p);
+        path.lineTo(AndroidUtilities.dp(21), AndroidUtilities.dp(12) - AndroidUtilities.dp(4) * p);
     }
 
     @Keep
