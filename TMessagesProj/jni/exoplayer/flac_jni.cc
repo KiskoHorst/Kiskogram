@@ -15,11 +15,25 @@
  */
 
 #include <jni.h>
+#include <android/log.h>
 #include <cstdlib>
 #include "include/flac_parser.h"
 
-#define DECODER_FUNC(RETURN_TYPE, NAME, ...) \
-RETURN_TYPE Java_org_telegram_messenger_exoplayer2_ext_flac_FlacDecoderJni_##NAME(JNIEnv *env, jobject thiz, ##__VA_ARGS__)
+#define LOG_TAG "flac_jni"
+#define ALOGE(...) \
+  ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
+#define ALOGV(...) \
+  ((void)__android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__))
+
+#define DECODER_FUNC(RETURN_TYPE, NAME, ...)                               \
+  extern "C" {                                                             \
+  JNIEXPORT RETURN_TYPE                                                    \
+      Java_com_google_android_exoplayer2_ext_flac_FlacDecoderJni_##NAME( \
+          JNIEnv *env, jobject thiz, ##__VA_ARGS__);                       \
+  }                                                                        \
+  JNIEXPORT RETURN_TYPE                                                    \
+      Java_com_google_android_exoplayer2_ext_flac_FlacDecoderJni_##NAME( \
+          JNIEnv *env, jobject thiz, ##__VA_ARGS__)
 
 class JavaDataSource : public DataSource {
  public:
@@ -65,8 +79,6 @@ struct Context {
   }
 };
 
-extern "C" {
-
 DECODER_FUNC(jlong, flacInit) {
   Context *context = new Context;
   if (!context->parser->init()) {
@@ -84,9 +96,11 @@ DECODER_FUNC(jobject, flacDecodeMetadata, jlong jContext) {
   }
 
   const FLAC__StreamMetadata_StreamInfo &streamInfo =
-          context->parser->getStreamInfo();
+      context->parser->getStreamInfo();
 
-  jclass cls = env->FindClass("org/telegram/messenger/exoplayer2/util/FlacStreamInfo");
+  jclass cls = env->FindClass(
+      "com/google/android/exoplayer2/util/"
+      "FlacStreamInfo");
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(IIIIIIIJ)V");
 
   return env->NewObject(cls, constructor, streamInfo.min_blocksize,
@@ -163,6 +177,4 @@ DECODER_FUNC(void, flacReset, jlong jContext, jlong newPosition) {
 DECODER_FUNC(void, flacRelease, jlong jContext) {
   Context *context = reinterpret_cast<Context *>(jContext);
   delete context;
-}
-
 }

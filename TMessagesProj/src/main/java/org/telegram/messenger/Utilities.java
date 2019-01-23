@@ -1,15 +1,18 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.messenger;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,6 +51,7 @@ public class Utilities {
     public native static int pinBitmap(Bitmap bitmap);
     public native static void unpinBitmap(Bitmap bitmap);
     public native static void blurBitmap(Object bitmap, int radius, int unpin, int width, int height, int stride);
+    public native static int needInvert(Object bitmap, int unpin, int width, int height, int stride);
     public native static void calcCDT(ByteBuffer hsvBuffer, int width, int height, ByteBuffer buffer);
     public native static boolean loadWebpImage(Bitmap bitmap, ByteBuffer buffer, int len, BitmapFactory.Options options, boolean unpin);
     public native static int convertVideoFrame(ByteBuffer src, ByteBuffer dest, int destFormat, int width, int height, int padding, int swap);
@@ -59,6 +63,23 @@ public class Utilities {
     public native static String readlink(String path);
     public native static long getDirSize(String path, int docType);
     public native static void clearDir(String path, int docType, long time);
+    private native static int pbkdf2(byte[] password, byte[] salt, byte[] dst, int iterations);
+    public native static int argon2(int iterations);
+    public static native void stackBlurBitmap(Bitmap bitmap, int radius);
+
+    public static Bitmap blurWallpaper(Bitmap src) {
+        Bitmap b;
+        if (src.getHeight() > src.getWidth()) {
+            b = Bitmap.createBitmap(Math.round(450f * src.getWidth() / src.getHeight()), 450, Bitmap.Config.ARGB_8888);
+        } else {
+            b = Bitmap.createBitmap(450, Math.round(450f * src.getHeight() / src.getWidth()), Bitmap.Config.ARGB_8888);
+        }
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        Rect rect = new Rect(0, 0, b.getWidth(), b.getHeight());
+        new Canvas(b).drawBitmap(src, null, rect, paint);
+        stackBlurBitmap(b, 12);
+        return b;
+    }
 
     public static void aesIgeEncryption(ByteBuffer buffer, byte[] key, byte[] iv, boolean encrypt, boolean changeIv, int offset, int length) {
         aesIgeEncryption(buffer, key, changeIv ? iv : iv.clone(), encrypt, offset, length);
@@ -187,7 +208,7 @@ public class Utilities {
     }
 
     public static boolean isGoodGaAndGb(BigInteger g_a, BigInteger p) {
-        return !(g_a.compareTo(BigInteger.valueOf(1)) != 1 || g_a.compareTo(p.subtract(BigInteger.valueOf(1))) != -1);
+        return !(g_a.compareTo(BigInteger.valueOf(1)) <= 0 || g_a.compareTo(p.subtract(BigInteger.valueOf(1))) >= 0);
     }
 
     public static boolean arraysEquals(byte[] arr1, int offset1, byte[] arr2, int offset2) {
@@ -255,6 +276,19 @@ public class Utilities {
         return new byte[32];
     }
 
+    public static byte[] computeSHA256(byte[]... args) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            for (int a = 0; a < args.length; a++) {
+                md.update(args[a], 0, args[a].length);
+            }
+            return md.digest();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return new byte[32];
+    }
+
     public static byte[] computeSHA512(byte[] convertme) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -276,6 +310,12 @@ public class Utilities {
             FileLog.e(e);
         }
         return new byte[64];
+    }
+
+    public static byte[] computePBKDF2(byte[] password, byte[] salt) {
+        byte[] dst = new byte[64];
+        Utilities.pbkdf2(password, salt, dst, 100000);
+        return dst;
     }
 
     public static byte[] computeSHA512(byte[] convertme, byte[] convertme2, byte[] convertme3) {

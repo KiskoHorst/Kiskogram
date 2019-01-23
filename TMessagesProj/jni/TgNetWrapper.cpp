@@ -39,6 +39,8 @@ jmethodID jclass_ConnectionsManager_onProxyError;
 jmethodID jclass_ConnectionsManager_getHostByName;
 jmethodID jclass_ConnectionsManager_getInitFlags;
 
+bool check_utf8(const char *data, size_t len);
+
 /*jint createLoadOpetation(JNIEnv *env, jclass c, jint dc_id, jlong id, jlong volume_id, jlong access_hash, jint local_id, jbyteArray encKey, jbyteArray encIv, jstring extension, jint version, jint size, jstring dest, jstring temp, jobject delegate) {
     if (encKey != nullptr && encIv == nullptr || encKey == nullptr && encIv != nullptr || extension == nullptr || dest == nullptr || temp == nullptr) {
         return 0;
@@ -196,7 +198,13 @@ void sendRequest(JNIEnv *env, jclass c, jint instanceNum, jlong object, jobject 
             ptr = (jlong) resp->response.get();
         } else if (error != nullptr) {
             errorCode = error->code;
-            errorText = jniEnv[instanceNum]->NewStringUTF(error->text.c_str());
+            const char *text = error->text.c_str();
+            size_t size = error->text.size();
+            if (check_utf8(text, size)) {
+                errorText = jniEnv[instanceNum]->NewStringUTF(text);
+            } else {
+                errorText = jniEnv[instanceNum]->NewStringUTF("UTF-8 ERROR");
+            }
         }
         if (onComplete != nullptr) {
             jniEnv[instanceNum]->CallVoidMethod(onComplete, jclass_RequestDelegateInternal_run, ptr, errorCode, errorText, networkType);
@@ -420,6 +428,16 @@ void setLangCode(JNIEnv *env, jclass c, jint instanceNum, jstring langCode) {
     }
 }
 
+void setSystemLangCode(JNIEnv *env, jclass c, jint instanceNum, jstring langCode) {
+    const char *langCodeStr = env->GetStringUTFChars(langCode, 0);
+
+    ConnectionsManager::getInstance(instanceNum).setSystemLangCode(std::string(langCodeStr));
+
+    if (langCodeStr != 0) {
+        env->ReleaseStringUTFChars(langCode, langCodeStr);
+    }
+}
+
 void init(JNIEnv *env, jclass c, jint instanceNum, jint version, jint layer, jint apiId, jstring deviceModel, jstring systemVersion, jstring appVersion, jstring langCode, jstring systemLangCode, jstring configPath, jstring logPath, jint userId, jboolean enablePushConnection, jboolean hasNetwork, jint networkType) {
     const char *deviceModelStr = env->GetStringUTFChars(deviceModel, 0);
     const char *systemVersionStr = env->GetStringUTFChars(systemVersion, 0);
@@ -478,6 +496,7 @@ static JNINativeMethod ConnectionsManagerMethods[] = {
         {"native_setUserId", "(II)V", (void *) setUserId},
         {"native_init", "(IIIILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZI)V", (void *) init},
         {"native_setLangCode", "(ILjava/lang/String;)V", (void *) setLangCode},
+        {"native_setSystemLangCode", "(ILjava/lang/String;)V", (void *) setSystemLangCode},
         {"native_switchBackend", "(I)V", (void *) switchBackend},
         {"native_pauseNetwork", "(I)V", (void *) pauseNetwork},
         {"native_resumeNetwork", "(IZ)V", (void *) resumeNetwork},
@@ -631,4 +650,57 @@ extern "C" int registerNativeTgNetFunctions(JavaVM *vm, JNIEnv *env) {
     }
 
     return JNI_TRUE;
+}
+
+//
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2018
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
+bool check_utf8(const char *data, size_t len) {
+    const char *data_end = data + len;
+    do {
+        unsigned int a = (unsigned char) (*data++);
+        if ((a & 0x80) == 0) {
+            if (data == data_end + 1) {
+                return true;
+            }
+            continue;
+        }
+
+#define ENSURE(condition) \
+if (!(condition)) {       \
+    return false;             \
+}
+
+        ENSURE((a & 0x40) != 0);
+
+        unsigned int b = (unsigned char) (*data++);
+        ENSURE((b & 0xc0) == 0x80);
+        if ((a & 0x20) == 0) {
+            ENSURE((a & 0x1e) > 0);
+            continue;
+        }
+
+        unsigned int c = (unsigned char) (*data++);
+        ENSURE((c & 0xc0) == 0x80);
+        if ((a & 0x10) == 0) {
+            int x = (((a & 0x0f) << 6) | (b & 0x20));
+            ENSURE(x != 0 && x != 0x360);
+            continue;
+        }
+
+        unsigned int d = (unsigned char) (*data++);
+        ENSURE((d & 0xc0) == 0x80);
+        if ((a & 0x08) == 0) {
+            int t = (((a & 0x07) << 6) | (b & 0x30));
+            ENSURE(0 < t && t < 0x110);
+            continue;
+        }
+
+        return false;
+#undef ENSURE
+    } while (1);
 }

@@ -3,7 +3,7 @@
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.ui.Adapters;
@@ -21,8 +21,6 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.support.widget.RecyclerView;
 import org.telegram.messenger.FileLoader;
 import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.RequestDelegate;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Cells.StickerCell;
 import org.telegram.ui.Components.RecyclerListView;
@@ -38,6 +36,7 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
     private int currentAccount = UserConfig.selectedAccount;
     private Context mContext;
     private ArrayList<TLRPC.Document> stickers;
+    private ArrayList<Object> stickersParents;
     private HashMap<String, TLRPC.Document> stickersMap;
     private ArrayList<String> stickersToLoad = new ArrayList<>();
     private StickersAdapterDelegate delegate;
@@ -55,18 +54,18 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
         this.delegate = delegate;
         DataQuery.getInstance(currentAccount).checkStickers(DataQuery.TYPE_IMAGE);
         DataQuery.getInstance(currentAccount).checkStickers(DataQuery.TYPE_MASK);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.FileDidLoaded);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.FileDidFailedLoad);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidLoad);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidFailedLoad);
     }
 
     public void onDestroy() {
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.FileDidLoaded);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.FileDidFailedLoad);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidLoad);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidFailedLoad);
     }
 
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
-        if (id == NotificationCenter.FileDidLoaded || id == NotificationCenter.FileDidFailedLoad) {
+        if (id == NotificationCenter.fileDidLoad || id == NotificationCenter.fileDidFailedLoad) {
             if (stickers != null && !stickers.isEmpty() && !stickersToLoad.isEmpty() && visible) {
                 String fileName = (String) args[0];
                 stickersToLoad.remove(fileName);
@@ -82,13 +81,16 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
             return false;
         }
         stickersToLoad.clear();
-        int size = Math.min(10, stickers.size());
+        int size = Math.min(6, stickers.size());
         for (int a = 0; a < size; a++) {
             TLRPC.Document document = stickers.get(a);
-            File f = FileLoader.getPathToAttach(document.thumb, "webp", true);
-            if (!f.exists()) {
-                stickersToLoad.add(FileLoader.getAttachFileName(document.thumb, "webp"));
-                FileLoader.getInstance(currentAccount).loadFile(document.thumb.location, "webp", 0, 1);
+            TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(document.thumbs, 90);
+            if (thumb instanceof TLRPC.TL_photoSize) {
+                File f = FileLoader.getPathToAttach(thumb, "webp", true);
+                if (!f.exists()) {
+                    stickersToLoad.add(FileLoader.getAttachFileName(thumb, "webp"));
+                    FileLoader.getInstance(currentAccount).loadFile(thumb.location, stickersParents.get(a), "webp", 0, 1, 1);
+                }
             }
         }
         return stickersToLoad.isEmpty();
@@ -107,7 +109,7 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
         return false;
     }
 
-    private void addStickerToResult(TLRPC.Document document) {
+    private void addStickerToResult(TLRPC.Document document, Object parent) {
         if (document == null) {
             return;
         }
@@ -117,13 +119,15 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
         }
         if (stickers == null) {
             stickers = new ArrayList<>();
+            stickersParents = new ArrayList<>();
             stickersMap = new HashMap<>();
         }
         stickers.add(document);
+        stickersParents.add(parent);
         stickersMap.put(key, document);
     }
 
-    private void addStickersToResult(ArrayList<TLRPC.Document> documents) {
+    private void addStickersToResult(ArrayList<TLRPC.Document> documents, Object parent) {
         if (documents == null || documents.isEmpty()) {
             return;
         }
@@ -135,9 +139,22 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
             }
             if (stickers == null) {
                 stickers = new ArrayList<>();
+                stickersParents = new ArrayList<>();
                 stickersMap = new HashMap<>();
             }
             stickers.add(document);
+            boolean found = false;
+            for (int b = 0, size2 = document.attributes.size(); b < size2; b++) {
+                TLRPC.DocumentAttribute attribute = document.attributes.get(b);
+                if (attribute instanceof TLRPC.TL_documentAttributeSticker) {
+                    stickersParents.add(attribute.stickerset);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                stickersParents.add(parent);
+            }
             stickersMap.put(key, document);
         }
     }
@@ -171,6 +188,7 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
                 return;
             }
             stickers = null;
+            stickersParents = null;
             stickersMap = null;
 
             delayLocalResults = false;
@@ -180,7 +198,7 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
             for (int a = 0, size = recentStickers.size(); a < size; a++) {
                 TLRPC.Document document = recentStickers.get(a);
                 if (isValidSticker(document, lastSticker)) {
-                    addStickerToResult(document);
+                    addStickerToResult(document, "recent");
                     recentsAdded++;
                     if (recentsAdded >= 5) {
                         break;
@@ -190,7 +208,7 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
             for (int a = 0, size = favsStickers.size(); a < size; a++) {
                 TLRPC.Document document = favsStickers.get(a);
                 if (isValidSticker(document, lastSticker)) {
-                    addStickerToResult(document);
+                    addStickerToResult(document, "fav");
                 }
             }
 
@@ -227,10 +245,11 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
                         }
                     });
                 }
-                addStickersToResult(arrayList);
+
+                addStickersToResult(arrayList, null);
             }
             if (SharedConfig.suggestStickers == 0) {
-                searchServerStickers(lastSticker);
+                searchServerStickers(lastSticker, originalEmoji);
             }
 
             if (stickers != null && !stickers.isEmpty()) {
@@ -257,45 +276,38 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
         }
     }
 
-    private void searchServerStickers(final String emoji) {
+    private void searchServerStickers(final String emoji, final String originalEmoji) {
         if (lastReqId != 0) {
             ConnectionsManager.getInstance(currentAccount).cancelRequest(lastReqId, true);
         }
         TLRPC.TL_messages_getStickers req = new TLRPC.TL_messages_getStickers();
-        req.emoticon = emoji;
+        req.emoticon = originalEmoji;
         req.hash = 0;
-        lastReqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, new RequestDelegate() {
-            @Override
-            public void run(final TLObject response, TLRPC.TL_error error) {
-                AndroidUtilities.runOnUIThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        lastReqId = 0;
-                        if (!emoji.equals(lastSticker) || !(response instanceof TLRPC.TL_messages_stickers)) {
-                            return;
-                        }
-                        delayLocalResults = false;
-                        TLRPC.TL_messages_stickers res = (TLRPC.TL_messages_stickers) response;
-                        int oldCount = stickers != null ? stickers.size() : 0;
-                        addStickersToResult(res.stickers);
-                        int newCount = stickers != null ? stickers.size() : 0;
-                        if (!visible && stickers != null && !stickers.isEmpty()) {
-                            checkStickerFilesExistAndDownload();
-                            delegate.needChangePanelVisibility(stickers != null && !stickers.isEmpty() && stickersToLoad.isEmpty());
-                            visible = true;
-                        }
-                        if (oldCount != newCount) {
-                            notifyDataSetChanged();
-                        }
-                    }
-                });
+        lastReqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            lastReqId = 0;
+            if (!emoji.equals(lastSticker) || !(response instanceof TLRPC.TL_messages_stickers)) {
+                return;
             }
-        });
+            delayLocalResults = false;
+            TLRPC.TL_messages_stickers res = (TLRPC.TL_messages_stickers) response;
+            int oldCount = stickers != null ? stickers.size() : 0;
+            addStickersToResult(res.stickers, "sticker_search_" + emoji);
+            int newCount = stickers != null ? stickers.size() : 0;
+            if (!visible && stickers != null && !stickers.isEmpty()) {
+                checkStickerFilesExistAndDownload();
+                delegate.needChangePanelVisibility(stickers != null && !stickers.isEmpty() && stickersToLoad.isEmpty());
+                visible = true;
+            }
+            if (oldCount != newCount) {
+                notifyDataSetChanged();
+            }
+        }));
     }
 
     public void clearStickers() {
         lastSticker = null;
         stickers = null;
+        stickersParents = null;
         stickersMap = null;
         stickersToLoad.clear();
         notifyDataSetChanged();
@@ -312,6 +324,10 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
 
     public TLRPC.Document getItem(int i) {
         return stickers != null && i >= 0 && i < stickers.size() ? stickers.get(i) : null;
+    }
+
+    public Object getItemParent(int i) {
+        return stickersParents != null && i >= 0 && i < stickersParents.size() ? stickersParents.get(i) : null;
     }
 
     @Override
@@ -337,6 +353,6 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
         } else if (i == stickers.size() - 1) {
             side = 1;
         }
-        ((StickerCell) viewHolder.itemView).setSticker(stickers.get(i), side);
+        ((StickerCell) viewHolder.itemView).setSticker(stickers.get(i), stickersParents.get(i), side);
     }
 }

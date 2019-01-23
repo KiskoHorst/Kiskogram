@@ -5,10 +5,12 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <openssl/aes.h>
+#include <openssl/evp.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include "image.h"
+#include "libtgvoip/client/android/tg_voip_jni.h"
 
 int registerNativeTgNetFunctions(JavaVM *vm, JNIEnv *env);
 
@@ -27,6 +29,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     if (registerNativeTgNetFunctions(vm, env) != JNI_TRUE) {
         return -1;
     }
+
+    tgvoipRegisterNatives(env);
     
 	return JNI_VERSION_1_6;
 }
@@ -50,6 +54,23 @@ JNIEXPORT void Java_org_telegram_messenger_Utilities_aesIgeEncryption(JNIEnv *en
     }
     (*env)->ReleaseByteArrayElements(env, key, keyBuff, JNI_ABORT);
     (*env)->ReleaseByteArrayElements(env, iv, ivBuff, 0);
+}
+
+JNIEXPORT jint Java_org_telegram_messenger_Utilities_pbkdf2(JNIEnv *env, jclass class, jbyteArray password, jbyteArray salt, jbyteArray dst, jint iterations) {
+    jbyte *passwordBuff = (*env)->GetByteArrayElements(env, password, NULL);
+    size_t passwordLength = (size_t) (*env)->GetArrayLength(env, password);
+    jbyte *saltBuff = (*env)->GetByteArrayElements(env, salt, NULL);
+    size_t saltLength = (size_t) (*env)->GetArrayLength(env, salt);
+    jbyte *dstBuff = (*env)->GetByteArrayElements(env, dst, NULL);
+    size_t dstLength = (size_t) (*env)->GetArrayLength(env, dst);
+
+    int result = PKCS5_PBKDF2_HMAC((char *) passwordBuff, passwordLength, (uint8_t *) saltBuff, saltLength, (unsigned int) iterations, EVP_sha512(), dstLength, (uint8_t *) dstBuff);
+
+    (*env)->ReleaseByteArrayElements(env, password, passwordBuff, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, salt, saltBuff, JNI_ABORT);
+    (*env)->ReleaseByteArrayElements(env, dst, dstBuff, 0);
+
+    return result;
 }
 
 JNIEXPORT void Java_org_telegram_messenger_Utilities_aesCtrDecryption(JNIEnv *env, jclass class, jobject buffer, jbyteArray key, jbyteArray iv, jint offset, jint length) {

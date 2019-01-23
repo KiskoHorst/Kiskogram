@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.ui.Adapters;
@@ -198,14 +198,11 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
                 textView.setText(LocaleController.getString("RecentlyViewedHide", R.string.RecentlyViewedHide));
                 textView.setGravity((LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL);
                 headerCell.addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP, 17, 15, 17, 0));
-                textView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        MessagesController.getInstance(currentAccount).hintDialogs.clear();
-                        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
-                        preferences.edit().remove("installReferer").commit();
-                        notifyDataSetChanged();
-                    }
+                textView.setOnClickListener(view1 -> {
+                    MessagesController.getInstance(currentAccount).hintDialogs.clear();
+                    SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+                    preferences.edit().remove("installReferer").commit();
+                    notifyDataSetChanged();
                 });
 
                 view = headerCell;
@@ -257,10 +254,12 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter {
             case 0: {
                 DialogCell cell = (DialogCell) holder.itemView;
                 TLRPC.TL_dialog dialog = (TLRPC.TL_dialog) getItem(i);
+                TLRPC.TL_dialog nextDialog = (TLRPC.TL_dialog) getItem(i + 1);
                 if (hasHints) {
                     i -= 2 + MessagesController.getInstance(currentAccount).hintDialogs.size();
                 }
                 cell.useSeparator = (i != getItemCount() - 1);
+                cell.fullSeparator = dialog.pinned && nextDialog != null && !nextDialog.pinned;
                 if (dialogsType == 0) {
                     if (AndroidUtilities.isTablet()) {
                         cell.setDialogSelected(dialog.id == openedDialogId);

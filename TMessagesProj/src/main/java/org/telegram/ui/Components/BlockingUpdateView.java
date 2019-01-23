@@ -5,10 +5,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.StateListAnimator;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.net.Uri;
@@ -73,16 +71,12 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
         imageView.setScaleType(ImageView.ScaleType.CENTER);
         imageView.setPadding(0, 0, 0, AndroidUtilities.dp(14));
         view.addView(imageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 0, top, 0, 0));
-        imageView.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                pressCount++;
-                if (pressCount >= 10) {
-                    setVisibility(GONE);
-                    UserConfig.getInstance(0).pendingAppUpdate = null;
-                    UserConfig.getInstance(0).saveConfig(false);
-                }
+        imageView.setOnClickListener(v -> {
+            pressCount++;
+            if (pressCount >= 10) {
+                setVisibility(GONE);
+                UserConfig.getInstance(0).pendingAppUpdate = null;
+                UserConfig.getInstance(0).saveConfig(false);
             }
         });
 
@@ -120,20 +114,17 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
         }
         acceptButton.setPadding(AndroidUtilities.dp(20), 0, AndroidUtilities.dp(20), 0);
         addView(acceptButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 56, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM, 0, 0, 0, 45));
-        acceptButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!checkApkInstallPermissions(getContext())) {
-                    return;
+        acceptButton.setOnClickListener(view1 -> {
+            if (!checkApkInstallPermissions(getContext())) {
+                return;
+            }
+            if (appUpdate.document instanceof TLRPC.TL_document) {
+                if (!openApkInstall((Activity) getContext(), appUpdate.document)) {
+                    FileLoader.getInstance(accountNum).loadFile(appUpdate.document, "update", 2, 1);
+                    showProgress(true);
                 }
-                if (appUpdate.document instanceof TLRPC.TL_document) {
-                    if (!openApkInstall((Activity) getContext(), appUpdate.document)) {
-                        FileLoader.getInstance(accountNum).loadFile(appUpdate.document, true, 1);
-                        showProgress(true);
-                    }
-                } else if (appUpdate.url != null) {
-                    Browser.openUrl(getContext(), appUpdate.url);
-                }
+            } else if (appUpdate.url != null) {
+                Browser.openUrl(getContext(), appUpdate.url);
             }
         });
 
@@ -177,21 +168,21 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
     public void setVisibility(int visibility) {
         super.setVisibility(visibility);
         if (visibility == GONE) {
-            NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.FileDidLoaded);
-            NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.FileDidFailedLoad);
+            NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.fileDidLoad);
+            NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.fileDidFailedLoad);
             NotificationCenter.getInstance(accountNum).removeObserver(this, NotificationCenter.FileLoadProgressChanged);
         }
     }
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.FileDidLoaded) {
+        if (id == NotificationCenter.fileDidLoad) {
             String location = (String) args[0];
             if (fileName != null && fileName.equals(location)) {
                 showProgress(false);
                 openApkInstall((Activity) getContext(), appUpdate.document);
             }
-        } else if (id == NotificationCenter.FileDidFailedLoad) {
+        } else if (id == NotificationCenter.fileDidFailedLoad) {
             String location = (String) args[0];
             if (fileName != null && fileName.equals(location)) {
                 showProgress(false);
@@ -210,15 +201,11 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setTitle(LocaleController.getString("AppName", R.string.AppName));
             builder.setMessage(LocaleController.getString("ApkRestricted", R.string.ApkRestricted));
-            builder.setPositiveButton(LocaleController.getString("PermissionOpenSettings", R.string.PermissionOpenSettings), new DialogInterface.OnClickListener() {
-                @TargetApi(Build.VERSION_CODES.O)
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    try {
-                        context.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName())));
-                    } catch (Exception e) {
-                        FileLog.e(e);
-                    }
+            builder.setPositiveButton(LocaleController.getString("PermissionOpenSettings", R.string.PermissionOpenSettings), (dialogInterface, i) -> {
+                try {
+                    context.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + ApplicationLoader.applicationContext.getPackageName())));
+                } catch (Exception e) {
+                    FileLog.e(e);
                 }
             });
             builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
@@ -322,8 +309,8 @@ public class BlockingUpdateView extends FrameLayout implements NotificationCente
         } else {
             acceptTextView.setText(LocaleController.getString("Update", R.string.Update).toUpperCase());
         }
-        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.FileDidLoaded);
-        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.FileDidFailedLoad);
+        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.fileDidLoad);
+        NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.fileDidFailedLoad);
         NotificationCenter.getInstance(accountNum).addObserver(this, NotificationCenter.FileLoadProgressChanged);
     }
 }

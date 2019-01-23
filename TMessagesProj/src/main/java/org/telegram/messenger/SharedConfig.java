@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.messenger;
@@ -16,11 +16,14 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import org.json.JSONObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class SharedConfig {
 
@@ -46,6 +49,10 @@ public class SharedConfig {
     public static int suggestStickers;
     private static int lastLocalId = -210000;
 
+    private static String passportConfigJson = "";
+    private static HashMap<String, String> passportConfigMap;
+    public static int passportConfigHash;
+
     private static boolean configLoaded;
     private static final Object sync = new Object();
     private static final Object localIdSync = new Object();
@@ -62,6 +69,7 @@ public class SharedConfig {
     public static boolean streamMedia = true;
     public static boolean streamAllVideo = false;
     public static boolean saveStreamMedia = true;
+    public static boolean sortContactsByName;
     public static boolean shuffleMusic;
     public static boolean playOrderReversed;
     public static boolean hasCameraCache;
@@ -135,6 +143,9 @@ public class SharedConfig {
                 editor.putString("pushString2", pushString);
                 editor.putString("pushAuthKey", pushAuthKey != null ? Base64.encodeToString(pushAuthKey, Base64.DEFAULT) : "");
                 editor.putInt("lastLocalId", lastLocalId);
+                editor.putString("passportConfigJson", passportConfigJson);
+                editor.putInt("passportConfigHash", passportConfigHash);
+                editor.putBoolean("sortContactsByName", sortContactsByName);
                 editor.commit();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -172,6 +183,8 @@ public class SharedConfig {
             allowScreenCapture = preferences.getBoolean("allowScreenCapture", false);
             lastLocalId = preferences.getInt("lastLocalId", -210000);
             pushString = preferences.getString("pushString2", "");
+            passportConfigJson = preferences.getString("passportConfigJson", "");
+            passportConfigHash = preferences.getInt("passportConfigHash", 0);
             String authKeyString = preferences.getString("pushAuthKey", null);
             if (!TextUtils.isEmpty(authKeyString)) {
                 pushAuthKey = Base64.decode(authKeyString, Base64.DEFAULT);
@@ -209,6 +222,7 @@ public class SharedConfig {
             saveStreamMedia = preferences.getBoolean("saveStreamMedia", true);
             streamAllVideo = preferences.getBoolean("streamAllVideo", BuildVars.DEBUG_VERSION);
             suggestStickers = preferences.getInt("suggestStickers", 0);
+            sortContactsByName = preferences.getBoolean("sortContactsByName", false);
 
             configLoaded = true;
         }
@@ -240,6 +254,35 @@ public class SharedConfig {
             SharedConfig.lastUptimeMillis = SystemClock.elapsedRealtime();
         }
         saveConfig();
+    }
+
+    public static boolean isPassportConfigLoaded() {
+        return passportConfigMap != null;
+    }
+
+    public static void setPassportConfig(String json, int hash) {
+        passportConfigMap = null;
+        passportConfigJson = json;
+        passportConfigHash = hash;
+        saveConfig();
+        getCountryLangs();
+    }
+
+    public static HashMap<String, String> getCountryLangs() {
+        if (passportConfigMap == null) {
+            passportConfigMap = new HashMap<>();
+            try {
+                JSONObject object = new JSONObject(passportConfigJson);
+                Iterator<String> iter = object.keys();
+                while (iter.hasNext()) {
+                    String key = iter.next();
+                    passportConfigMap.put(key.toUpperCase(), object.getString(key).toUpperCase());
+                }
+            } catch (Throwable e) {
+                FileLog.e(e);
+            }
+        }
+        return passportConfigMap;
     }
 
     public static boolean checkPasscode(String passcode) {
@@ -387,6 +430,14 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("streamMedia", streamMedia);
+        editor.commit();
+    }
+
+    public static void toggleSortContactsByName() {
+        sortContactsByName = !sortContactsByName;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("sortContactsByName", sortContactsByName);
         editor.commit();
     }
 

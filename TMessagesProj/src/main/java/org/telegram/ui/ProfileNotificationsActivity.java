@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.ui;
@@ -13,7 +13,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Ringtone;
@@ -37,6 +36,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.NotificationCenter;
+import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.support.widget.LinearLayoutManager;
 import org.telegram.messenger.support.widget.RecyclerView;
@@ -159,11 +159,7 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
             if (hasOverride) {
                 notificationsEnabled = true;
             } else {
-                if ((int) dialog_id < 0) {
-                    notificationsEnabled = preferences.getBoolean("EnableGroup", true);
-                } else {
-                    notificationsEnabled = preferences.getBoolean("EnableAll", true);
-                }
+                notificationsEnabled = NotificationsController.getInstance(currentAccount).isGlobalNotificationsEnabled(dialog_id);
             }
         } else if (value == 1) {
             notificationsEnabled = true;
@@ -334,30 +330,21 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                             FileLog.e(e);
                         }
                     } else if (position == vibrateRow) {
-                        showDialog(AlertsCreator.createVibrationSelectDialog(getParentActivity(), ProfileNotificationsActivity.this, dialog_id, false, false, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (adapter != null) {
-                                    adapter.notifyItemChanged(vibrateRow);
-                                }
+                        showDialog(AlertsCreator.createVibrationSelectDialog(getParentActivity(), dialog_id, false, false, () -> {
+                            if (adapter != null) {
+                                adapter.notifyItemChanged(vibrateRow);
                             }
                         }));
                     } else if (position == callsVibrateRow) {
-                        showDialog(AlertsCreator.createVibrationSelectDialog(getParentActivity(), ProfileNotificationsActivity.this, dialog_id, "calls_vibrate_", new Runnable() {
-                            @Override
-                            public void run() {
-                                if (adapter != null) {
-                                    adapter.notifyItemChanged(callsVibrateRow);
-                                }
+                        showDialog(AlertsCreator.createVibrationSelectDialog(getParentActivity(), dialog_id, "calls_vibrate_", () -> {
+                            if (adapter != null) {
+                                adapter.notifyItemChanged(callsVibrateRow);
                             }
                         }));
                     } else if (position == priorityRow) {
-                        showDialog(AlertsCreator.createPrioritySelectDialog(getParentActivity(), ProfileNotificationsActivity.this, dialog_id, false, false, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (adapter != null) {
-                                    adapter.notifyItemChanged(priorityRow);
-                                }
+                        showDialog(AlertsCreator.createPrioritySelectDialog(getParentActivity(), dialog_id, -1, () -> {
+                            if (adapter != null) {
+                                adapter.notifyItemChanged(priorityRow);
                             }
                         }));
                     } else if (position == smartRow) {
@@ -416,49 +403,40 @@ public class ProfileNotificationsActivity extends BaseFragment implements Notifi
                             }
                         });
                         list.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(8));
-                        list.setOnItemClickListener(new RecyclerListView.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(View view, int position) {
-                                if (position < 0 || position >= 100) {
-                                    return;
-                                }
-                                int notifyMaxCount = position % 10 + 1;
-                                int notifyDelay = position / 10 + 1;
-                                SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
-                                preferences.edit().putInt("smart_max_count_" + dialog_id, notifyMaxCount).commit();
-                                preferences.edit().putInt("smart_delay_" + dialog_id, notifyDelay * 60).commit();
-                                if (adapter != null) {
-                                    adapter.notifyItemChanged(smartRow);
-                                }
-                                dismissCurrentDialig();
+                        list.setOnItemClickListener((view1, position1) -> {
+                            if (position1 < 0 || position1 >= 100) {
+                                return;
                             }
+                            int notifyMaxCount1 = position1 % 10 + 1;
+                            int notifyDelay1 = position1 / 10 + 1;
+                            SharedPreferences preferences1 = MessagesController.getNotificationsSettings(currentAccount);
+                            preferences1.edit().putInt("smart_max_count_" + dialog_id, notifyMaxCount1).commit();
+                            preferences1.edit().putInt("smart_delay_" + dialog_id, notifyDelay1 * 60).commit();
+                            if (adapter != null) {
+                                adapter.notifyItemChanged(smartRow);
+                            }
+                            dismissCurrentDialig();
                         });
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("SmartNotificationsAlert", R.string.SmartNotificationsAlert));
                         builder.setView(list);
                         builder.setPositiveButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                        builder.setNegativeButton(LocaleController.getString("SmartNotificationsDisabled", R.string.SmartNotificationsDisabled), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                SharedPreferences preferences = MessagesController.getNotificationsSettings(currentAccount);
-                                preferences.edit().putInt("smart_max_count_" + dialog_id, 0).commit();
-                                if (adapter != null) {
-                                    adapter.notifyItemChanged(smartRow);
-                                }
-                                dismissCurrentDialig();
+                        builder.setNegativeButton(LocaleController.getString("SmartNotificationsDisabled", R.string.SmartNotificationsDisabled), (dialog, which) -> {
+                            SharedPreferences preferences12 = MessagesController.getNotificationsSettings(currentAccount);
+                            preferences12.edit().putInt("smart_max_count_" + dialog_id, 0).commit();
+                            if (adapter != null) {
+                                adapter.notifyItemChanged(smartRow);
                             }
+                            dismissCurrentDialig();
                         });
                         showDialog(builder.create());
                     } else if (position == colorRow) {
                         if (getParentActivity() == null) {
                             return;
                         }
-                        showDialog(AlertsCreator.createColorSelectDialog(getParentActivity(), dialog_id, false, false, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (adapter != null) {
-                                    adapter.notifyItemChanged(colorRow);
-                                }
+                        showDialog(AlertsCreator.createColorSelectDialog(getParentActivity(), dialog_id, -1, () -> {
+                            if (adapter != null) {
+                                adapter.notifyItemChanged(colorRow);
                             }
                         }));
                     } else if (position == popupEnabledRow) {

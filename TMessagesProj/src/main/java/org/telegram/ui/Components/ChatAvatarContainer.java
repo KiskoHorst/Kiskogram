@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.ui.Components;
@@ -14,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
@@ -81,44 +80,37 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             timeItem.setScaleType(ImageView.ScaleType.CENTER);
             timeItem.setImageDrawable(timerDrawable = new TimerDrawable(context));
             addView(timeItem);
-            timeItem.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    parentFragment.showDialog(AlertsCreator.createTTLAlert(getContext(), parentFragment.getCurrentEncryptedChat()).create());
-                }
-            });
+            timeItem.setOnClickListener(v -> parentFragment.showDialog(AlertsCreator.createTTLAlert(getContext(), parentFragment.getCurrentEncryptedChat()).create()));
         }
 
         if (parentFragment != null) {
-            setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    TLRPC.User user = parentFragment.getCurrentUser();
-                    TLRPC.Chat chat = parentFragment.getCurrentChat();
-                    if (user != null) {
-                        Bundle args = new Bundle();
-                        if (UserObject.isUserSelf(user)) {
-                            args.putLong("dialog_id", parentFragment.getDialogId());
-                            MediaActivity fragment = new MediaActivity(args, new int[]{-1, -1, -1, -1, -1});
-                            fragment.setChatInfo(parentFragment.getCurrentChatInfo());
-                            parentFragment.presentFragment(fragment);
-                        } else {
-                            args.putInt("user_id", user.id);
-                            if (timeItem != null) {
-                                args.putLong("dialog_id", parentFragment.getDialogId());
-                            }
-                            ProfileActivity fragment = new ProfileActivity(args);
-                            fragment.setPlayProfileAnimation(true);
-                            parentFragment.presentFragment(fragment);
-                        }
-                    } else if (chat != null) {
-                        Bundle args = new Bundle();
-                        args.putInt("chat_id", chat.id);
-                        ProfileActivity fragment = new ProfileActivity(args);
+            setOnClickListener(v -> {
+                TLRPC.User user = parentFragment.getCurrentUser();
+                TLRPC.Chat chat = parentFragment.getCurrentChat();
+                if (user != null) {
+                    Bundle args = new Bundle();
+                    if (UserObject.isUserSelf(user)) {
+                        args.putLong("dialog_id", parentFragment.getDialogId());
+                        MediaActivity fragment = new MediaActivity(args, new int[]{-1, -1, -1, -1, -1});
                         fragment.setChatInfo(parentFragment.getCurrentChatInfo());
+                        parentFragment.presentFragment(fragment);
+                    } else {
+                        args.putInt("user_id", user.id);
+                        if (timeItem != null) {
+                            args.putLong("dialog_id", parentFragment.getDialogId());
+                        }
+                        ProfileActivity fragment = new ProfileActivity(args);
+                        fragment.setUserInfo(parentFragment.getCurrentUserInfo());
                         fragment.setPlayProfileAnimation(true);
                         parentFragment.presentFragment(fragment);
                     }
+                } else if (chat != null) {
+                    Bundle args = new Bundle();
+                    args.putInt("chat_id", chat.id);
+                    ProfileActivity fragment = new ProfileActivity(args);
+                    fragment.setChatInfo(parentFragment.getCurrentChatInfo());
+                    fragment.setPlayProfileAnimation(true);
+                    parentFragment.presentFragment(fragment);
                 }
             });
 
@@ -273,9 +265,9 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                 TLRPC.ChatFull info = parentFragment.getCurrentChatInfo();
                 if (ChatObject.isChannel(chat)) {
                     if (info != null && info.participants_count != 0) {
-                        if (chat.megagroup && info.participants_count <= 200) {
-                            if (onlineCount > 1 && info.participants_count != 0) {
-                                newSubtitle = String.format("%s, %s", LocaleController.formatPluralString("Members", info.participants_count), LocaleController.formatPluralString("OnlineCount", onlineCount));
+                        if (chat.megagroup) {
+                            if (onlineCount > 1) {
+                                newSubtitle = String.format("%s, %s", LocaleController.formatPluralString("Members", info.participants_count), LocaleController.formatPluralString("OnlineCount", Math.min(onlineCount, info.participants_count)));
                             } else {
                                 newSubtitle = LocaleController.formatPluralString("Members", info.participants_count);
                             }
@@ -353,7 +345,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         }
         avatarDrawable.setInfo(chat);
         if (avatarImageView != null) {
-            avatarImageView.setImage(newPhoto, "50_50", avatarDrawable);
+            avatarImageView.setImage(newPhoto, "50_50", avatarDrawable, chat);
         }
     }
 
@@ -367,7 +359,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
         }
 
         if (avatarImageView != null) {
-            avatarImageView.setImage(newPhoto, "50_50", avatarDrawable);
+            avatarImageView.setImage(newPhoto, "50_50", avatarDrawable, user);
         }
     }
 
@@ -376,6 +368,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             return;
         }
         TLRPC.FileLocation newPhoto = null;
+        Object parentObject = null;
         TLRPC.User user = parentFragment.getCurrentUser();
         TLRPC.Chat chat = parentFragment.getCurrentChat();
         if (user != null) {
@@ -385,14 +378,16 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
             } else if (user.photo != null) {
                 newPhoto = user.photo.photo_small;
             }
+            parentObject = user;
         } else if (chat != null) {
             if (chat.photo != null) {
                 newPhoto = chat.photo.photo_small;
             }
             avatarDrawable.setInfo(chat);
+            parentObject = chat;
         }
         if (avatarImageView != null) {
-            avatarImageView.setImage(newPhoto, "50_50", avatarDrawable);
+            avatarImageView.setImage(newPhoto, "50_50", avatarDrawable, parentObject);
         }
     }
 
@@ -414,6 +409,8 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
                     onlineCount++;
                 }
             }
+        } else if (info instanceof TLRPC.TL_channelFull && info.participants_count > 200) {
+            onlineCount = info.online_count;
         }
     }
 
@@ -421,7 +418,7 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         if (parentFragment != null) {
-            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdatedConnectionState);
+            NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
             currentConnectionState = ConnectionsManager.getInstance(currentAccount).getConnectionState();
             updateCurrentConnectionState();
         }
@@ -431,13 +428,13 @@ public class ChatAvatarContainer extends FrameLayout implements NotificationCent
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if (parentFragment != null) {
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdatedConnectionState);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
         }
     }
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.didUpdatedConnectionState) {
+        if (id == NotificationCenter.didUpdateConnectionState) {
             int state = ConnectionsManager.getInstance(currentAccount).getConnectionState();
             if (currentConnectionState != state) {
                 currentConnectionState = state;

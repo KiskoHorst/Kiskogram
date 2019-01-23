@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.ui.Components;
@@ -32,11 +32,12 @@ import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
-import org.telegram.messenger.exoplayer2.ui.AspectRatioFrameLayout;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.PhotoViewer;
 
@@ -69,12 +70,7 @@ public class PipVideoView {
         private boolean isCompleted;
         private float bufferedPosition;
 
-        private Runnable hideRunnable = new Runnable() {
-            @Override
-            public void run() {
-                show(false, true);
-            }
-        };
+        private Runnable hideRunnable = () -> show(false, true);
 
         private Runnable progressRunnable = new Runnable() {
             @Override
@@ -102,14 +98,11 @@ public class PipVideoView {
             inlineButton.setScaleType(ImageView.ScaleType.CENTER);
             inlineButton.setImageResource(R.drawable.ic_outinline);
             addView(inlineButton, LayoutHelper.createFrame(56, 48, Gravity.RIGHT | Gravity.TOP));
-            inlineButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (parentSheet != null) {
-                        parentSheet.exitFromPip();
-                    } else if (photoViewer != null) {
-                        photoViewer.exitFromPip();
-                    }
+            inlineButton.setOnClickListener(v -> {
+                if (parentSheet != null) {
+                    parentSheet.exitFromPip();
+                } else if (photoViewer != null) {
+                    photoViewer.exitFromPip();
                 }
             });
 
@@ -123,32 +116,24 @@ public class PipVideoView {
                 playButton = new ImageView(context);
                 playButton.setScaleType(ImageView.ScaleType.CENTER);
                 addView(playButton, LayoutHelper.createFrame(48, 48, Gravity.CENTER));
-                playButton.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (photoViewer == null) {
-                            return;
-                        }
-                        VideoPlayer videoPlayer = photoViewer.getVideoPlayer();
-                        if (videoPlayer == null) {
-                            return;
-                        }
-                        if (videoPlayer.isPlaying()) {
-                            videoPlayer.pause();
-                        } else {
-                            videoPlayer.play();
-                        }
-                        updatePlayButton();
+                playButton.setOnClickListener(v -> {
+                    if (photoViewer == null) {
+                        return;
                     }
+                    VideoPlayer videoPlayer = photoViewer.getVideoPlayer();
+                    if (videoPlayer == null) {
+                        return;
+                    }
+                    if (videoPlayer.isPlaying()) {
+                        videoPlayer.pause();
+                    } else {
+                        videoPlayer.play();
+                    }
+                    updatePlayButton();
                 });
             }
 
-            setOnTouchListener(new OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    return true;
-                }
-            });
+            setOnTouchListener((v, event) -> true);
             updatePlayButton();
             show(false, false);
         }

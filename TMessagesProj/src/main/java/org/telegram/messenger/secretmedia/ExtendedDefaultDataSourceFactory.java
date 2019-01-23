@@ -1,24 +1,24 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.messenger.secretmedia;
 
 import android.content.Context;
 
-import org.telegram.messenger.exoplayer2.upstream.DataSource;
-import org.telegram.messenger.exoplayer2.upstream.DefaultDataSource;
-import org.telegram.messenger.exoplayer2.upstream.DefaultHttpDataSourceFactory;
-import org.telegram.messenger.exoplayer2.upstream.TransferListener;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.upstream.TransferListener;
 
 public final class ExtendedDefaultDataSourceFactory implements DataSource.Factory {
 
     private final Context context;
-    private final TransferListener<? super DataSource> listener;
+    private final TransferListener listener;
     private final DataSource.Factory baseDataSourceFactory;
 
     /**
@@ -35,7 +35,7 @@ public final class ExtendedDefaultDataSourceFactory implements DataSource.Factor
      * @param listener An optional listener.
      */
     public ExtendedDefaultDataSourceFactory(Context context, String userAgent,
-                                    TransferListener<? super DataSource> listener) {
+                                    TransferListener listener) {
         this(context, listener, new DefaultHttpDataSourceFactory(userAgent, listener));
     }
 
@@ -46,7 +46,7 @@ public final class ExtendedDefaultDataSourceFactory implements DataSource.Factor
      *     for {@link DefaultDataSource}.
      * @see DefaultDataSource#DefaultDataSource(Context, TransferListener, DataSource)
      */
-    public ExtendedDefaultDataSourceFactory(Context context, TransferListener<? super DataSource> listener,
+    public ExtendedDefaultDataSourceFactory(Context context, TransferListener listener,
                                     DataSource.Factory baseDataSourceFactory) {
         this.context = context.getApplicationContext();
         this.listener = listener;

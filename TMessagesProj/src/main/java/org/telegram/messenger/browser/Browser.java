@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.messenger.browser;
@@ -12,7 +12,6 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.graphics.BitmapFactory;
@@ -40,8 +39,6 @@ import org.telegram.messenger.support.customtabsclient.shared.CustomTabsHelper;
 import org.telegram.messenger.support.customtabsclient.shared.ServiceConnection;
 import org.telegram.messenger.support.customtabsclient.shared.ServiceConnectionCallback;
 import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.RequestDelegate;
-import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
@@ -182,63 +179,39 @@ public class Browser {
             try {
                 String host = uri.getHost().toLowerCase();
                 if (host.equals("telegra.ph") || uri.toString().toLowerCase().contains("telegram.org/faq")) {
-                    final AlertDialog progressDialog[] = new AlertDialog[] {new AlertDialog(context, 1)};
+                    final AlertDialog progressDialog[] = new AlertDialog[] {new AlertDialog(context, 3)};
 
                     TLRPC.TL_messages_getWebPagePreview req = new TLRPC.TL_messages_getWebPagePreview();
                     req.message = uri.toString();
-                    final int reqId = ConnectionsManager.getInstance(UserConfig.selectedAccount).sendRequest(req, new RequestDelegate() {
-                        @Override
-                        public void run(final TLObject response, TLRPC.TL_error error) {
-                            AndroidUtilities.runOnUIThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        progressDialog[0].dismiss();
-                                    } catch (Throwable ignore) {
+                    final int reqId = ConnectionsManager.getInstance(UserConfig.selectedAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                        try {
+                            progressDialog[0].dismiss();
+                        } catch (Throwable ignore) {
 
-                                    }
-                                    progressDialog[0] = null;
-
-                                    boolean ok = false;
-                                    if (response instanceof TLRPC.TL_messageMediaWebPage) {
-                                        TLRPC.TL_messageMediaWebPage webPage = (TLRPC.TL_messageMediaWebPage) response;
-                                        if (webPage.webpage instanceof TLRPC.TL_webPage && webPage.webpage.cached_page != null) {
-                                            NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.openArticle, webPage.webpage, uri.toString());
-                                            ok = true;
-                                        }
-                                    }
-                                    if (!ok) {
-                                        openUrl(context, uri, allowCustom, false);
-                                    }
-                                }
-                            });
                         }
-                    });
-                    AndroidUtilities.runOnUIThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (progressDialog[0] == null) {
-                                return;
-                            }
-                            try {
-                                progressDialog[0].setMessage(LocaleController.getString("Loading", R.string.Loading));
-                                progressDialog[0].setCanceledOnTouchOutside(false);
-                                progressDialog[0].setCancelable(false);
-                                progressDialog[0].setButton(DialogInterface.BUTTON_NEGATIVE, LocaleController.getString("Cancel", R.string.Cancel), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        ConnectionsManager.getInstance(UserConfig.selectedAccount).cancelRequest(reqId, true);
-                                        try {
-                                            dialog.dismiss();
-                                        } catch (Exception e) {
-                                            FileLog.e(e);
-                                        }
-                                    }
-                                });
-                                progressDialog[0].show();
-                            } catch (Exception ignore) {
+                        progressDialog[0] = null;
 
+                        boolean ok = false;
+                        if (response instanceof TLRPC.TL_messageMediaWebPage) {
+                            TLRPC.TL_messageMediaWebPage webPage = (TLRPC.TL_messageMediaWebPage) response;
+                            if (webPage.webpage instanceof TLRPC.TL_webPage && webPage.webpage.cached_page != null) {
+                                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.openArticle, webPage.webpage, uri.toString());
+                                ok = true;
                             }
+                        }
+                        if (!ok) {
+                            openUrl(context, uri, allowCustom, false);
+                        }
+                    }));
+                    AndroidUtilities.runOnUIThread(() -> {
+                        if (progressDialog[0] == null) {
+                            return;
+                        }
+                        try {
+                            progressDialog[0].setOnCancelListener(dialog -> ConnectionsManager.getInstance(UserConfig.selectedAccount).cancelRequest(reqId, true));
+                            progressDialog[0].show();
+                        } catch (Exception ignore) {
+
                         }
                     }, 1000);
                     return;
@@ -336,6 +309,18 @@ public class Browser {
         return isInternalUri(Uri.parse(url), forceBrowser);
     }
 
+    public static boolean isPassportUrl(String url) {
+        try {
+            url = url.toLowerCase();
+            if (url.startsWith("tg:passport") || url.startsWith("tg://passport") || url.startsWith("tg:secureid") || url.contains("resolve") && url.contains("domain=telegrampassport")) {
+                return true;
+            }
+        } catch (Throwable ignore) {
+
+        }
+        return false;
+    }
+
     public static boolean isInternalUri(Uri uri, boolean forceBrowser[]) {
         String host = uri.getHost();
         host = host != null ? host.toLowerCase() : "";
@@ -353,7 +338,7 @@ public class Browser {
                 }
                 return true;
             }
-        } else if ("telegram.me".equals(host) || "t.me".equals(host) || "telesco.pe".equals(host)) {
+        } else if ("telegram.me".equals(host) || "t.me".equals(host)) {
             String path = uri.getPath();
             if (path != null && path.length() > 1) {
                 path = path.substring(1).toLowerCase();

@@ -1,15 +1,14 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
@@ -49,7 +48,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.blockedUsersDidLoaded);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.blockedUsersDidLoad);
         MessagesController.getInstance(currentAccount).getBlockedUsers(false);
         return true;
     }
@@ -58,7 +57,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.blockedUsersDidLoaded);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.blockedUsersDidLoad);
     }
 
     @Override
@@ -101,40 +100,31 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? RecyclerListView.SCROLLBAR_POSITION_LEFT : RecyclerListView.SCROLLBAR_POSITION_RIGHT);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        listView.setOnItemClickListener(new RecyclerListView.OnItemClickListener() {
-            @Override
-            public void onItemClick(View view, int position) {
-                if (position >= MessagesController.getInstance(currentAccount).blockedUsers.size()) {
-                    return;
-                }
-                Bundle args = new Bundle();
-                args.putInt("user_id", MessagesController.getInstance(currentAccount).blockedUsers.get(position));
-                presentFragment(new ProfileActivity(args));
+        listView.setOnItemClickListener((view, position) -> {
+            if (position >= MessagesController.getInstance(currentAccount).blockedUsers.size()) {
+                return;
             }
+            Bundle args = new Bundle();
+            args.putInt("user_id", MessagesController.getInstance(currentAccount).blockedUsers.keyAt(position));
+            presentFragment(new ProfileActivity(args));
         });
 
-        listView.setOnItemLongClickListener(new RecyclerListView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemClick(View view, int position) {
-                if (position >= MessagesController.getInstance(currentAccount).blockedUsers.size() || getParentActivity() == null) {
-                    return true;
-                }
-                selectedUserId = MessagesController.getInstance(currentAccount).blockedUsers.get(position);
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                CharSequence[] items = new CharSequence[]{LocaleController.getString("Unblock", R.string.Unblock)};
-                builder.setItems(items, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        if (i == 0) {
-                            MessagesController.getInstance(currentAccount).unblockUser(selectedUserId);
-                        }
-                    }
-                });
-                showDialog(builder.create());
-
+        listView.setOnItemLongClickListener((view, position) -> {
+            if (position >= MessagesController.getInstance(currentAccount).blockedUsers.size() || getParentActivity() == null) {
                 return true;
             }
+            selectedUserId = MessagesController.getInstance(currentAccount).blockedUsers.keyAt(position);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+            CharSequence[] items = new CharSequence[]{LocaleController.getString("Unblock", R.string.Unblock)};
+            builder.setItems(items, (dialogInterface, i) -> {
+                if (i == 0) {
+                    MessagesController.getInstance(currentAccount).unblockUser(selectedUserId);
+                }
+            });
+            showDialog(builder.create());
+
+            return true;
         });
 
         if (MessagesController.getInstance(currentAccount).loadingBlockedUsers) {
@@ -152,7 +142,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
             if ((mask & MessagesController.UPDATE_MASK_AVATAR) != 0 || (mask & MessagesController.UPDATE_MASK_NAME) != 0) {
                 updateVisibleRows(mask);
             }
-        } else if (id == NotificationCenter.blockedUsersDidLoaded) {
+        } else if (id == NotificationCenter.blockedUsersDidLoad) {
             emptyView.showTextView();
             if (listViewAdapter != null) {
                 listViewAdapter.notifyDataSetChanged();
@@ -199,7 +189,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
 
         @Override
         public int getItemCount() {
-            if (MessagesController.getInstance(currentAccount).blockedUsers.isEmpty()) {
+            if (MessagesController.getInstance(currentAccount).blockedUsers.size() == 0) {
                 return 0;
             }
             return MessagesController.getInstance(currentAccount).blockedUsers.size() + 1;
@@ -229,7 +219,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             if (holder.getItemViewType() == 0) {
-                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(MessagesController.getInstance(currentAccount).blockedUsers.get(position));
+                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(MessagesController.getInstance(currentAccount).blockedUsers.keyAt(position));
                 if (user != null) {
                     String number;
                     if (user.bot) {
@@ -255,16 +245,13 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
 
     @Override
     public ThemeDescription[] getThemeDescriptions() {
-        ThemeDescription.ThemeDescriptionDelegate cellDelegate = new ThemeDescription.ThemeDescriptionDelegate() {
-            @Override
-            public void didSetColor() {
-                if (listView != null) {
-                    int count = listView.getChildCount();
-                    for (int a = 0; a < count; a++) {
-                        View child = listView.getChildAt(a);
-                        if (child instanceof UserCell) {
-                            ((UserCell) child).update(0);
-                        }
+        ThemeDescription.ThemeDescriptionDelegate cellDelegate = () -> {
+            if (listView != null) {
+                int count = listView.getChildCount();
+                for (int a = 0; a < count; a++) {
+                    View child = listView.getChildAt(a);
+                    if (child instanceof UserCell) {
+                        ((UserCell) child).update(0);
                     }
                 }
             }
@@ -288,7 +275,7 @@ public class BlockedUsersActivity extends BaseFragment implements NotificationCe
                 new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
                 new ThemeDescription(listView, 0, new Class[]{UserCell.class}, new String[]{"statusColor"}, null, null, cellDelegate, Theme.key_windowBackgroundWhiteGrayText),
 
-                new ThemeDescription(listView, 0, new Class[]{UserCell.class}, null, new Drawable[]{Theme.avatar_photoDrawable, Theme.avatar_broadcastDrawable, Theme.avatar_savedDrawable}, null, Theme.key_avatar_text),
+                new ThemeDescription(listView, 0, new Class[]{UserCell.class}, null, new Drawable[]{Theme.avatar_broadcastDrawable, Theme.avatar_savedDrawable}, null, Theme.key_avatar_text),
                 new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundRed),
                 new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundOrange),
                 new ThemeDescription(null, 0, null, null, null, cellDelegate, Theme.key_avatar_backgroundViolet),

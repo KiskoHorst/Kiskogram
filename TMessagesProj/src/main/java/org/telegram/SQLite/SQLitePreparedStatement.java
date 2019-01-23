@@ -1,9 +1,9 @@
 /*
- * This is the source code of Telegram for Android v. 3.x.x.
+ * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
  * You should have received a copy of the license in this archive (see LICENSE).
  *
- * Copyright Nikolai Kudashov, 2013-2017.
+ * Copyright Nikolai Kudashov, 2013-2018.
  */
 
 package org.telegram.SQLite;
@@ -18,7 +18,7 @@ public class SQLitePreparedStatement {
 
     private boolean isFinalized = false;
     private long sqliteStatementHandle;
-    private boolean finalizeAfterQuery = false;
+    private boolean finalizeAfterQuery;
 
     //private static HashMap<SQLitePreparedStatement, String> hashMap;
 
@@ -53,7 +53,8 @@ public class SQLitePreparedStatement {
         reset(sqliteStatementHandle);
 
         int i = 1;
-        for (Object obj : args) {
+        for (int a = 0; a < args.length; a++) {
+            Object obj = args[a];
             if (obj == null) {
                 bindNull(sqliteStatementHandle, i);
             } else if (obj instanceof Integer) {
