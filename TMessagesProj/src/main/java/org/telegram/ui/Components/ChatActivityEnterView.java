@@ -751,7 +751,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
 //            emojiButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.INPUT_FIELD_SELECTOR_COLOR));
 //        }
         setEmojiButtonImage();
-        frameLayout.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 3, 0, 0, 0));
+        if (isChat) frameLayout.addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.BOTTOM | Gravity.LEFT, 3, 0, 0, 0));
         emojiButton.setOnClickListener(view -> {
             if (!isPopupShowing() || currentPopupContentType != 0) {
                 showPopup(1, 0);
@@ -842,7 +842,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         messageEditText.setTextColor(Theme.getColor(Theme.key_chat_messagePanelText));
         messageEditText.setHintColor(Theme.getColor(Theme.key_chat_messagePanelHint));
         messageEditText.setHintTextColor(Theme.getColor(Theme.key_chat_messagePanelHint));
-        frameLayout.addView(messageEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 52, 0, isChat ? 50 : 2, 0));
+        frameLayout.addView(messageEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, isChat ? 52 : 8, 0, isChat ? 50 : 2, 0));
         messageEditText.setOnKeyListener(new OnKeyListener() {
 
             boolean ctrlPressed = false;

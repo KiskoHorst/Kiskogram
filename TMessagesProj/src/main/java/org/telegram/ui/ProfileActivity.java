@@ -144,7 +144,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private boolean playProfileAnimation;
     private boolean allowProfileAnimation = true;
     private int extraHeight;
-    private View toolbarbg;
     private int initialAnimationExtraHeight;
     private float animationProgress;
 
@@ -303,7 +302,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public boolean onFragmentCreate() {
-
         user_id = arguments.getInt("user_id", 0);
         chat_id = arguments.getInt("chat_id", 0);
         banFromGroup = arguments.getInt("ban_chat_id", 0);
@@ -1005,12 +1003,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
         topView = new TopView(context);
         topView.setBackgroundColor(AvatarDrawable.getProfileBackColorForId(user_id != 0 || ChatObject.isChannel(chat_id, currentAccount) && !currentChat.megagroup ? 5 : chat_id));
-
-        if (Build.VERSION.SDK_INT >= 21) {
-            actionBar.setElevation(AndroidUtilities.dp(9.0f));
-            topView.setElevation(AndroidUtilities.dp(9.0f));
-        }
-
         frameLayout.addView(topView);
 
         frameLayout.addView(actionBar);
@@ -1019,9 +1011,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarImage.setRoundRadius(AndroidUtilities.dp(21));
         avatarImage.setPivotX(0);
         avatarImage.setPivotY(0);
-        if (Build.VERSION.SDK_INT >= 21) {
-            avatarImage.setElevation(AndroidUtilities.dp(9.0f));
-        }
         frameLayout.addView(avatarImage, LayoutHelper.createFrame(42, 42, Gravity.TOP | Gravity.LEFT, 64, 0, 0, 0));
         avatarImage.setOnClickListener(v -> {
             if (user_id != 0) {
@@ -1050,9 +1039,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 nameTextView[a].setTextColor(Theme.getColor(Theme.key_actionBarDefaultTitle));
             }
             nameTextView[a].setTextSize(18);
-            if (Build.VERSION.SDK_INT >= 21) {
-                nameTextView[a].setElevation(AndroidUtilities.dp(9.0f));
-            }
             nameTextView[a].setGravity(Gravity.LEFT);
             nameTextView[a].setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             nameTextView[a].setLeftDrawableTopPadding(-AndroidUtilities.dp(1.3f));
@@ -1064,9 +1050,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[a] = new SimpleTextView(context);
             onlineTextView[a].setTextColor(AvatarDrawable.getProfileTextColorForId(user_id != 0 || ChatObject.isChannel(chat_id, currentAccount) && !currentChat.megagroup ? 5 : chat_id));
             onlineTextView[a].setTextSize(14);
-            if (Build.VERSION.SDK_INT >= 21) {
-                onlineTextView[a].setElevation(AndroidUtilities.dp(9.0f));
-            }
             onlineTextView[a].setGravity(Gravity.LEFT);
             onlineTextView[a].setAlpha(a == 0 ? 0.0f : 1.0f);
             frameLayout.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 118, 0, a == 0 ? 48 : 8, 0));
@@ -1088,8 +1071,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             writeButton.setScaleType(ImageView.ScaleType.CENTER);
             if (Build.VERSION.SDK_INT >= 21) {
                 StateListAnimator animator = new StateListAnimator();
-                animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(9), AndroidUtilities.dp(11)).setDuration(200));
-                animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(11), AndroidUtilities.dp(9)).setDuration(200));
+                animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
+                animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
                 writeButton.setStateListAnimator(animator);
                 writeButton.setOutlineProvider(new ViewOutlineProvider() {
                     @SuppressLint("NewApi")
@@ -1407,9 +1390,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private void needLayout() {
         FrameLayout.LayoutParams layoutParams;
         int newTop = (actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight();
-
-        if (Build.VERSION.SDK_INT >= 21) toolbarbg.setTranslationY((actionBar.getOccupyStatusBar() ? AndroidUtilities.statusBarHeight : 0) + ActionBar.getCurrentActionBarHeight() + extraHeight-AndroidUtilities.dp(8f));
-
         if (listView != null && !openAnimationInProgress) {
             layoutParams = (FrameLayout.LayoutParams) listView.getLayoutParams();
             if (layoutParams.topMargin != newTop) {

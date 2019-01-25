@@ -1,3 +1,4 @@
+
 /*
  * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
@@ -8,109 +9,109 @@
 
 package org.telegram.ui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
-import android.animation.StateListAnimator;
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.res.Configuration;
-import android.graphics.Canvas;
-import android.graphics.Outline;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.content.FileProvider;
-import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextUtils;
-import android.text.method.LinkMovementMethod;
-import android.text.style.URLSpan;
-import android.util.Base64;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewOutlineProvider;
-import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
+        import android.animation.Animator;
+        import android.animation.AnimatorListenerAdapter;
+        import android.animation.AnimatorSet;
+        import android.animation.ObjectAnimator;
+        import android.animation.StateListAnimator;
+        import android.annotation.SuppressLint;
+        import android.content.Context;
+        import android.content.Intent;
+        import android.content.SharedPreferences;
+        import android.content.pm.PackageInfo;
+        import android.content.res.Configuration;
+        import android.graphics.Canvas;
+        import android.graphics.Outline;
+        import android.graphics.Paint;
+        import android.graphics.PorterDuff;
+        import android.graphics.PorterDuffColorFilter;
+        import android.graphics.drawable.Drawable;
+        import android.net.Uri;
+        import android.os.Build;
+        import android.os.Bundle;
+        import android.support.annotation.NonNull;
+        import android.support.v4.content.FileProvider;
+        import android.text.Html;
+        import android.text.Spannable;
+        import android.text.SpannableString;
+        import android.text.TextUtils;
+        import android.text.method.LinkMovementMethod;
+        import android.text.style.URLSpan;
+        import android.util.Base64;
+        import android.util.TypedValue;
+        import android.view.Gravity;
+        import android.view.MotionEvent;
+        import android.view.View;
+        import android.view.ViewGroup;
+        import android.view.ViewOutlineProvider;
+        import android.view.ViewTreeObserver;
+        import android.view.animation.AccelerateInterpolator;
+        import android.view.animation.DecelerateInterpolator;
+        import android.widget.FrameLayout;
+        import android.widget.ImageView;
+        import android.widget.LinearLayout;
+        import android.widget.TextView;
+        import android.widget.Toast;
 
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.PhoneFormat.PhoneFormat;
-import org.telegram.messenger.BuildConfig;
-import org.telegram.messenger.ContactsController;
-import org.telegram.messenger.DataQuery;
-import org.telegram.messenger.ImageLoader;
-import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.UserObject;
-import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.BuildVars;
-import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.Utilities;
-import org.telegram.messenger.browser.Browser;
-import org.telegram.messenger.support.widget.LinearLayoutManager;
-import org.telegram.messenger.support.widget.RecyclerView;
-import org.telegram.tgnet.ConnectionsManager;
-import org.telegram.tgnet.SerializedData;
-import org.telegram.tgnet.TLRPC;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.MessagesController;
-import org.telegram.messenger.MessagesStorage;
-import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
-import org.telegram.messenger.UserConfig;
-import org.telegram.messenger.MessageObject;
-import org.telegram.ui.ActionBar.AlertDialog;
-import org.telegram.ui.ActionBar.BottomSheet;
-import org.telegram.ui.ActionBar.ThemeDescription;
-import org.telegram.ui.Cells.EmptyCell;
-import org.telegram.ui.Cells.HeaderCell;
-import org.telegram.ui.Cells.ShadowSectionCell;
-import org.telegram.ui.Cells.TextCell;
-import org.telegram.ui.Cells.TextDetailCell;
-import org.telegram.ui.Cells.TextInfoPrivacyCell;
-import org.telegram.ui.ActionBar.ActionBar;
-import org.telegram.ui.ActionBar.ActionBarMenu;
-import org.telegram.ui.ActionBar.ActionBarMenuItem;
-import org.telegram.ui.Components.AvatarDrawable;
-import org.telegram.ui.Components.ImageUpdater;
-import org.telegram.ui.Components.BackupImageView;
-import org.telegram.ui.ActionBar.BaseFragment;
-import org.telegram.ui.Components.CombinedDrawable;
-import org.telegram.ui.Components.LayoutHelper;
-import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Components.RadialProgressView;
-import org.telegram.ui.Components.RecyclerListView;
-import org.telegram.ui.Components.URLSpanNoUnderline;
-import org.telegram.ui.Components.voip.VoIPHelper;
+        import org.telegram.messenger.AndroidUtilities;
+        import org.telegram.PhoneFormat.PhoneFormat;
+        import org.telegram.messenger.BuildConfig;
+        import org.telegram.messenger.ContactsController;
+        import org.telegram.messenger.DataQuery;
+        import org.telegram.messenger.ImageLoader;
+        import org.telegram.messenger.SharedConfig;
+        import org.telegram.messenger.UserObject;
+        import org.telegram.messenger.ApplicationLoader;
+        import org.telegram.messenger.BuildVars;
+        import org.telegram.messenger.LocaleController;
+        import org.telegram.messenger.FileLoader;
+        import org.telegram.messenger.Utilities;
+        import org.telegram.messenger.browser.Browser;
+        import org.telegram.messenger.support.widget.LinearLayoutManager;
+        import org.telegram.messenger.support.widget.RecyclerView;
+        import org.telegram.tgnet.ConnectionsManager;
+        import org.telegram.tgnet.SerializedData;
+        import org.telegram.tgnet.TLRPC;
+        import org.telegram.messenger.FileLog;
+        import org.telegram.messenger.MessagesController;
+        import org.telegram.messenger.MessagesStorage;
+        import org.telegram.messenger.NotificationCenter;
+        import org.telegram.messenger.R;
+        import org.telegram.messenger.UserConfig;
+        import org.telegram.messenger.MessageObject;
+        import org.telegram.ui.ActionBar.AlertDialog;
+        import org.telegram.ui.ActionBar.BottomSheet;
+        import org.telegram.ui.ActionBar.ThemeDescription;
+        import org.telegram.ui.Cells.EmptyCell;
+        import org.telegram.ui.Cells.HeaderCell;
+        import org.telegram.ui.Cells.ShadowSectionCell;
+        import org.telegram.ui.Cells.TextCell;
+        import org.telegram.ui.Cells.TextDetailCell;
+        import org.telegram.ui.Cells.TextInfoPrivacyCell;
+        import org.telegram.ui.ActionBar.ActionBar;
+        import org.telegram.ui.ActionBar.ActionBarMenu;
+        import org.telegram.ui.ActionBar.ActionBarMenuItem;
+        import org.telegram.ui.Components.AvatarDrawable;
+        import org.telegram.ui.Components.ImageUpdater;
+        import org.telegram.ui.Components.BackupImageView;
+        import org.telegram.ui.ActionBar.BaseFragment;
+        import org.telegram.ui.Components.CombinedDrawable;
+        import org.telegram.ui.Components.LayoutHelper;
+        import org.telegram.ui.ActionBar.Theme;
+        import org.telegram.ui.Components.RadialProgressView;
+        import org.telegram.ui.Components.RecyclerListView;
+        import org.telegram.ui.Components.URLSpanNoUnderline;
+        import org.telegram.ui.Components.voip.VoIPHelper;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+        import java.io.BufferedInputStream;
+        import java.io.BufferedOutputStream;
+        import java.io.File;
+        import java.io.FileInputStream;
+        import java.io.FileOutputStream;
+        import java.util.ArrayList;
+        import java.util.Locale;
+        import java.util.zip.ZipEntry;
+        import java.util.zip.ZipOutputStream;
 
 public class SettingsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, ImageUpdater.ImageUpdaterDelegate {
 
@@ -145,8 +146,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     private int bioRow;
     private int settingsSectionRow;
     private int settingsSectionRow2;
-    private int enableAnimationsRow;
-    private int KG_ExtraPinsRow;
     private int notificationRow;
     private int languageRow;
     private int privacyRow;
@@ -230,7 +229,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         dataRow = rowCount++;
         chatRow = rowCount++;
         languageRow = rowCount++;
-        KG_ExtraPinsRow = rowCount++;
         helpRow = rowCount++;
         versionRow = rowCount++;
 
@@ -254,13 +252,15 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     }
 
     @Override
-    public View createView(final Context context) {
+    public View createView(Context context) {
         actionBar.setBackgroundColor(Theme.getColor(Theme.key_avatar_backgroundActionBarBlue));
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_avatar_actionBarSelectorBlue), false);
         actionBar.setItemsColor(Theme.getColor(Theme.key_avatar_actionBarIconBlue), false);
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAddToContainer(false);
-        extraHeight = 88;
+        if (Build.VERSION.SDK_INT >= 21) {
+            actionBar.setElevation(0);
+        }
         if (AndroidUtilities.isTablet()) {
             actionBar.setOccupyStatusBar(false);
         }
@@ -505,6 +505,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 if (position == versionRow) {
                     pressCount++;
                     if (pressCount >= 2 || BuildVars.DEBUG_PRIVATE_VERSION) {
+                        SharedPreferences preferences2 = ApplicationLoader.applicationContext.getSharedPreferences("Kiskogram", android.app.Activity.MODE_PRIVATE);
                         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                         builder.setTitle(LocaleController.getString("DebugMenu", R.string.DebugMenu));
                         CharSequence[] items;
@@ -517,6 +518,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                                 SharedConfig.inappCamera ? LocaleController.getString("DebugMenuDisableCamera", R.string.DebugMenuDisableCamera) : LocaleController.getString("DebugMenuEnableCamera", R.string.DebugMenuEnableCamera),
                                 LocaleController.getString("DebugMenuClearMediaCache", R.string.DebugMenuClearMediaCache),
                                 LocaleController.getString("DebugMenuCallSettings", R.string.DebugMenuCallSettings),
+                                "Kiskogram: "+(preferences2.getBoolean("KG_ExtraPins", false) ? "Disable":"Enable")+" infinite pins",
                                 null,
                                 BuildVars.DEBUG_PRIVATE_VERSION ? "Check for app updates" : null
                         };
@@ -542,8 +544,13 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                             } else if (which == 7) {
                                 VoIPHelper.showCallDebugSettings(getParentActivity());
                             } else if (which == 8) {
-                                SharedConfig.toggleRoundCamera16to9();
+                                boolean pins = preferences2.getBoolean("KG_ExtraPins", false);
+                                SharedPreferences.Editor editor = preferences2.edit();
+                                editor.putBoolean("KG_ExtraPins", !pins);
+                                editor.commit();
                             } else if (which == 9) {
+                                SharedConfig.toggleRoundCamera16to9();
+                            } else if (which == 10) {
                                 ((LaunchActivity) getParentActivity()).checkAppUpdate(true);
                             }
                         });
@@ -567,14 +574,11 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         extraHeightView = new View(context);
         extraHeightView.setPivotY(0);
         extraHeightView.setBackgroundColor(Theme.getColor(Theme.key_avatar_backgroundActionBarBlue));
-        if (Build.VERSION.SDK_INT >= 21) {
-            extraHeightView.setElevation(AndroidUtilities.dp(4.0f));
-        }
         frameLayout.addView(extraHeightView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 88));
 
         shadowView = new View(context);
         shadowView.setBackgroundResource(R.drawable.header_shadow);
-        //frameLayout.addView(shadowView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3));
+        frameLayout.addView(shadowView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 3));
 
         avatarContainer = new FrameLayout(context);
         avatarContainer.setPivotX(LocaleController.isRTL ? AndroidUtilities.dp(42) : 0);
@@ -639,7 +643,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         onlineTextView.setMaxLines(1);
         onlineTextView.setSingleLine(true);
         onlineTextView.setEllipsize(TextUtils.TruncateAt.END);
-
         onlineTextView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
         frameLayout.addView(onlineTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 48 : 118, 0, LocaleController.isRTL ? 118 : 48, 0));
 
@@ -653,13 +656,13 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             drawable = combinedDrawable;
         }
         writeButton.setBackgroundDrawable(drawable);
-        writeButton.setImageResource(R.drawable.menu_camera_av);
+        writeButton.setImageResource(R.drawable.floating_camera);
         writeButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_profile_actionIcon), PorterDuff.Mode.MULTIPLY));
         writeButton.setScaleType(ImageView.ScaleType.CENTER);
         if (Build.VERSION.SDK_INT >= 21) {
             StateListAnimator animator = new StateListAnimator();
-            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(6)).setDuration(200));
-            animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(6), AndroidUtilities.dp(4)).setDuration(200));
+            animator.addState(new int[]{android.R.attr.state_pressed}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(2), AndroidUtilities.dp(4)).setDuration(200));
+            animator.addState(new int[]{}, ObjectAnimator.ofFloat(writeButton, "translationZ", AndroidUtilities.dp(4), AndroidUtilities.dp(2)).setDuration(200));
             writeButton.setStateListAnimator(animator);
             writeButton.setOutlineProvider(new ViewOutlineProvider() {
                 @SuppressLint("NewApi")
@@ -1211,8 +1214,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                         textCell.setTextAndIcon(LocaleController.getString("DataSettings", R.string.DataSettings), R.drawable.menu_data, true);
                     } else if (position == chatRow) {
                         textCell.setTextAndIcon(LocaleController.getString("ChatSettings", R.string.ChatSettings), R.drawable.menu_chats, true);
-					} else if (position == KG_ExtraPinsRow) {
-                        textCell.setTextAndCheck(LocaleController.getString("KG_ExtraPins", R.string.KG_ExtraPins), preferences2.getBoolean("KG_ExtraPins", false), false);
                     } else if (position == helpRow) {
                         textCell.setTextAndIcon(LocaleController.getString("SettingsHelp", R.string.SettingsHelp), R.drawable.menu_help, false);
                     }
@@ -1267,7 +1268,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             return position == notificationRow || position == numberRow || position == privacyRow ||
                     position == languageRow || position == usernameRow || position == bioRow ||
                     position == versionRow || position == dataRow || position == chatRow ||
-                    position == helpRow || position == KG_ExtraPinsRow;
+                    position == helpRow;
         }
 
         @Override
@@ -1297,7 +1298,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     cell.setBackgroundDrawable(Theme.getThemedDrawable(mContext, R.drawable.greydivider_bottom, Theme.key_windowBackgroundGrayShadow));
                     try {
                         PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-                        int code = (int)Math.floor(pInfo.versionCode / 100);
+                        int code = pInfo.versionCode / 100;
                         String abi = "";
                         switch (pInfo.versionCode % 10) {
                             case 1:

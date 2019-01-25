@@ -258,13 +258,13 @@ public class LocaleController {
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
 
-        localeInfo = new LocaleInfo();
-        localeInfo.name = "Suomi";
-        localeInfo.nameEnglish = "Finnish";
-        localeInfo.shortName = "fi";
-        localeInfo.pathToFile = null;
-        languages.add(localeInfo);
-        languagesDict.put(localeInfo.shortName, localeInfo);
+        //localeInfo = new LocaleInfo();
+        //localeInfo.name = "Suomi";
+        //localeInfo.nameEnglish = "Finnish";
+        //localeInfo.shortName = "fi";
+        //localeInfo.pathToFile = null;
+        //languages.add(localeInfo);
+        //languagesDict.put(localeInfo.shortName, localeInfo);
 
         localeInfo = new LocaleInfo();
         localeInfo.name = "Italiano";

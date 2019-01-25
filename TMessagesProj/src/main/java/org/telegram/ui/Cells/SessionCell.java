@@ -53,18 +53,14 @@ public class SessionCell extends LinearLayout {
         LinearLayout linearLayout = new LinearLayout(context);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         linearLayout.setWeightSum(1);
-
+        addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 14 : 20), 11, (LocaleController.isRTL ? 20 : 14), 4));
         if (type == 1) {
-            addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 30, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 15 : 49), 11, (LocaleController.isRTL ? 49 : 15), 0));
-
             avatarDrawable = new AvatarDrawable();
             avatarDrawable.setTextSize(AndroidUtilities.dp(10));
 
             imageView = new BackupImageView(context);
             imageView.setRoundRadius(AndroidUtilities.dp(10));
-            addView(imageView, LayoutHelper.createFrame(20, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 0 : 21), 13, (LocaleController.isRTL ? 21 : 0), 0));
-        } else {
-            addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 30, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 15 : 21), 11, (LocaleController.isRTL ? 21 : 15), 0));
+            linearLayout.addView(imageView, LayoutHelper.createFrame(20, 20, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 6 : 0), 2, (LocaleController.isRTL ? 0 : 6), 2));
         }
 
         nameTextView = new TextView(context);
@@ -94,7 +90,7 @@ public class SessionCell extends LinearLayout {
         detailTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         detailTextView.setEllipsize(TextUtils.TruncateAt.END);
         detailTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        detailTextView.setPadding(AndroidUtilities.dp(16f),0,AndroidUtilities.dp(16f),0);
+        detailTextView.setPadding(AndroidUtilities.dp(20f),0,AndroidUtilities.dp(20f),0);
         addView(detailTextView);
 
         detailExTextView = new TextView(context);
@@ -102,7 +98,7 @@ public class SessionCell extends LinearLayout {
         detailExTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         detailExTextView.setEllipsize(TextUtils.TruncateAt.END);
         detailExTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        detailExTextView.setPadding(AndroidUtilities.dp(16f),AndroidUtilities.dp(2f),AndroidUtilities.dp(16f),AndroidUtilities.dp(14f));
+        detailExTextView.setPadding(AndroidUtilities.dp(20f),AndroidUtilities.dp(2f),AndroidUtilities.dp(20f),AndroidUtilities.dp(14f));
         addView(detailExTextView);
     }
 

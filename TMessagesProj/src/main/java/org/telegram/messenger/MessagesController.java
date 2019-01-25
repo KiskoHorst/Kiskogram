@@ -223,7 +223,6 @@ public class MessagesController implements NotificationCenter.NotificationCenter
     public int webFileDatacenterId;
     public String suggestedLangCode;
     private String installReferer;
-	public boolean extraPins;
 
     private SharedPreferences notificationsPreferences;
     private SharedPreferences mainPreferences;
@@ -401,7 +400,6 @@ public class MessagesController implements NotificationCenter.NotificationCenter
         callConnectTimeout = mainPreferences.getInt("callConnectTimeout", 30000);
         callPacketTimeout = mainPreferences.getInt("callPacketTimeout", 10000);
         maxPinnedDialogsCount = mainPreferences.getInt("maxPinnedDialogsCount", 5);
-		extraPins = kiskogramPreferences.getBoolean("KG_ExtraPins", false);
         maxMessageLength = mainPreferences.getInt("maxMessageLength", 4096);
         maxCaptionLength = mainPreferences.getInt("maxCaptionLength", 1024);
         mapProvider = mainPreferences.getInt("mapProvider", 0);
@@ -6855,7 +6853,7 @@ public class MessagesController implements NotificationCenter.NotificationCenter
                 count++;
             }
         }
-        return (count < maxPinnedDialogsCount || extraPins);
+        return (count < maxPinnedDialogsCount || kiskogramPreferences.getBoolean("KG_ExtraPins", false));
     }
 
     public void markDialogAsUnread(long did, TLRPC.InputPeer peer, long taskId) {

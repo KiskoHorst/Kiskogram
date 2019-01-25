@@ -109,7 +109,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
         emojiButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         emojiButton.setImageResource(R.drawable.ic_smile_small);
         emojiButton.setPadding(0, 0, 0, AndroidUtilities.dp(7));
-        addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT), 0, 0, 0, 0));
+        //addView(emojiButton, LayoutHelper.createFrame(48, 48, Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT), 0, 0, 0, 0));
         emojiButton.setOnClickListener(view -> {
             if (!emojiButton.isEnabled()) {
                 return;
@@ -136,11 +136,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     public void setEnabled(boolean enabled) {
         editText.setEnabled(enabled);
         emojiButton.setVisibility(enabled ? VISIBLE : GONE);
-        if (enabled) {
-            editText.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(40) : 0, 0, LocaleController.isRTL ? 0 : AndroidUtilities.dp(40), AndroidUtilities.dp(8));
-        } else {
-            editText.setPadding(0, 0, 0, AndroidUtilities.dp(8));
-        }
+        editText.setPadding(0, 0, 0, AndroidUtilities.dp(8));
     }
 
     @Override
