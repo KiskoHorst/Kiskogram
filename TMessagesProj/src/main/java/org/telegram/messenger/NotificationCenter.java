@@ -8,7 +8,7 @@
 
 package org.telegram.messenger;
 
-import android.support.annotation.UiThread;
+import androidx.annotation.UiThread;
 import android.util.SparseArray;
 
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ public class NotificationCenter {
     public static final int messagesReadEncrypted = totalEvents++;
     public static final int encryptedChatCreated = totalEvents++;
     public static final int dialogPhotosLoaded = totalEvents++;
+    public static final int folderBecomeEmpty = totalEvents++;
     public static final int removeAllMessagesFromDialog = totalEvents++;
     public static final int notificationsSettingsUpdated = totalEvents++;
     public static final int blockedUsersDidLoad = totalEvents++;
@@ -87,6 +88,7 @@ public class NotificationCenter {
     public static final int updateMentionsCount = totalEvents++;
     public static final int didUpdatePollResults = totalEvents++;
     public static final int chatOnlineCountDidLoad = totalEvents++;
+    public static final int videoLoadingStateChanged = totalEvents++;
 
     public static final int httpFileDidLoad = totalEvents++;
     public static final int httpFileDidFailedLoad = totalEvents++;
@@ -110,6 +112,7 @@ public class NotificationCenter {
     public static final int messagePlayingPlayStateChanged = totalEvents++;
     public static final int messagePlayingDidStart = totalEvents++;
     public static final int messagePlayingDidSeek = totalEvents++;
+    public static final int messagePlayingGoingToStop = totalEvents++;
     public static final int recordProgressChanged = totalEvents++;
     public static final int recordStarted = totalEvents++;
     public static final int recordStartError = totalEvents++;
@@ -130,6 +133,8 @@ public class NotificationCenter {
 
     public static final int needDeleteDialog = totalEvents++;
 
+    public static final int newEmojiSuggestionsAvailable = totalEvents++;
+
     //global
     public static final int pushMessagesUpdated = totalEvents++;
     public static final int stopEncodingService = totalEvents++;
@@ -142,6 +147,7 @@ public class NotificationCenter {
     public static final int cameraInitied = totalEvents++;
     public static final int didReplacedPhotoInMemCache = totalEvents++;
     public static final int didSetNewTheme = totalEvents++;
+    public static final int themeListUpdated = totalEvents++;
     public static final int needSetDayNightTheme = totalEvents++;
     public static final int locationPermissionGranted = totalEvents++;
     public static final int reloadInterface = totalEvents++;

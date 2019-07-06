@@ -17,7 +17,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -27,12 +26,14 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ContactsController;
+import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SendMessagesHelper;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.voip.VoIPController;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.RequestDelegate;
@@ -58,7 +59,7 @@ public class VoIPHelper{
 
 	private static final int VOIP_SUPPORT_ID=4244000;
 
-	public static void startCall(TLRPC.User user, final Activity activity, TLRPC.TL_userFull userFull){
+	public static void startCall(TLRPC.User user, final Activity activity, TLRPC.UserFull userFull){
 		if(userFull!=null && userFull.phone_calls_private){
 			new AlertDialog.Builder(activity)
 					.setTitle(LocaleController.getString("VoipFailed", R.string.VoipFailed))
@@ -212,14 +213,14 @@ public class VoIPHelper{
 			if(d[0].equals(call.call_id+"")){
 				try{
 					long accessHash=Long.parseLong(d[1]);
-					showRateAlert(context, null, call.call_id, accessHash, UserConfig.selectedAccount);
+					showRateAlert(context, null, call.call_id, accessHash, UserConfig.selectedAccount, true);
 				}catch(Exception x){}
 				return;
 			}
 		}
 	}
 
-	public static void showRateAlert(final Context context, final Runnable onDismiss, final long callID, final long accessHash, final int account){
+	public static void showRateAlert(final Context context, final Runnable onDismiss, final long callID, final long accessHash, final int account, final boolean userInitiative){
 		final File log=getLogFile(callID);
 		final int[] page={0};
 		LinearLayout alertView=new LinearLayout(context);
@@ -397,6 +398,7 @@ public class VoIPHelper{
 					req.peer=new TLRPC.TL_inputPhoneCall();
 					req.peer.access_hash=accessHash;
 					req.peer.id=callID;
+					req.user_initiative=userInitiative;
 					ConnectionsManager.getInstance(account).sendRequest(req, new RequestDelegate(){
 						@Override
 						public void run(TLObject response, TLRPC.TL_error error){
@@ -505,5 +507,23 @@ public class VoIPHelper{
 				.setTitle(LocaleController.getString("DebugMenuCallSettings", R.string.DebugMenuCallSettings))
 				.setView(ll)
 				.show();
+	}
+
+	public static int getDataSavingDefault(){
+		boolean low=DownloadController.getInstance(0).lowPreset.lessCallData,
+				medium=DownloadController.getInstance(0).mediumPreset.lessCallData,
+				high=DownloadController.getInstance(0).highPreset.lessCallData;
+		if(!low && !medium && !high){
+			return VoIPController.DATA_SAVING_NEVER;
+		}else if(low && !medium && !high){
+			return VoIPController.DATA_SAVING_ROAMING;
+		}else if(low && medium && !high){
+			return VoIPController.DATA_SAVING_MOBILE;
+		}else if(low && medium && high){
+			return VoIPController.DATA_SAVING_ALWAYS;
+		}
+		if(BuildVars.LOGS_ENABLED)
+			FileLog.w("Invalid call data saving preset configuration: "+low+"/"+medium+"/"+high);
+		return VoIPController.DATA_SAVING_NEVER;
 	}
 }

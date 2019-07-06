@@ -9,7 +9,7 @@
 package org.telegram.messenger;
 
 import android.net.Uri;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.upstream.BaseDataSource;
@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.concurrent.CountDownLatch;
 
-public class FileStreamLoadOperation extends BaseDataSource {
+public class FileStreamLoadOperation extends BaseDataSource implements FileLoadOperationStream {
 
     private FileLoadOperation loadOperation;
 
@@ -76,8 +76,10 @@ public class FileStreamLoadOperation extends BaseDataSource {
         }
         opened = true;
         transferStarted(dataSpec);
-        file = new RandomAccessFile(loadOperation.getCurrentFile(), "r");
-        file.seek(currentOffset);
+        if (loadOperation != null) {
+            file = new RandomAccessFile(loadOperation.getCurrentFile(), "r");
+            file.seek(currentOffset);
+        }
         return bytesRemaining;
     }
 
@@ -96,9 +98,8 @@ public class FileStreamLoadOperation extends BaseDataSource {
                 while (availableLength == 0) {
                     availableLength = loadOperation.getDownloadedLengthFromOffset(currentOffset, readLength);
                     if (availableLength == 0) {
-                        if (loadOperation.isPaused()) {
-                            FileLoader.getInstance(currentAccount).loadStreamFile(this, document, parentObject, currentOffset);
-                        }
+                        FileLog.d("not found bytes " + offset);
+                        FileLoader.getInstance(currentAccount).loadStreamFile(this, document, parentObject, currentOffset);
                         countDownLatch = new CountDownLatch(1);
                         countDownLatch.await();
                     }
@@ -142,7 +143,8 @@ public class FileStreamLoadOperation extends BaseDataSource {
         }
     }
 
-    protected void newDataAvailable() {
+    @Override
+    public void newDataAvailable() {
         if (countDownLatch != null) {
             countDownLatch.countDown();
         }

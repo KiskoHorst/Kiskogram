@@ -17,7 +17,7 @@ package com.google.android.exoplayer2.source;
 
 import android.net.Uri;
 import android.os.Handler;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.FormatHolder;
@@ -356,7 +356,7 @@ import org.checkerframework.checker.nullness.compatqual.NullableType;
     } else if (isPendingReset()) {
       return pendingResetPositionUs;
     }
-    long largestQueuedTimestampUs = C.TIME_UNSET;
+    long largestQueuedTimestampUs = Long.MAX_VALUE;
     if (haveAudioVideoTracks) {
       // Ignore non-AV tracks, which may be sparse or poorly interleaved.
       largestQueuedTimestampUs = Long.MAX_VALUE;
@@ -368,7 +368,7 @@ import org.checkerframework.checker.nullness.compatqual.NullableType;
         }
       }
     }
-    if (largestQueuedTimestampUs == C.TIME_UNSET) {
+    if (largestQueuedTimestampUs == Long.MAX_VALUE) {
       largestQueuedTimestampUs = getLargestQueuedTimestampUs();
     }
     return largestQueuedTimestampUs == Long.MIN_VALUE ? lastSeekPositionUs

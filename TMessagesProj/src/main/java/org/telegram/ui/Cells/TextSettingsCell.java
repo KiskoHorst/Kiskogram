@@ -17,6 +17,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ public class TextSettingsCell extends FrameLayout {
     private TextView valueTextView;
     private ImageView valueImageView;
     private boolean needDivider;
+    private boolean canDisable;
 
     public TextSettingsCell(Context context) {
         this(context, 21);
@@ -88,6 +90,10 @@ public class TextSettingsCell extends FrameLayout {
 
     public TextView getTextView() {
         return textView;
+    }
+
+    public void setCanDisable(boolean value) {
+        canDisable = value;
     }
 
     public TextView getValueTextView() {
@@ -159,9 +165,27 @@ public class TextSettingsCell extends FrameLayout {
     }
 
     @Override
+    public void setEnabled(boolean value) {
+        super.setEnabled(value);
+        textView.setAlpha(value || !canDisable ? 1.0f : 0.5f);
+        if (valueTextView.getVisibility() == VISIBLE) {
+            valueTextView.setAlpha(value || !canDisable ? 1.0f : 0.5f);
+        }
+        if (valueImageView.getVisibility() == VISIBLE) {
+            valueImageView.setAlpha(value || !canDisable ? 1.0f : 0.5f);
+        }
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
             canvas.drawLine(LocaleController.isRTL ? 0 : AndroidUtilities.dp(20), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? AndroidUtilities.dp(20) : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
         }
+    }
+
+    @Override
+    public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+        super.onInitializeAccessibilityNodeInfo(info);
+        info.setEnabled(isEnabled());
     }
 }

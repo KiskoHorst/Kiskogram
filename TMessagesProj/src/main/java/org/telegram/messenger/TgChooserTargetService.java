@@ -9,6 +9,7 @@
 package org.telegram.messenger;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -107,6 +108,9 @@ public class TgChooserTargetService extends ChooserTargetService {
             } catch (Exception e) {
                 FileLog.e(e);
             }
+            SharedConfig.directShareHash = Utilities.random.nextLong();
+            ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE).edit().putLong("directShareHash", SharedConfig.directShareHash).commit();
+
             for (int a = 0; a < dialogs.size(); a++) {
                 Bundle extras = new Bundle();
                 Icon icon = null;
@@ -118,6 +122,7 @@ public class TgChooserTargetService extends ChooserTargetService {
                         if (user.id == id) {
                             if (!user.bot) {
                                 extras.putLong("dialogId", (long) id);
+                                extras.putLong("hash", SharedConfig.directShareHash);
                                 if (user.photo != null && user.photo.photo_small != null) {
                                     icon = createRoundBitmap(FileLoader.getPathToAttach(user.photo.photo_small, true));
                                 }
@@ -132,6 +137,7 @@ public class TgChooserTargetService extends ChooserTargetService {
                         if (chat.id == -id) {
                             if (!ChatObject.isNotInChat(chat) && (!ChatObject.isChannel(chat) || chat.megagroup)) {
                                 extras.putLong("dialogId", (long) id);
+                                extras.putLong("hash", SharedConfig.directShareHash);
                                 if (chat.photo != null && chat.photo.photo_small != null) {
                                     icon = createRoundBitmap(FileLoader.getPathToAttach(chat.photo.photo_small, true));
                                 }

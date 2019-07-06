@@ -19,6 +19,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
@@ -177,13 +178,7 @@ public class SessionCell extends LinearLayout {
             if (user != null) {
                 avatarDrawable.setInfo(user);
                 name = UserObject.getFirstName(user);
-                TLRPC.FileLocation currentPhoto;
-                if (user.photo != null) {
-                    currentPhoto = user.photo.photo_small;
-                } else {
-                    currentPhoto = null;
-                }
-                imageView.setImage(currentPhoto, "50_50", avatarDrawable, user);
+                imageView.setImage(ImageLocation.getForUser(user, false), "50_50", avatarDrawable, user);
             } else {
                 name = "";
             }

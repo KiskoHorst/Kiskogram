@@ -6,6 +6,8 @@ import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -109,5 +111,22 @@ public class JNIUtilities{
 			return new String[]{tm.getNetworkOperatorName(), tm.getNetworkCountryIso().toUpperCase(), mcc, mnc};
 		}
 		return null;
+	}
+
+	public static int[] getWifiInfo(){
+		try{
+			WifiManager wmgr=(WifiManager) ApplicationLoader.applicationContext.getSystemService(Context.WIFI_SERVICE);
+			WifiInfo info=wmgr.getConnectionInfo();
+			return new int[]{info.getRssi(), info.getLinkSpeed()};
+		}catch(Exception ignore){}
+		return null;
+	}
+
+	public static String getSupportedVideoCodecs() {
+		return "";
+	}
+
+	public static int getMaxVideoResolution() {
+		return 320;
 	}
 }

@@ -12,11 +12,14 @@ import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
@@ -209,6 +212,7 @@ public class UserCell extends FrameLayout {
                 return;
             }
         }
+        lastAvatar = photo;
 
         if (currentUser != null) {
             avatarDrawable.setInfo(currentUser);
@@ -256,13 +260,33 @@ public class UserCell extends FrameLayout {
                     statusTextView.setText(LocaleController.formatUserStatus(currentAccount, currentUser));
                 }
             }
+            avatarImageView.setImage(ImageLocation.getForUser(currentUser, false), "50_50", avatarDrawable, currentUser);
+        } else if (currentChat != null) {
+            statusTextView.setTextColor(statusColor);
+            if (ChatObject.isChannel(currentChat) && !currentChat.megagroup) {
+                if (currentChat.participants_count != 0) {
+                    statusTextView.setText(LocaleController.formatPluralString("Subscribers", currentChat.participants_count));
+                } else if (TextUtils.isEmpty(currentChat.username)) {
+                    statusTextView.setText(LocaleController.getString("ChannelPrivate", R.string.ChannelPrivate));
+                } else {
+                    statusTextView.setText(LocaleController.getString("ChannelPublic", R.string.ChannelPublic));
+                }
+            } else {
+                if (currentChat.participants_count != 0) {
+                    statusTextView.setText(LocaleController.formatPluralString("Members", currentChat.participants_count));
+                } else if (TextUtils.isEmpty(currentChat.username)) {
+                    statusTextView.setText(LocaleController.getString("MegaPrivate", R.string.MegaPrivate));
+                } else {
+                    statusTextView.setText(LocaleController.getString("MegaPublic", R.string.MegaPublic));
+                }
+            }
+            avatarImageView.setImage(ImageLocation.getForChat(currentChat, false), "50_50", avatarDrawable, currentObject);
         }
 
         if (imageView.getVisibility() == VISIBLE && currentDrawable == 0 || imageView.getVisibility() == GONE && currentDrawable != 0) {
             imageView.setVisibility(currentDrawable == 0 ? GONE : VISIBLE);
             imageView.setImageResource(currentDrawable);
         }
-        avatarImageView.setImage(photo, "50_50", avatarDrawable, currentObject);
     }
 
     @Override

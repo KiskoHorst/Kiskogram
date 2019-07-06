@@ -19,7 +19,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
@@ -27,7 +26,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 import android.util.SparseArray;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -45,6 +44,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.ImageReceiver;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
@@ -319,6 +319,8 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
     private boolean disableShowCheck;
     private PhotoViewer.PhotoViewerProvider currentProvider;
 
+    private int playerRetryPlayCount;
+
     private boolean textureUploaded;
     private boolean videoCrossfadeStarted;
     private float videoCrossfadeAlpha;
@@ -329,7 +331,7 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
     private MessageObject currentMessageObject;
     private ImageReceiver.BitmapHolder currentThumb;
 
-    private int coords[] = new int[2];
+    private int[] coords = new int[2];
 
     private boolean isPhotoVisible;
 
@@ -523,7 +525,12 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
 
                 @Override
                 public void onError(Exception e) {
-                    FileLog.e(e);
+                    if (playerRetryPlayCount > 0) {
+                        playerRetryPlayCount--;
+                        AndroidUtilities.runOnUIThread(() -> preparePlayer(file), 100);
+                    } else {
+                        FileLog.e(e);
+                    }
                 }
 
                 @Override
@@ -563,7 +570,8 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
 
     private void releasePlayer() {
         if (videoPlayer != null) {
-            videoPlayer.releasePlayer();
+            playerRetryPlayCount = 0;
+            videoPlayer.releasePlayer(true);
             videoPlayer = null;
         }
         try {
@@ -719,7 +727,7 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         if (parentActivity == null || messageObject == null || !messageObject.needDrawBluredPreview() || provider == null) {
             return;
         }
-        final PhotoViewer.PlaceProviderObject object = provider.getPlaceForPhoto(messageObject, null, 0);
+        final PhotoViewer.PlaceProviderObject object = provider.getPlaceForPhoto(messageObject, null, 0, true);
         if (object == null) {
             return;
         }
@@ -761,10 +769,10 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         disableShowCheck = true;
         centerImage.setManualAlphaAnimator(false);
 
-        final Rect drawRegion = object.imageReceiver.getDrawRegion();
+        final RectF drawRegion = object.imageReceiver.getDrawRegion();
 
-        float width = (drawRegion.right - drawRegion.left);
-        float height = (drawRegion.bottom - drawRegion.top);
+        float width = drawRegion.width();
+        float height = drawRegion.height();
         int viewWidth = AndroidUtilities.displaySize.x;
         int viewHeight = AndroidUtilities.displaySize.y + (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
         scale = Math.max(width / viewWidth, height / viewHeight);
@@ -772,8 +780,8 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         translationX = object.viewX + drawRegion.left + width / 2 -  viewWidth / 2;
         translationY = object.viewY + drawRegion.top + height / 2 - viewHeight / 2;
         clipHorizontal = Math.abs(drawRegion.left - object.imageReceiver.getImageX());
-        int clipVertical = Math.abs(drawRegion.top - object.imageReceiver.getImageY());
-        int coords2[] = new int[2];
+        int clipVertical = (int) Math.abs(drawRegion.top - object.imageReceiver.getImageY());
+        int[] coords2 = new int[2];
         object.parentView.getLocationInWindow(coords2);
         clipTop = coords2[1] - (Build.VERSION.SDK_INT >= 21 ? 0 : AndroidUtilities.statusBarHeight) - (object.viewY + drawRegion.top) + object.clipTopAddition;
         if (clipTop < 0) {
@@ -812,9 +820,10 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         if (document != null) {
             if (MessageObject.isGifDocument(document)) {
                 actionBar.setTitle(LocaleController.getString("DisappearingGif", R.string.DisappearingGif));
-                centerImage.setImage(document, null, currentThumb != null ? new BitmapDrawable(currentThumb.bitmap) : null, -1, null, messageObject, 1);
+                centerImage.setImage(ImageLocation.getForDocument(document), null, currentThumb != null ? new BitmapDrawable(currentThumb.bitmap) : null, -1, null, messageObject, 1);
                 secretDeleteTimer.setDestroyTime((long) messageObject.messageOwner.destroyTime * 1000, messageObject.messageOwner.ttl, false);
             } else {
+                playerRetryPlayCount = 1;
                 actionBar.setTitle(LocaleController.getString("DisappearingVideo", R.string.DisappearingVideo));
                 File f = new File(messageObject.messageOwner.attachPath);
                 if (f.exists()) {
@@ -842,7 +851,7 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         } else {
             actionBar.setTitle(LocaleController.getString("DisappearingPhoto", R.string.DisappearingPhoto));
             TLRPC.PhotoSize sizeFull = FileLoader.getClosestPhotoSizeWithSize(messageObject.photoThumbs, AndroidUtilities.getPhotoSize());
-            centerImage.setImage(sizeFull, null, currentThumb != null ? new BitmapDrawable(currentThumb.bitmap) : null, -1, null, messageObject, 2);
+            centerImage.setImage(ImageLocation.getForObject(sizeFull, messageObject.photoThumbsObject), null, currentThumb != null ? new BitmapDrawable(currentThumb.bitmap) : null, -1, null, messageObject, 2);
             secretDeleteTimer.setDestroyTime((long) messageObject.messageOwner.destroyTime * 1000, messageObject.messageOwner.ttl, false);
         }
         try {
@@ -1177,7 +1186,7 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
         if (currentProvider == null || currentMessageObject.messageOwner.media.photo instanceof TLRPC.TL_photoEmpty || currentMessageObject.messageOwner.media.document instanceof TLRPC.TL_documentEmpty) {
             object = null;
         } else {
-            object = currentProvider.getPlaceForPhoto(currentMessageObject, null, 0);
+            object = currentProvider.getPlaceForPhoto(currentMessageObject, null, 0, true);
         }
         if (videoPlayer != null) {
             videoPlayer.pause();
@@ -1191,7 +1200,7 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
             if (object != null && object.imageReceiver.getThumbBitmap() != null && !byDelete) {
                 object.imageReceiver.setVisible(false, true);
 
-                final Rect drawRegion = object.imageReceiver.getDrawRegion();
+                final RectF drawRegion = object.imageReceiver.getDrawRegion();
 
                 float width = (drawRegion.right - drawRegion.left);
                 float height = (drawRegion.bottom - drawRegion.top);
@@ -1201,8 +1210,8 @@ public class SecretMediaViewer implements NotificationCenter.NotificationCenterD
                 animateToX = object.viewX + drawRegion.left + width / 2 -  viewWidth / 2;
                 animateToY = object.viewY + drawRegion.top + height / 2 - viewHeight / 2;
                 animateToClipHorizontal = Math.abs(drawRegion.left - object.imageReceiver.getImageX());
-                int clipVertical = Math.abs(drawRegion.top - object.imageReceiver.getImageY());
-                int coords2[] = new int[2];
+                int clipVertical =( int) Math.abs(drawRegion.top - object.imageReceiver.getImageY());
+                int[] coords2 = new int[2];
                 object.parentView.getLocationInWindow(coords2);
                 animateToClipTop = coords2[1] - (Build.VERSION.SDK_INT >= 21 ? 0 : AndroidUtilities.statusBarHeight) - (object.viewY + drawRegion.top) + object.clipTopAddition;
                 if (animateToClipTop < 0) {

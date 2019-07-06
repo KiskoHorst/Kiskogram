@@ -55,6 +55,8 @@ public class TextCell extends FrameLayout {
         valueImageView = new ImageView(context);
         valueImageView.setScaleType(ImageView.ScaleType.CENTER);
         addView(valueImageView);
+
+        setFocusable(true);
     }
 
     public SimpleTextView getTextView() {

@@ -16,8 +16,8 @@
 package com.google.android.exoplayer2;
 
 import android.os.Looper;
-import android.support.annotation.IntDef;
-import android.support.annotation.Nullable;
+import androidx.annotation.IntDef;
+import androidx.annotation.Nullable;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -760,7 +760,7 @@ public interface Player {
    * Releases the player. This method must be called when the player is no longer required. The
    * player must not be used after calling this method.
    */
-  void release();
+  void release(boolean async);
 
   /**
    * Returns the number of renderers.

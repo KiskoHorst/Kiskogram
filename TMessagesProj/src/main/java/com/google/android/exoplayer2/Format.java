@@ -17,7 +17,7 @@ package com.google.android.exoplayer2;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.drm.DrmInitData;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.util.MimeTypes;
@@ -921,8 +921,8 @@ public final class Format implements Parcelable {
     this.height = height;
     this.frameRate = frameRate;
     this.rotationDegrees = rotationDegrees == Format.NO_VALUE ? 0 : rotationDegrees;
-    this.pixelWidthHeightRatio =
-        pixelWidthHeightRatio == Format.NO_VALUE ? 1 : pixelWidthHeightRatio;
+    this.pixelWidthHeightRatio = 1;
+        //pixelWidthHeightRatio == Format.NO_VALUE ? 1 : pixelWidthHeightRatio; TODO remove after ffmpeg support
     this.projectionData = projectionData;
     this.stereoMode = stereoMode;
     this.colorInfo = colorInfo;

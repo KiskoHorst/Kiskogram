@@ -7,7 +7,7 @@ import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 
 import org.telegram.messenger.AndroidUtilities;
 
@@ -25,6 +25,8 @@ public class AnimatedArrowDrawable extends Drawable {
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(AndroidUtilities.dp(2));
         paint.setColor(color);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeJoin(Paint.Join.ROUND);
         isSmall = small;
 
         updatePath();
