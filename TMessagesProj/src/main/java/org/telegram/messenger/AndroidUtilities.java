@@ -24,6 +24,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -40,6 +41,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.PowerManager;
+import android.provider.CallLog;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -1317,6 +1319,8 @@ public class AndroidUtilities {
         }
     }*/
 
+    private static ContentObserver callLogContentObserver;
+    private static Runnable unregisterRunnable;
     private static boolean hasCallPermissions = Build.VERSION.SDK_INT >= 23;
 
     @SuppressWarnings("unchecked")
@@ -1333,9 +1337,38 @@ public class AndroidUtilities {
             telephonyService = (ITelephony) m.invoke(tm);
             telephonyService.silenceRinger();
             telephonyService.endCall();
+        } catch (Throwable e) {
+            FileLog.e(e);
+        }
+    }
+
+    public static String obtainLoginPhoneCall(String pattern) {
+        if (!hasCallPermissions) {
+            return null;
+        }
+        try (Cursor cursor = ApplicationLoader.applicationContext.getContentResolver().query(
+                CallLog.Calls.CONTENT_URI,
+                new String[]{CallLog.Calls.NUMBER, CallLog.Calls.DATE},
+                CallLog.Calls.TYPE + " IN (" + CallLog.Calls.MISSED_TYPE + "," + CallLog.Calls.INCOMING_TYPE + "," + CallLog.Calls.REJECTED_TYPE + ")",
+                null,
+                "date DESC LIMIT 5")) {
+            while (cursor.moveToNext()) {
+                String number = cursor.getString(0);
+                long date = cursor.getLong(1);
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.e("number = " + number);
+                }
+                if (Math.abs(System.currentTimeMillis() - date) >= 60 * 60 * 1000) {
+                    continue;
+                }
+                if (checkPhonePattern(pattern, number)) {
+                    return number;
+                }
+            }
         } catch (Exception e) {
             FileLog.e(e);
         }
+        return null;
     }
 
     public static boolean checkPhonePattern(String pattern, String phone) {
@@ -2670,5 +2703,33 @@ public class AndroidUtilities {
         int bS = Color.blue(color1);
         int aS = Color.alpha(color1);
         return Color.argb((int) ((aS + (aF - aS) * offset) * alpha), (int) (rS + (rF - rS) * offset), (int) (gS + (gF - gS) * offset), (int) (bS + (bF - bS) * offset));
+    }
+
+    public static int indexOfIgnoreCase(final String origin, final String searchStr) {
+        if (searchStr.isEmpty() || origin.isEmpty()) {
+            return origin.indexOf(searchStr);
+        }
+
+        for (int i = 0; i < origin.length(); i++) {
+            if (i + searchStr.length() > origin.length()) {
+                return -1;
+            }
+            int j = 0;
+            int ii = i;
+            while (ii < origin.length() && j < searchStr.length()) {
+                char c = Character.toLowerCase(origin.charAt(ii));
+                char c2 = Character.toLowerCase(searchStr.charAt(j));
+                if (c != c2) {
+                    break;
+                }
+                j++;
+                ii++;
+            }
+            if (j == searchStr.length()) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 }

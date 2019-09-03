@@ -8,6 +8,7 @@
 
 package org.telegram.ui.ActionBar;
 
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -27,13 +28,6 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import com.airbnb.lottie.LottieAnimationView;
-import com.airbnb.lottie.LottieDrawable;
-import com.airbnb.lottie.LottieProperty;
-import com.airbnb.lottie.SimpleColorFilter;
-import com.airbnb.lottie.model.KeyPath;
-import com.airbnb.lottie.value.LottieValueCallback;
-
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -52,6 +46,8 @@ import org.telegram.ui.Components.LetterDrawable;
 import org.telegram.ui.Components.LineProgressView;
 import org.telegram.ui.Components.MessageBackgroundDrawable;
 import org.telegram.ui.Components.NumberTextView;
+import org.telegram.ui.Components.RLottieDrawable;
+import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RadialProgressView;
 import org.telegram.ui.Components.RadioButton;
 import org.telegram.ui.Components.RecyclerListView;
@@ -101,6 +97,7 @@ public class ThemeDescription {
     public static int FLAG_AB_SUBMENUBACKGROUND         = 0x80000000;
 
     private View viewToInvalidate;
+    private int alphaOverride = -1;
     private Paint[] paintToUpdate;
     private Drawable[] drawablesToUpdate;
     private Class[] listClasses;
@@ -149,7 +146,7 @@ public class ThemeDescription {
         }
     }
 
-    public ThemeDescription(View view, int flags, Class[] classes, LottieDrawable[] drawables, String layerName, String key) {
+    public ThemeDescription(View view, int flags, Class[] classes, RLottieDrawable[] drawables, String layerName, String key) {
         currentKey = key;
         lottieLayerName = layerName;
         drawablesToUpdate = drawables;
@@ -162,6 +159,10 @@ public class ThemeDescription {
     }
 
     public ThemeDescription(View view, int flags, Class[] classes, String[] classesFields, Paint[] paint, Drawable[] drawables, ThemeDescriptionDelegate themeDescriptionDelegate, String key) {
+        this(view, flags, classes, classesFields, paint, drawables, -1, themeDescriptionDelegate, key);
+    }
+
+    public ThemeDescription(View view, int flags, Class[] classes, String[] classesFields, Paint[] paint, Drawable[] drawables, int alpha, ThemeDescriptionDelegate themeDescriptionDelegate, String key) {
         currentKey = key;
         paintToUpdate = paint;
         drawablesToUpdate = drawables;
@@ -169,6 +170,7 @@ public class ThemeDescription {
         changeFlags = flags;
         listClasses = classes;
         listClassesFieldName = classesFields;
+        alphaOverride = alpha;
         delegate = themeDescriptionDelegate;
         cachedFields = new HashMap<>();
         notFoundCachedFields = new HashMap<>();
@@ -216,6 +218,10 @@ public class ThemeDescription {
         if (save) {
             Theme.setColor(currentKey, color, useDefault);
         }
+        currentColor = color;
+        if (alphaOverride > 0) {
+            color = Color.argb(alphaOverride, Color.red(color), Color.green(color), Color.blue(color));
+        }
         if (paintToUpdate != null) {
             for (int a = 0; a < paintToUpdate.length; a++) {
                 if ((changeFlags & FLAG_LINKCOLOR) != 0 && paintToUpdate[a] instanceof TextPaint) {
@@ -232,9 +238,9 @@ public class ThemeDescription {
                 }
                 if (drawablesToUpdate[a] instanceof ScamDrawable) {
                     ((ScamDrawable) drawablesToUpdate[a]).setColor(color);
-                } else if (drawablesToUpdate[a] instanceof LottieDrawable) {
+                } else if (drawablesToUpdate[a] instanceof RLottieDrawable) {
                     if (lottieLayerName != null) {
-                        ((LottieDrawable) drawablesToUpdate[a]).addValueCallback(new KeyPath(lottieLayerName, "**"), LottieProperty.COLOR_FILTER, new LottieValueCallback<>(new SimpleColorFilter(color)));
+                        ((RLottieDrawable) drawablesToUpdate[a]).setLayerColor(lottieLayerName + ".**", color);
                     }
                 } else if (drawablesToUpdate[a] instanceof CombinedDrawable) {
                     if ((changeFlags & FLAG_BACKGROUNDFILTER) != 0) {
@@ -470,7 +476,6 @@ public class ThemeDescription {
             }
             processViewColor(viewToInvalidate, color);
         }
-        currentColor = color;
         if (delegate != null) {
             delegate.didSetColor();
         }
@@ -548,8 +553,8 @@ public class ThemeDescription {
                                 if (object instanceof View) {
                                     ((View) object).invalidate();
                                 }
-                                if (lottieLayerName != null && object instanceof LottieAnimationView) {
-                                    ((LottieAnimationView) object).addValueCallback(new KeyPath(lottieLayerName, "**"), LottieProperty.COLOR_FILTER, new LottieValueCallback<>(new SimpleColorFilter(color)));
+                                if (lottieLayerName != null && object instanceof RLottieImageView) {
+                                    ((RLottieImageView) object).setLayerColor(lottieLayerName + ".**", color);
                                 }
                                 if ((changeFlags & FLAG_USEBACKGROUNDDRAWABLE) != 0 && object instanceof View) {
                                     object = ((View) object).getBackground();
@@ -665,6 +670,8 @@ public class ThemeDescription {
                                     } else {
                                         ((LineProgressView) object).setBackColor(color);
                                     }
+                                } else if (object instanceof RadialProgressView) {
+                                    ((RadialProgressView) object).setProgressColor(color);
                                 } else if (object instanceof Paint) {
                                     ((Paint) object).setColor(color);
                                 } else if (object instanceof SeekBarView) {
