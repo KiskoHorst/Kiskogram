@@ -324,8 +324,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         otherItem = menu.addItem(0, R.drawable.ic_ab_other);
         otherItem.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));
-        otherItem.addSubItem(edit_name, R.drawable.msg_edit, LocaleController.getString("EditName", R.string.EditName));
-        otherItem.addSubItem(logout, R.drawable.msg_leave, LocaleController.getString("LogOut", R.string.LogOut));
+        otherItem.addSubItem(edit_name, R.drawable.group_edit, LocaleController.getString("EditName", R.string.EditName));
+        otherItem.addSubItem(logout, R.drawable.chats_leave, LocaleController.getString("LogOut", R.string.LogOut));
 
         int scrollTo;
         int scrollToPosition = 0;
@@ -1927,7 +1927,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                                 abi = "universal " + Build.CPU_ABI + " " + Build.CPU_ABI2;
                                 break;
                         }
-                        cell.setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v5.3.1 (%d)", pInfo.versionName, code, abi));
+                        cell.setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v5.10.0 (%d)", pInfo.versionName, code, abi));
                     } catch (Exception e) {
                         FileLog.e(e);
                     }

@@ -140,18 +140,18 @@ public class ContentPreviewViewer {
                 if (delegate != null) {
                     if (delegate.needSend()) {
                         items.add(LocaleController.getString("SendStickerPreview", R.string.SendStickerPreview));
-                        icons.add(R.drawable.outline_send);
+                        icons.add(R.drawable.ic_send);
                         actions.add(0);
                     }
                     if (currentStickerSet != null && delegate.needOpen()) {
                         items.add(LocaleController.formatString("ViewPackPreview", R.string.ViewPackPreview));
-                        icons.add(R.drawable.outline_pack);
+                        icons.add(R.drawable.folder);
                         actions.add(1);
                     }
                 }
                 if (!MessageObject.isMaskDocument(currentDocument) && (inFavs || MediaDataController.getInstance(currentAccount).canAddStickerToFavorites())) {
                     items.add(inFavs ? LocaleController.getString("DeleteFromFavorites", R.string.DeleteFromFavorites) : LocaleController.getString("AddToFavorites", R.string.AddToFavorites));
-                    icons.add(inFavs ? R.drawable.outline_unfave : R.drawable.outline_fave);
+                    icons.add(inFavs ? R.drawable.star_off : R.drawable.star);
                     actions.add(2);
                 }
                 if (items.isEmpty()) {

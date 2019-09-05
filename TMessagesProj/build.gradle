@@ -40,8 +40,6 @@ android {
 
     defaultConfig.applicationId = "li.peeloi.kisko.kiskogram"
 
-    //sourceSets.main.jniLibs.srcDirs = ['./jni/']
-
     sourceSets.main {
         jniLibs.srcDir 'libs'
         jni.srcDirs = [] //disable automatic ndk-build call
@@ -116,9 +114,6 @@ android {
         }
     }
 
-<<<<<<< HEAD
-    defaultConfig.versionCode = 160801
-=======
     sourceSets.debug {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
     }
@@ -244,8 +239,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 1684
->>>>>>> master
+    defaultConfig.versionCode = 168401
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
@@ -262,6 +256,7 @@ android {
 
                 String manifestPath = directory.toString() + "/AndroidManifest.xml"
                 def manifestContent = file(manifestPath).getText()
+
                 manifestContent = manifestContent.replace(String.format('android:versionCode="%d"', defaultConfig.versionCode), String.format('android:versionCode="%s"', defaultConfig.versionCode))
                 file(manifestPath).write(manifestContent)
             }
@@ -281,5 +276,9 @@ android {
         versionName "5.10.0-r1"
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
+
+        manifestPlaceholders = [applicationClassName: "ApplicationLoader"]
     }
 }
+
+apply plugin: 'com.google.gms.google-services'

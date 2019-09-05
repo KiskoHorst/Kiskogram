@@ -372,7 +372,7 @@ public class ContactsAdapter extends RecyclerListView.SectionsAdapter {
                         if (position == 0) {
                             textCell.setTextAndIcon(LocaleController.getString("InviteFriends", R.string.InviteFriends), R.drawable.menu_invite, false);
                         } else if (position == 1) {
-                            textCell.setTextAndIcon(LocaleController.getString("AddPeopleNearby", R.string.AddPeopleNearby), R.drawable.menu_location, false);
+                            textCell.setTextAndIcon(LocaleController.getString("AddPeopleNearby", R.string.AddPeopleNearby), R.drawable.pin, false);
                         }
                     } else if (isAdmin) {
                         if (isChannel) {

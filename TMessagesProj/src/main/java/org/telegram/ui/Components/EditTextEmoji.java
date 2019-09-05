@@ -136,7 +136,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     @Override
     public void setEnabled(boolean enabled) {
         editText.setEnabled(enabled);
-        emojiButton.setVisibility(enabled ? VISIBLE : GONE);
+        //emojiButton.setVisibility(enabled ? VISIBLE : GONE);
         editText.setPadding(0, 0, 0, AndroidUtilities.dp(8));
     }
 

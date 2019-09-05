@@ -23,6 +23,7 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityManager;
 
 import org.telegram.messenger.AccountInstance;
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DownloadController;

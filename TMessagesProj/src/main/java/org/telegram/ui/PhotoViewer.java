@@ -2317,20 +2317,20 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         ActionBarMenu menu = actionBar.createMenu();
 
-        masksItem = menu.addItem(gallery_menu_masks, R.drawable.msg_mask);
-        pipItem = menu.addItem(gallery_menu_pip, R.drawable.ic_goinline);
-        sendItem = menu.addItem(gallery_menu_send, R.drawable.msg_forward);
+        masksItem = menu.addItem(gallery_menu_masks, R.drawable.ic_msg_panel_stickers);
+        pipItem = menu.addItem(gallery_menu_pip, R.drawable.ic_outinline);
+        sendItem = menu.addItem(gallery_menu_send, R.drawable.forward);
 
         menuItem = menu.addItem(0, R.drawable.ic_ab_other);
-        menuItem.addSubItem(gallery_menu_openin, R.drawable.msg_openin, LocaleController.getString("OpenInExternalApp", R.string.OpenInExternalApp)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_openin, R.drawable.open_in, LocaleController.getString("OpenInExternalApp", R.string.OpenInExternalApp)).setColors(0xfffafafa, 0xfffafafa);
         menuItem.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));
-        allMediaItem = menuItem.addSubItem(gallery_menu_showall, R.drawable.msg_media, LocaleController.getString("ShowAllMedia", R.string.ShowAllMedia));
+        allMediaItem = menuItem.addSubItem(gallery_menu_showall, R.drawable.folder, LocaleController.getString("ShowAllMedia", R.string.ShowAllMedia));
         allMediaItem.setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_showinchat, R.drawable.msg_message, LocaleController.getString("ShowInChat", R.string.ShowInChat)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_share, R.drawable.msg_shareout, LocaleController.getString("ShareFile", R.string.ShareFile)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_save, R.drawable.msg_gallery, LocaleController.getString("SaveToGallery", R.string.SaveToGallery)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_delete, R.drawable.msg_delete, LocaleController.getString("Delete", R.string.Delete)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_cancel_loading, R.drawable.msg_cancel, LocaleController.getString("StopDownload", R.string.StopDownload)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_showinchat, R.drawable.profile_message, LocaleController.getString("ShowInChat", R.string.ShowInChat)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_share, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("ShareFile", R.string.ShareFile)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_save, R.drawable.download, LocaleController.getString("SaveToGallery", R.string.SaveToGallery)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_delete, R.drawable.ic_ab_delete, LocaleController.getString("Delete", R.string.Delete)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_cancel_loading, R.drawable.msg_block, LocaleController.getString("StopDownload", R.string.StopDownload)).setColors(0xfffafafa, 0xfffafafa);
         menuItem.redrawPopup(0xf9222222);
         sendItem.setContentDescription(LocaleController.getString("Forward", R.string.Forward));
 

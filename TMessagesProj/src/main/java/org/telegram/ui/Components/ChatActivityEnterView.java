@@ -1199,7 +1199,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
 
         recordDeleteImageView = new ImageView(context);
         recordDeleteImageView.setScaleType(ImageView.ScaleType.CENTER);
-        recordDeleteImageView.setImageResource(R.drawable.msg_delete);
+        recordDeleteImageView.setImageResource(R.drawable.chats_delete);
         recordDeleteImageView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelVoiceDelete), PorterDuff.Mode.MULTIPLY));
         recordDeleteImageView.setContentDescription(LocaleController.getString("Delete", R.string.Delete));
         recordedAudioPanel.addView(recordDeleteImageView, LayoutHelper.createFrame(48, 48));
@@ -1612,10 +1612,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             }
         };
         sendButton.setVisibility(INVISIBLE);
-        sendButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-
-        sendButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelSend), PorterDuff.Mode.MULTIPLY));
-        sendButton.setImageResource(R.drawable.ic_send);
+        int color = Theme.getColor(Theme.key_chat_messagePanelSend);
         sendButton.setContentDescription(LocaleController.getString("Send", R.string.Send));
         sendButton.setSoundEffectsEnabled(false);
         sendButton.setScaleX(0.1f);
@@ -4165,12 +4162,17 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             } else {
                 currentPage = emojiView.getCurrentPage();
             }
-            if (currentPage == 0 || !allowStickers && !allowGifs) {
+            if (!allowStickers && !allowGifs) {
+                emojiButton[0].setVisibility(GONE);
                 nextIcon = 1;
-            } else if (currentPage == 1) {
-                nextIcon = 2;
+
             } else {
-                nextIcon = 3;
+                emojiButton[0].setVisibility(VISIBLE);
+                if (currentPage == 2) {
+                    nextIcon = 2;
+                } else {
+                    nextIcon = 3;
+                }
             }
         }
         if (currentEmojiIcon == nextIcon) {
@@ -4183,9 +4185,9 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         if (nextIcon == 0) {
             emojiButton[animated ? 1 : 0].setImageResource(R.drawable.input_keyboard);
         } else if (nextIcon == 1) {
-            emojiButton[animated ? 1 : 0].setImageResource(R.drawable.input_smile);
+            emojiButton[animated ? 1 : 0].setImageResource(R.drawable.ic_msg_panel_stickers);
         } else if (nextIcon == 2) {
-            emojiButton[animated ? 1 : 0].setImageResource(R.drawable.input_sticker);
+            emojiButton[animated ? 1 : 0].setImageResource(R.drawable.ic_msg_panel_stickers);
         } else if (nextIcon == 3) {
             emojiButton[animated ? 1 : 0].setImageResource(R.drawable.input_gif);
         }
