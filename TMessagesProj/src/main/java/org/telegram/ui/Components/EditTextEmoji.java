@@ -3,6 +3,7 @@ package org.telegram.ui.Components;
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.os.Build;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -106,11 +107,11 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
         editText.setFocusable(editText.isEnabled());
         editText.setCursorSize(AndroidUtilities.dp(20));
         editText.setCursorWidth(1.5f);
+        editText.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         if (style == STYLE_FRAGMENT) {
             editText.setGravity(Gravity.CENTER_VERTICAL | (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT));
             editText.setBackgroundDrawable(Theme.createEditTextDrawable(context, false));
             editText.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
-            editText.setCursorColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
             editText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
             editText.setPadding(LocaleController.isRTL ? AndroidUtilities.dp(40) : 0, 0, LocaleController.isRTL ? 0 : AndroidUtilities.dp(40), AndroidUtilities.dp(8));
             addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 11 : 0, 1, LocaleController.isRTL ? 0 : 11, 0));
@@ -122,6 +123,11 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
             editText.setPadding(0, 0, 0, 0);
             addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 48, 0, 0, 0));
         }
+    }
+
+    public void setSizeNotifierLayout(SizeNotifierFrameLayout layout) {
+        sizeNotifierLayout = layout;
+        sizeNotifierLayout.setDelegate(this);
     }
 
     @Override

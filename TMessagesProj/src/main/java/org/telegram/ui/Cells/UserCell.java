@@ -396,9 +396,9 @@ public class UserCell extends FrameLayout {
         } else if (currentChat != null) {
             avatarDrawable.setInfo(currentChat);
         } else if (currentName != null) {
-            avatarDrawable.setInfo(currentId, currentName.toString(), null, false);
+            avatarDrawable.setInfo(currentId, currentName.toString(), null);
         } else {
-            avatarDrawable.setInfo(currentId, "#", null, false);
+            avatarDrawable.setInfo(currentId, "#", null);
         }
 
         if (currentName != null) {
@@ -407,8 +407,10 @@ public class UserCell extends FrameLayout {
         } else {
             if (currentUser != null) {
                 lastName = newName == null ? UserObject.getUserName(currentUser) : newName;
-            } else {
+            } else if (currentChat != null) {
                 lastName = newName == null ? currentChat.title : newName;
+            } else {
+                lastName = "";
             }
             nameTextView.setText(lastName);
         }

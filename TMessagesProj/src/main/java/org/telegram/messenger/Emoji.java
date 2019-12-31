@@ -41,8 +41,8 @@ public class Emoji {
     private static boolean inited = false;
     private static Paint placeholderPaint;
     private static final int splitCount = 4;
-    private static Bitmap emojiBmp[][] = new Bitmap[8][splitCount];
-    private static boolean loadingEmoji[][] = new boolean[8][splitCount];
+    private static Bitmap[][] emojiBmp = new Bitmap[8][splitCount];
+    private static boolean[][] loadingEmoji = new boolean[8][splitCount];
 
     public static HashMap<String, Integer> emojiUseHistory = new HashMap<>();
     public static ArrayList<String> recentEmoji = new ArrayList<>();
@@ -52,10 +52,10 @@ public class Emoji {
     private final static int MAX_RECENT_EMOJI_COUNT = 48;
 
     private static final int[][] cols = {
-            {16, 16, 16, 16},
+            {20, 20, 20, 20},
             {6, 6, 6, 6},
             {5, 5, 5, 5},
-            {7, 7, 7, 7},
+            {9, 9, 9, 9},
             {5, 5, 5, 5},
             {7, 7, 7, 7},
             {8, 8, 8, 8},
@@ -115,7 +115,7 @@ public class Emoji {
             File imageFile;
 
             try {
-                for (int a = 12; a < 14; a++) {
+                for (int a = 13; a < 15; a++) {
                     imageName = String.format(Locale.US, "v%d_emoji%.01fx_%d.png", a, scale, page);
                     imageFile = ApplicationLoader.applicationContext.getFileStreamPath(imageName);
                     if (imageFile.exists()) {
@@ -127,13 +127,10 @@ public class Emoji {
             }
             Bitmap bitmap = null;
             try {
-                InputStream is = ApplicationLoader.applicationContext.getAssets().open("emoji/" + String.format(Locale.US, "v14_emoji%.01fx_%d_%d.png", scale, page, page2));
+                InputStream is = ApplicationLoader.applicationContext.getAssets().open("emoji/" + String.format(Locale.US, "v15_emoji%.01fx_%d_%d.png", scale, page, page2));
                 BitmapFactory.Options opts = new BitmapFactory.Options();
                 opts.inJustDecodeBounds = false;
                 opts.inSampleSize = imageResize;
-                if (Build.VERSION.SDK_INT >= 26) {
-                    opts.inPreferredConfig = Bitmap.Config.HARDWARE;
-                }
                 bitmap = BitmapFactory.decodeStream(is, null, opts);
                 is.close();
             } catch (Throwable e) {
@@ -213,7 +210,7 @@ public class Emoji {
         return ed;
     }
 
-    public static boolean isValidEmoji(String code) {
+    public static boolean isValidEmoji(CharSequence code) {
         DrawableInfo info = rects.get(code);
         if (info == null) {
             CharSequence newCode = EmojiData.emojiAliasMap.get(code);
@@ -349,7 +346,6 @@ public class Emoji {
         } else {
             s = Spannable.Factory.getInstance().newSpannable(cs.toString());
         }
-
         return s;
     }
 
@@ -488,7 +484,7 @@ public class Emoji {
                         StringBuilder string = new StringBuilder();
                         for (int a = 0; a < 4; a++) {
                             char ch = (char) value;
-                            string.insert(0, String.valueOf(ch));
+                            string.insert(0, ch);
                             value >>= 16;
                             if (value == 0) {
                                 break;

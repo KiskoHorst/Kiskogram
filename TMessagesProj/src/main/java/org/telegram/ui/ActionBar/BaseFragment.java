@@ -28,6 +28,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
+import org.telegram.messenger.MediaController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocationController;
@@ -37,6 +38,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SecretChatHelper;
 import org.telegram.messenger.SendMessagesHelper;
+import org.telegram.messenger.TonController;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 
@@ -93,6 +95,10 @@ public class BaseFragment {
         return currentAccount;
     }
 
+    public int getClassGuid() {
+        return classGuid;
+    }
+
     protected void setInPreviewMode(boolean value) {
         inPreviewMode = value;
         if (actionBar != null) {
@@ -110,7 +116,7 @@ public class BaseFragment {
             if (parent != null) {
                 try {
                     onRemoveFromParent();
-                    parent.removeView(fragmentView);
+                    parent.removeViewInLayout(fragmentView);
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
@@ -121,7 +127,7 @@ public class BaseFragment {
             ViewGroup parent = (ViewGroup) actionBar.getParent();
             if (parent != null) {
                 try {
-                    parent.removeView(actionBar);
+                    parent.removeViewInLayout(actionBar);
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
@@ -148,7 +154,7 @@ public class BaseFragment {
                 if (parent != null) {
                     try {
                         onRemoveFromParent();
-                        parent.removeView(fragmentView);
+                        parent.removeViewInLayout(fragmentView);
                     } catch (Exception e) {
                         FileLog.e(e);
                     }
@@ -163,7 +169,7 @@ public class BaseFragment {
                     ViewGroup parent = (ViewGroup) actionBar.getParent();
                     if (parent != null) {
                         try {
-                            parent.removeView(actionBar);
+                            parent.removeViewInLayout(actionBar);
                         } catch (Exception e) {
                             FileLog.e(e);
                         }
@@ -291,6 +297,10 @@ public class BaseFragment {
 
     public void restoreSelfArgs(Bundle args) {
 
+    }
+
+    public ActionBarLayout getParentLayout() {
+        return parentLayout;
     }
 
     public boolean presentFragmentAsPreview(BaseFragment fragment) {
@@ -423,8 +433,10 @@ public class BaseFragment {
                 if (onDismissListener != null) {
                     onDismissListener.onDismiss(dialog1);
                 }
-                onDialogDismiss(visibleDialog);
-                visibleDialog = null;
+                onDialogDismiss((Dialog) dialog1);
+                if (dialog1 == visibleDialog) {
+                    visibleDialog = null;
+                }
             });
             visibleDialog.show();
             return visibleDialog;
@@ -508,6 +520,14 @@ public class BaseFragment {
 
     public NotificationCenter getNotificationCenter() {
         return getAccountInstance().getNotificationCenter();
+    }
+
+    public MediaController getMediaController() {
+        return MediaController.getInstance();
+    }
+
+    public TonController getTonController() {
+        return getAccountInstance().getTonController();
     }
 
     public UserConfig getUserConfig() {

@@ -74,18 +74,18 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
         MediaDataController.getInstance(currentAccount).checkStickers(MediaDataController.TYPE_MASK);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.newEmojiSuggestionsAvailable);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidLoad);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidFailedLoad);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidFailToLoad);
     }
 
     public void onDestroy() {
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.newEmojiSuggestionsAvailable);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidLoad);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidFailedLoad);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidFailToLoad);
     }
 
     @Override
     public void didReceivedNotification(int id, int account, final Object... args) {
-        if (id == NotificationCenter.fileDidLoad || id == NotificationCenter.fileDidFailedLoad) {
+        if (id == NotificationCenter.fileDidLoad || id == NotificationCenter.fileDidFailToLoad) {
             if (stickers != null && !stickers.isEmpty() && !stickersToLoad.isEmpty() && visible) {
                 String fileName = (String) args[0];
                 stickersToLoad.remove(fileName);
@@ -247,7 +247,7 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
             }
         }
         if (emojiOnly || SharedConfig.suggestStickers == 2 || !isValidEmoji) {
-            if (visible && (keywordResults == null || keywordResults.isEmpty())) {
+            if (visible && (emojiOnly || SharedConfig.suggestStickers == 2 || keywordResults == null || keywordResults.isEmpty())) {
                 visible = false;
                 delegate.needChangePanelVisibility(false);
                 notifyDataSetChanged();
@@ -309,8 +309,8 @@ public class StickersAdapter extends RecyclerListView.SelectionAdapter implement
 
                 @Override
                 public int compare(StickerResult lhs, StickerResult rhs) {
-                    boolean isAnimated1 = MessageObject.isAnimatedStickerDocument(lhs.sticker);
-                    boolean isAnimated2 = MessageObject.isAnimatedStickerDocument(rhs.sticker);
+                    boolean isAnimated1 = MessageObject.isAnimatedStickerDocument(lhs.sticker, true);
+                    boolean isAnimated2 = MessageObject.isAnimatedStickerDocument(rhs.sticker, true);
                     if (isAnimated1 == isAnimated2) {
                         int idx1 = getIndex(lhs.sticker.id);
                         int idx2 = getIndex(rhs.sticker.id);
