@@ -2219,7 +2219,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     } else if (position == helpRow) {
                         textCell.setTextAndIcon(LocaleController.getString("SettingsHelp", R.string.SettingsHelp), R.drawable.menu_help, false);
                     } else if (position == devicesRow) {
-                        textCell.setTextAndIcon(LocaleController.getString("Devices", R.string.Devices), R.drawable.menu_devices, true);
+                        textCell.setTextAndIcon(LocaleController.getString("Devices", R.string.Devices), R.drawable.laptop, true);
                     }
                     break;
                 }
@@ -2330,7 +2330,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                                 abi = "universal " + Build.CPU_ABI + " " + Build.CPU_ABI2;
                                 break;
                         }
-                        cell.setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v5.10.0 (%d)", pInfo.versionName, code, abi));
+                        cell.setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v5.13.0 (%d)", pInfo.versionName, code, abi));
                     } catch (Exception e) {
                         FileLog.e(e);
                     }

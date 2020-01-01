@@ -215,7 +215,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         }
         boolean hasWallet = Build.VERSION.SDK_INT >= 18 && !TextUtils.isEmpty(UserConfig.getInstance(UserConfig.selectedAccount).walletConfig) && !TextUtils.isEmpty(UserConfig.getInstance(UserConfig.selectedAccount).walletBlockchainName);
         int eventType = Theme.getEventType();
-        if (eventType == 0) {
+        if (false) {
             items.add(new Item(2, LocaleController.getString("NewGroup", R.string.NewGroup), R.drawable.menu_groups_ny));
             if (!hasWallet) {
                 items.add(new Item(3, LocaleController.getString("NewSecretChat", R.string.NewSecretChat), R.drawable.menu_secret_ny));
@@ -241,7 +241,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             items.add(new Item(10, LocaleController.getString("Calls", R.string.Calls), R.drawable.menu_calls));
             items.add(new Item(11, LocaleController.getString("SavedMessages", R.string.SavedMessages), R.drawable.menu_saved));
             if (hasWallet) {
-                items.add(new Item(12, LocaleController.getString("Wallet", R.string.Wallet), R.drawable.menu_wallet));
+                items.add(new Item(12, LocaleController.getString("Wallet", R.string.Wallet), R.drawable.wallet));
             }
             items.add(new Item(8, LocaleController.getString("Settings", R.string.Settings), R.drawable.menu_settings));
             items.add(null); // divider

@@ -1018,25 +1018,25 @@ public class PhonebookShareAlert extends BottomSheet {
                 } else {
                     item = other.get(position - vcardStartRow);
                     if (item.type == 1) {
-                        icon = R.drawable.menu_mail;
+                        icon = R.drawable.email;
                     } else if (item.type == 2) {
-                        icon = R.drawable.menu_location;
+                        icon = R.drawable.pin;
                     } else if (item.type == 3) {
-                        icon = R.drawable.msg_link;
+                        icon = R.drawable.profile_link;
                     } else if (item.type == 4) {
                         icon = R.drawable.profile_info;
                     } else if (item.type == 5) {
-                        icon = R.drawable.menu_date;
+                        icon = R.drawable.calendar;
                     } else if (item.type == 6) {
                         if ("ORG".equalsIgnoreCase(item.getRawType(true))) {
-                            icon = R.drawable.menu_work;
+                            icon = R.drawable.domain;
                         } else {
-                            icon = R.drawable.menu_jobtitle;
+                            icon = R.drawable.briefcase;
                         }
                     } else if (item.type == 20) {
-                        icon = R.drawable.menu_info;
+                        icon = R.drawable.profile_info;
                     } else {
-                        icon = R.drawable.menu_info;
+                        icon = R.drawable.profile_info;
                     }
                 }
                 cell.setVCardItem(item, icon, position != getItemCount() - 1);

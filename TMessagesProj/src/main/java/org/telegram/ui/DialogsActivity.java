@@ -2959,17 +2959,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             pinItem.setVisibility(View.VISIBLE);
         }
         if (canUnmuteCount != 0) {
-<<<<<<< HEAD
-            muteItem.setTextAndIcon(LocaleController.getString("ChatsUnmute", R.string.ChatsUnmute), R.drawable.notifications_on);
-        } else {
-            muteItem.setTextAndIcon(LocaleController.getString("ChatsMute", R.string.ChatsMute), R.drawable.notifications_off);
-=======
-            muteItem.setIcon(R.drawable.msg_unmute);
+            muteItem.setIcon(R.drawable.notifications_on);
             muteItem.setContentDescription(LocaleController.getString("ChatsUnmute", R.string.ChatsUnmute));
         } else {
-            muteItem.setIcon(R.drawable.msg_mute);
+            muteItem.setIcon(R.drawable.notifications_off);
             muteItem.setContentDescription(LocaleController.getString("ChatsMute", R.string.ChatsMute));
->>>>>>> master
         }
         if (canReadCount != 0) {
             readItem.setTextAndIcon(LocaleController.getString("MarkAsRead", R.string.MarkAsRead), R.drawable.menu_read);

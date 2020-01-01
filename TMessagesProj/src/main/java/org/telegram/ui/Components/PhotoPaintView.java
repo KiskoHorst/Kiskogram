@@ -266,21 +266,21 @@ public class PhotoPaintView extends FrameLayout implements EntityView.EntityView
 
         paintButton = new ImageView(context);
         paintButton.setScaleType(ImageView.ScaleType.CENTER);
-        paintButton.setImageResource(R.drawable.photo_paint);
+        paintButton.setImageResource(R.drawable.brush);
         paintButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         toolsView.addView(paintButton, LayoutHelper.createFrame(54, LayoutHelper.MATCH_PARENT, Gravity.CENTER, 0, 0, 56, 0));
         paintButton.setOnClickListener(v -> selectEntity(null));
 
         ImageView stickerButton = new ImageView(context);
         stickerButton.setScaleType(ImageView.ScaleType.CENTER);
-        stickerButton.setImageResource(R.drawable.photo_sticker);
+        stickerButton.setImageResource(R.drawable.ic_msg_panel_stickers);
         stickerButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         toolsView.addView(stickerButton, LayoutHelper.createFrame(54, LayoutHelper.MATCH_PARENT, Gravity.CENTER));
         stickerButton.setOnClickListener(v -> openStickersView());
 
         ImageView textButton = new ImageView(context);
         textButton.setScaleType(ImageView.ScaleType.CENTER);
-        textButton.setImageResource(R.drawable.photo_paint_text);
+        textButton.setImageResource(R.drawable.input_keyboard);
         textButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         toolsView.addView(textButton, LayoutHelper.createFrame(54, LayoutHelper.MATCH_PARENT, Gravity.CENTER, 56, 0, 0, 0));
         textButton.setOnClickListener(v -> createText());
@@ -333,11 +333,11 @@ public class PhotoPaintView extends FrameLayout implements EntityView.EntityView
             } else if (currentEntityView instanceof TextPaintView) {
                 resource = R.drawable.photo_outline;
             }
-            paintButton.setImageResource(R.drawable.photo_paint);
+            paintButton.setImageResource(R.drawable.brush);
             paintButton.setColorFilter(null);
         } else {
             paintButton.setColorFilter(new PorterDuffColorFilter(0xff51bdf3, PorterDuff.Mode.MULTIPLY));
-            paintButton.setImageResource(R.drawable.photo_paint);
+            paintButton.setImageResource(R.drawable.brush);
         }
 
         colorPicker.setSettingsButtonImage(resource);

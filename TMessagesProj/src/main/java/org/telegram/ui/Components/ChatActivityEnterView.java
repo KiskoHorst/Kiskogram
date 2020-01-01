@@ -1155,8 +1155,8 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
 
         if (isChat) {
             if (parentFragment != null) {
-                Drawable drawable1 = context.getResources().getDrawable(R.drawable.input_calendar1).mutate();
-                Drawable drawable2 = context.getResources().getDrawable(R.drawable.input_calendar2).mutate();
+                Drawable drawable1 = context.getResources().getDrawable(R.drawable.calendar_base).mutate();
+                Drawable drawable2 = context.getResources().getDrawable(R.drawable.calendar_dot).mutate();
                 drawable1.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
                 drawable2.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_recordedVoiceDot), PorterDuff.Mode.MULTIPLY));
                 CombinedDrawable combinedDrawable = new CombinedDrawable(drawable1, drawable2);
@@ -1616,9 +1616,9 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         });
 
         if (isInScheduleMode()) {
-            sendButtonDrawable = context.getResources().getDrawable(R.drawable.input_schedule).mutate();
-            sendButtonInverseDrawable = context.getResources().getDrawable(R.drawable.input_schedule).mutate();
-            inactinveSendButtonDrawable = context.getResources().getDrawable(R.drawable.input_schedule).mutate();
+            sendButtonDrawable = context.getResources().getDrawable(R.drawable.msg_timer).mutate();
+            sendButtonInverseDrawable = context.getResources().getDrawable(R.drawable.msg_timer).mutate();
+            inactinveSendButtonDrawable = context.getResources().getDrawable(R.drawable.msg_timer).mutate();
         } else {
             sendButtonDrawable = context.getResources().getDrawable(R.drawable.ic_send).mutate();
             sendButtonInverseDrawable = context.getResources().getDrawable(R.drawable.ic_send).mutate();
@@ -1896,9 +1896,9 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 ActionBarMenuSubItem cell = new ActionBarMenuSubItem(getContext());
                 if (num == 0) {
                     if (UserObject.isUserSelf(user)) {
-                        cell.setTextAndIcon(LocaleController.getString("SetReminder", R.string.SetReminder), R.drawable.msg_schedule);
+                        cell.setTextAndIcon(LocaleController.getString("SetReminder", R.string.SetReminder), R.drawable.calendar);
                     } else {
-                        cell.setTextAndIcon(LocaleController.getString("ScheduleMessage", R.string.ScheduleMessage), R.drawable.msg_schedule);
+                        cell.setTextAndIcon(LocaleController.getString("ScheduleMessage", R.string.ScheduleMessage), R.drawable.calendar);
                     }
                 } else if (num == 1) {
                     cell.setTextAndIcon(LocaleController.getString("SendWithoutSound", R.string.SendWithoutSound), R.drawable.input_notify_off);

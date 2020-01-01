@@ -536,8 +536,8 @@ public class StickersAlert extends BottomSheet implements NotificationCenter.Not
         optionsButton.setIcon(R.drawable.ic_ab_other);
         optionsButton.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.getColor(Theme.key_player_actionBarSelector), 1));
         containerView.addView(optionsButton, LayoutHelper.createFrame(40, 40, Gravity.TOP | Gravity.RIGHT, 0, 5, 5, 0));
-        optionsButton.addSubItem(1, R.drawable.msg_share, LocaleController.getString("StickersShare", R.string.StickersShare));
-        optionsButton.addSubItem(2, R.drawable.msg_link, LocaleController.getString("CopyLink", R.string.CopyLink));
+        optionsButton.addSubItem(1, R.drawable.forward, LocaleController.getString("StickersShare", R.string.StickersShare));
+        optionsButton.addSubItem(2, R.drawable.profile_link, LocaleController.getString("CopyLink", R.string.CopyLink));
         optionsButton.setOnClickListener(v -> optionsButton.toggleSubMenu());
         optionsButton.setDelegate(this::onSubItemClick);
         optionsButton.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));

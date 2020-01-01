@@ -597,10 +597,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             ActionBarMenu menu = actionBar.createMenu();
             menuItem = menu.addItem(0, R.drawable.ic_ab_other);
             menuItem.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));
-            menuItem.addSubItem(share_theme, R.drawable.msg_share, LocaleController.getString("ShareTheme", R.string.ShareTheme));
-            menuItem.addSubItem(edit_theme, R.drawable.msg_edit, LocaleController.getString("EditThemeColors", R.string.EditThemeColors));
-            menuItem.addSubItem(create_theme, R.drawable.menu_palette, LocaleController.getString("CreateNewThemeMenu", R.string.CreateNewThemeMenu));
-            menuItem.addSubItem(reset_settings, R.drawable.msg_reset, LocaleController.getString("ThemeResetToDefaults", R.string.ThemeResetToDefaults));
+            menuItem.addSubItem(share_theme, R.drawable.forward, LocaleController.getString("ShareTheme", R.string.ShareTheme));
+            menuItem.addSubItem(edit_theme, R.drawable.group_edit, LocaleController.getString("EditThemeColors", R.string.EditThemeColors));
+            menuItem.addSubItem(create_theme, R.drawable.toast_pallete, LocaleController.getString("CreateNewThemeMenu", R.string.CreateNewThemeMenu));
+            menuItem.addSubItem(reset_settings, R.drawable.ic_again, LocaleController.getString("ThemeResetToDefaults", R.string.ThemeResetToDefaults));
         } else {
             actionBar.setTitle(LocaleController.getString("AutoNightTheme", R.string.AutoNightTheme));
         }

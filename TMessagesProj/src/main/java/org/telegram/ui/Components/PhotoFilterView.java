@@ -1767,7 +1767,7 @@ public class PhotoFilterView extends FrameLayout {
 
         tuneItem = new ImageView(context);
         tuneItem.setScaleType(ImageView.ScaleType.CENTER);
-        tuneItem.setImageResource(R.drawable.photo_tools);
+        tuneItem.setImageResource(R.drawable.tune);
         tuneItem.setColorFilter(new PorterDuffColorFilter(0xff6cc3ff, PorterDuff.Mode.MULTIPLY));
         tuneItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         linearLayout.addView(tuneItem, LayoutHelper.createLinear(56, 48));
@@ -1781,7 +1781,7 @@ public class PhotoFilterView extends FrameLayout {
 
         blurItem = new ImageView(context);
         blurItem.setScaleType(ImageView.ScaleType.CENTER);
-        blurItem.setImageResource(R.drawable.tool_blur);
+        blurItem.setImageResource(R.drawable.blur_radial);
         blurItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         linearLayout.addView(blurItem, LayoutHelper.createLinear(56, 48));
         blurItem.setOnClickListener(v -> {
@@ -1794,7 +1794,7 @@ public class PhotoFilterView extends FrameLayout {
 
         curveItem = new ImageView(context);
         curveItem.setScaleType(ImageView.ScaleType.CENTER);
-        curveItem.setImageResource(R.drawable.tool_curve);
+        curveItem.setImageResource(R.drawable.curve);
         curveItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         linearLayout.addView(curveItem, LayoutHelper.createLinear(56, 48));
         curveItem.setOnClickListener(v -> {

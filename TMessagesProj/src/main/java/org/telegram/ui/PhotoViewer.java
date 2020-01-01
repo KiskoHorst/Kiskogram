@@ -2390,12 +2390,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         menuItem.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));
         allMediaItem = menuItem.addSubItem(gallery_menu_showall, R.drawable.folder, LocaleController.getString("ShowAllMedia", R.string.ShowAllMedia));
         allMediaItem.setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_savegif, R.drawable.msg_gif, LocaleController.getString("SaveToGIFs", R.string.SaveToGIFs)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_showinchat, R.drawable.msg_message, LocaleController.getString("ShowInChat", R.string.ShowInChat)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_share, R.drawable.msg_shareout, LocaleController.getString("ShareFile", R.string.ShareFile)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_save, R.drawable.msg_gallery, LocaleController.getString("SaveToGallery", R.string.SaveToGallery)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_delete, R.drawable.msg_delete, LocaleController.getString("Delete", R.string.Delete)).setColors(0xfffafafa, 0xfffafafa);
-        menuItem.addSubItem(gallery_menu_cancel_loading, R.drawable.msg_cancel, LocaleController.getString("StopDownload", R.string.StopDownload)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_savegif, R.drawable.input_gif, LocaleController.getString("SaveToGIFs", R.string.SaveToGIFs)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_showinchat, R.drawable.eye, LocaleController.getString("ShowInChat", R.string.ShowInChat)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_share, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("ShareFile", R.string.ShareFile)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_save, R.drawable.download, LocaleController.getString("SaveToGallery", R.string.SaveToGallery)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_delete, R.drawable.ic_ab_delete, LocaleController.getString("Delete", R.string.Delete)).setColors(0xfffafafa, 0xfffafafa);
+        menuItem.addSubItem(gallery_menu_cancel_loading, R.drawable.msg_block, LocaleController.getString("StopDownload", R.string.StopDownload)).setColors(0xfffafafa, 0xfffafafa);
         menuItem.redrawPopup(0xf9222222);
         sendItem.setContentDescription(LocaleController.getString("Forward", R.string.Forward));
 
@@ -2795,7 +2795,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         cropItem = new ImageView(parentActivity);
         cropItem.setScaleType(ImageView.ScaleType.CENTER);
-        cropItem.setImageResource(R.drawable.photo_crop);
+        cropItem.setImageResource(R.drawable.crop);
         cropItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         itemsLayout.addView(cropItem, LayoutHelper.createLinear(70, 48));
         cropItem.setOnClickListener(v -> {
@@ -2808,7 +2808,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         rotateItem = new ImageView(parentActivity);
         rotateItem.setScaleType(ImageView.ScaleType.CENTER);
-        rotateItem.setImageResource(R.drawable.tool_rotate);
+        rotateItem.setImageResource(R.drawable.format_rotate_90);
         rotateItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         itemsLayout.addView(rotateItem, LayoutHelper.createLinear(70, 48));
         rotateItem.setOnClickListener(v -> {
@@ -2821,7 +2821,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         paintItem = new ImageView(parentActivity);
         paintItem.setScaleType(ImageView.ScaleType.CENTER);
-        paintItem.setImageResource(R.drawable.photo_paint);
+        paintItem.setImageResource(R.drawable.brush);
         paintItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         itemsLayout.addView(paintItem, LayoutHelper.createLinear(70, 48));
         paintItem.setOnClickListener(v -> {
@@ -2908,7 +2908,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         tuneItem = new ImageView(parentActivity);
         tuneItem.setScaleType(ImageView.ScaleType.CENTER);
-        tuneItem.setImageResource(R.drawable.photo_tools);
+        tuneItem.setImageResource(R.drawable.tune);
         tuneItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         itemsLayout.addView(tuneItem, LayoutHelper.createLinear(70, 48));
         tuneItem.setOnClickListener(v -> {
@@ -2921,7 +2921,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         timeItem = new ImageView(parentActivity);
         timeItem.setScaleType(ImageView.ScaleType.CENTER);
-        timeItem.setImageResource(R.drawable.photo_timer);
+        timeItem.setImageResource(R.drawable.msg_timer);
         timeItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         timeItem.setContentDescription(LocaleController.getString("SetTimer", R.string.SetTimer));
         itemsLayout.addView(timeItem, LayoutHelper.createLinear(70, 48));
@@ -5594,7 +5594,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         actionBar.setSubtitle(null);
         masksItem.setVisibility(View.GONE);
         muteVideo = false;
-        muteItem.setImageResource(R.drawable.volume_on);
+        muteItem.setImageResource(R.drawable.ic_volume_up_white_24dp);
         editorDoneLayout.setVisibility(View.GONE);
         captionTextView.setTag(null);
         captionTextView.setVisibility(View.INVISIBLE);
