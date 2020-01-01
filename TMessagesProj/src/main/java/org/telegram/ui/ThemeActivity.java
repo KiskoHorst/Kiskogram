@@ -895,7 +895,8 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             return;
         }
         Theme.ThemeInfo themeInfo = Theme.getCurrentTheme();
-        if (themeInfo.themeAccents != null && !themeInfo.themeAccents.isEmpty() && themeInfo.getAccent(false).id >= 100) {
+        Theme.ThemeAccent accent = themeInfo.getAccent(false);
+        if (themeInfo.themeAccents != null && !themeInfo.themeAccents.isEmpty() && accent != null && accent.id >= 100) {
             menuItem.showSubItem(share_theme);
             menuItem.showSubItem(edit_theme);
         } else {
@@ -1583,6 +1584,9 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         }
                     });
                     accentsListView.setOnItemLongClickListener((view12, position) -> {
+                        if (position < 0 || position >= accentsAdapter.themeAccents.size()) {
+                            return false;
+                        }
                         Theme.ThemeAccent accent = accentsAdapter.themeAccents.get(position);
                         if (accent.id >= 100) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
@@ -1728,7 +1732,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                     } else if (position == nightScheduledRow) {
                         typeCell.setValue(LocaleController.getString("AutoNightScheduled", R.string.AutoNightScheduled), Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_SCHEDULED, true);
                     } else if (position == nightAutomaticRow) {
-                        typeCell.setValue(LocaleController.getString("AutoNightAdaptive", R.string.AutoNightAdaptive), Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_AUTOMATIC, true);
+                        typeCell.setValue(LocaleController.getString("AutoNightAdaptive", R.string.AutoNightAdaptive), Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_AUTOMATIC, nightSystemDefaultRow != -1);
                     } else if (position == nightSystemDefaultRow) {
                         typeCell.setValue(LocaleController.getString("AutoNightSystemDefault", R.string.AutoNightSystemDefault), Theme.selectedAutoNightType == Theme.AUTO_NIGHT_TYPE_SYSTEM, false);
                     }

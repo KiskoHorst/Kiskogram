@@ -280,7 +280,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 181801
+    defaultConfig.versionCode = 181901
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
             outputFileName = "app.apk"
