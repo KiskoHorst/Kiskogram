@@ -4527,7 +4527,10 @@ public class MessagesController extends BaseController implements NotificationCe
         for (int a = 0; a < allDialogs.size(); a++) {
             TLRPC.Dialog d = allDialogs.get(a);
             if (!d.pinned) {
-                break;
+                if (d.id != proxyDialogId) {
+                    break;
+                }
+                continue;
             }
             maxPinnedNum = Math.max(d.pinnedNum, maxPinnedNum);
         }
@@ -8200,7 +8203,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     continue;
                 }
                 if (!dialog.pinned) {
-                    break;
+                    if (dialog.id != proxyDialogId) {
+                        break;
+                    }
+                    continue;
                 }
                 getMessagesStorage().setDialogPinned(dialog.id, dialog.pinnedNum);
                 if ((int) dialog.id != 0) {
@@ -8254,7 +8260,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     continue;
                 }
                 if (!d.pinned) {
-                    break;
+                    if (d.id != proxyDialogId) {
+                        break;
+                    }
+                    continue;
                 }
                 maxPinnedNum = Math.max(d.pinnedNum, maxPinnedNum);
             }
@@ -8417,7 +8426,10 @@ public class MessagesController extends BaseController implements NotificationCe
                             continue;
                         }
                         if (!dialog.pinned) {
-                            break;
+                            if (dialog.id != proxyDialogId) {
+                                break;
+                            }
+                            continue;
                         }
                         maxPinnedNum = Math.max(dialog.pinnedNum, maxPinnedNum);
                         dialog.pinned = false;
