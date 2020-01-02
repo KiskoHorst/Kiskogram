@@ -386,7 +386,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             customTabsRow = rowCount++;
             directShareRow = rowCount++;
             enableAnimationsRow = rowCount++;
-            emojiRow = rowCount++;
+            //emojiRow = rowCount++;
             raiseToSpeakRow = rowCount++;
             sendByEnterRow = rowCount++;
             saveToGalleryRow = rowCount++;
@@ -600,7 +600,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
             menuItem.addSubItem(share_theme, R.drawable.forward, LocaleController.getString("ShareTheme", R.string.ShareTheme));
             menuItem.addSubItem(edit_theme, R.drawable.group_edit, LocaleController.getString("EditThemeColors", R.string.EditThemeColors));
             menuItem.addSubItem(create_theme, R.drawable.toast_pallete, LocaleController.getString("CreateNewThemeMenu", R.string.CreateNewThemeMenu));
-            menuItem.addSubItem(reset_settings, R.drawable.ic_again, LocaleController.getString("ThemeResetToDefaults", R.string.ThemeResetToDefaults));
+            menuItem.addSubItem(reset_settings, R.drawable.restart, LocaleController.getString("ThemeResetToDefaults", R.string.ThemeResetToDefaults));
         } else {
             actionBar.setTitle(LocaleController.getString("AutoNightTheme", R.string.AutoNightTheme));
         }
@@ -1319,7 +1319,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 };
                 icons = new int[]{
                         0,
-                        R.drawable.msg_shareout
+                        R.drawable.abc_ic_menu_share_mtrl_alpha
                 };
             } else {
                 hasDelete = themeInfo.info == null || !themeInfo.info.isDefault;
@@ -1330,11 +1330,11 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         themeInfo.info != null && themeInfo.info.creator ? LocaleController.getString("ThemeSetUrl", R.string.ThemeSetUrl) : null,
                         hasDelete ? LocaleController.getString("Delete", R.string.Delete) : null};
                 icons = new int[]{
-                        R.drawable.msg_share,
-                        R.drawable.msg_shareout,
-                        R.drawable.msg_edit,
-                        R.drawable.msg_link,
-                        R.drawable.msg_delete
+                        R.drawable.forward,
+                        R.drawable.abc_ic_menu_share_mtrl_alpha,
+                        R.drawable.group_edit,
+                        R.drawable.profile_link,
+                        R.drawable.ic_ab_delete
                 };
             }
             builder.setItems(items, icons, (dialog, which) -> {

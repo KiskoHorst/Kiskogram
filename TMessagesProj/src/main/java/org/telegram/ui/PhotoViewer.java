@@ -2746,9 +2746,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 cell.setBackgroundDrawable(Theme.createSelectorDrawable(0x24ffffff, 7));
                 if (num == 0) {
                     if (UserObject.isUserSelf(user)) {
-                        cell.setTextAndIcon(LocaleController.getString("SetReminder", R.string.SetReminder), R.drawable.msg_schedule);
+                        cell.setTextAndIcon(LocaleController.getString("SetReminder", R.string.SetReminder), R.drawable.calendar);
                     } else {
-                        cell.setTextAndIcon(LocaleController.getString("ScheduleMessage", R.string.ScheduleMessage), R.drawable.msg_schedule);
+                        cell.setTextAndIcon(LocaleController.getString("ScheduleMessage", R.string.ScheduleMessage), R.drawable.calendar);
                     }
                 } else if (num == 1) {
                     cell.setTextAndIcon(LocaleController.getString("SendWithoutSound", R.string.SendWithoutSound), R.drawable.input_notify_off);
@@ -2840,14 +2840,14 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         selectedCompression = preferences.getInt("compress_video2", selectCompression());
         int compressIconWidth;
         if (selectedCompression <= 1) {
-            compressItem.setImageResource(R.drawable.video_quality1);
+            compressItem.setImageResource(R.drawable.menu_settings);
             compressIconWidth = 48;
         } else if (selectedCompression == 2) {
-            compressItem.setImageResource(R.drawable.video_quality2);
+            compressItem.setImageResource(R.drawable.quality_hd);
             compressIconWidth = 64;
         } else {
             selectedCompression = compressionsCount - 1;
-            compressItem.setImageResource(R.drawable.video_quality3);
+            compressItem.setImageResource(R.drawable.quality_hdplus);
             compressIconWidth = 64;
         }
         itemsLayout.addView(compressItem, LayoutHelper.createLinear(70, 48));
@@ -8950,7 +8950,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             } else {
                 muteItem.setColorFilter(null);
                 actionBar.setSubtitle(currentSubtitle);
-                muteItem.setImageResource(R.drawable.volume_on);
+                muteItem.setImageResource(R.drawable.ic_volume_up_white_24dp);
                 muteItem.setContentDescription(LocaleController.getString("Sound", R.string.Sound));
                 if (compressItem.getTag() != null) {
                     compressItem.setAlpha(1.0f);
@@ -8983,13 +8983,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
         int compressIconWidth = 64;
         if (selectedCompression < 2) {
-            compressItem.setImageResource(R.drawable.video_quality1);
+            compressItem.setImageResource(R.drawable.menu_settings);
             compressIconWidth = 48;
         } else if (selectedCompression == 2) {
-            compressItem.setImageResource(R.drawable.video_quality2);
+            compressItem.setImageResource(R.drawable.quality_hd);
             compressIconWidth = 64;
         } else if (selectedCompression == 3) {
-            compressItem.setImageResource(R.drawable.video_quality3);
+            compressItem.setImageResource(R.drawable.quality_hdplus);
             compressIconWidth = 64;
         }
         compressItem.setPadding(AndroidUtilities.dp(70 - compressIconWidth) / 2, 0, AndroidUtilities.dp(70 - compressIconWidth) / 2, 0);

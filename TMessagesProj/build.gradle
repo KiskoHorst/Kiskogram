@@ -314,7 +314,7 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 28
-        versionName "5.13.0-r1"
+        versionName "5.13.0-r2"
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         manifestPlaceholders = [applicationClassName: "ApplicationLoader"]
