@@ -112,7 +112,16 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
     private Rect backgroundPaddings;
 
     private Runnable dismissRunnable = this::dismiss;
-    private Runnable showRunnable = this::show;
+    private Runnable showRunnable = () -> {
+        if (isShowing()) {
+            return;
+        }
+        try {
+            show();
+        } catch (Exception ignore) {
+
+        }
+    };
 
     private ArrayList<AlertDialogCell> itemViews = new ArrayList<>();
 
@@ -1026,7 +1035,12 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
     }
 
     public void showDelayed(long delay) {
+        AndroidUtilities.cancelRunOnUIThread(showRunnable);
         AndroidUtilities.runOnUIThread(showRunnable, delay);
+    }
+
+    public ThemeDescription[] getThemeDescriptions() {
+        return null;
     }
 
     public static class Builder {

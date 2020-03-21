@@ -143,7 +143,7 @@
     <string name="EncryptedChatStartedOutgoing">%s ist deinem geheimen Chat beigetreten.</string>
     <string name="EncryptedChatStartedIncoming">Du bist dem geheimen Chat beigetreten.</string>
     <string name="ClearHistory">Verlauf leeren</string>
-    <string name="ClearRecentHistory">Clear history</string>
+    <string name="ClearRecentHistory">Verlauf leeren</string>
     <string name="HistoryClearedUndo">Verlauf geleert.</string>
     <string name="ChatsMute">Stumm</string>
     <string name="ChatsUnmute">Stumm aus</string>
@@ -219,6 +219,7 @@
     <string name="ArchiveHintText2">Stummgeschaltete Chats\nbleiben im Archiv, wenn\nneue Nachrichten eintreffen.</string>
     <string name="ArchiveHintHeader3">Angeheftete Chats</string>
     <string name="ArchiveHintText3">Unbegrenzt viele archivierte Chats\nkannst du oben anheften.</string>
+    <string name="ScheduledOrNoSoundHint">Halte diese Knopf, um deine Nachricht zu planen oder ohne Ton zu senden.</string>
     <!--channels-->
     <string name="SetAsAdmin">Zum Admin machen</string>
     <string name="EditAdminRights">Adminrechte bearbeiten</string>
@@ -244,6 +245,7 @@
     <string name="ActionPinnedText">un1 hat \"%1$s\" angeheftet</string>
     <string name="ActionPinnedNoText">un1 hat eine Nachricht angeheftet</string>
     <string name="ActionPinnedPoll">un1 hat eine Umfrage angeheftet</string>
+    <string name="ActionPinnedQuiz">un1 hat ein Quiz angeheftet</string>
     <string name="ActionPinnedPhoto">un1 hat ein Bild angeheftet</string>
     <string name="ActionPinnedVideo">un1 hat ein Video angeheftet</string>
     <string name="ActionPinnedFile">un1 hat eine Datei angeheftet</string>
@@ -376,6 +378,7 @@
     <string name="ChannelMessageVideo">%1$s hat ein Video gesendet</string>
     <string name="ChannelMessageContact2">%1$s hat einen Kontakt gesendet %2$s</string>
     <string name="ChannelMessagePoll2">%1$s hat eine Umfrage gesendet %2$s</string>
+    <string name="ChannelMessageQuiz2">%1$s hat das Quiz \"%2$s\" veröffentlicht</string>
     <string name="ChannelMessageMap">%1$s hat einen Standort gesendet</string>
     <string name="ChannelMessageLiveLocation">%1$@ hat einen Live-Standort geteilt</string>
     <string name="ChannelMessageDocument">%1$s hat eine Datei gesendet</string>
@@ -522,28 +525,66 @@
     <string name="SlowmodeSendErrorTooLong">Dieser Text ist für eine einzelne Nachricht leider zu lang.\n\nLangsamer Modus ist aktiv, du kannst nicht mehr als eine gleichzeitig senden.</string>
     <!--polls-->
     <string name="NewPoll">Neue Umfrage</string>
+    <string name="NewQuiz">Neues Quiz</string>
     <string name="Poll">Umfrage</string>
     <string name="Question">Frage</string>
     <string name="QuestionHint">Stelle eine Frage</string>
     <string name="PollOptions">Umfrageoptionen</string>
-    <string name="AddAnOption">Option hinzufügen</string>
+    <string name="QuizAnswers">Quiz-Antworten</string>
+    <string name="PollResults">Umfrageergebnis</string>
+    <string name="PollAnonymous">Anonyme Stimmabgabe</string>
+    <string name="PollQuiz">Quiz-Modus</string>
+    <string name="PollSelectOption">Erst eine Option wählen</string>
+    <string name="PollCollapse">Zuklappen</string>
+    <string name="PollExpand">Aufklappen</string>
+    <string name="PublicPollCantForward">Leider können Umfragen mit sichtbaren Stimmen nicht an Kanäle weitergeleitet werden.</string>
+    <string name="PollCantForwardSecretChat">Leider können Umfragen nicht an Geheime Chats weitergeleitet werden.</string>
+    <string name="PollMultiple">Mehrfachauswahl</string>
+    <string name="PollTapToSelect">Wähle hier die richtige Antwort</string>
+    <string name="QuizInfo">Umfragen im Quiz-Modus haben eine richtige Antwort. Nutzer können ihre Antworten nicht widerrufen.</string>
+    <string name="AddAnOption">Option hinzufügen...</string>
     <string name="AddAnOptionInfo">Noch %1$s</string>
     <string name="AddAnOptionInfoMax">Mehr Optionen gibt es derzeit leider nicht.</string>
     <string name="AnonymousPoll">Anonyme Umfrage</string>
+    <string name="QuizWrongAnswer">Falsche Antwort!</string>
+    <string name="QuizWrongAnswerInfo">Du hast nicht die richtige Antwort gewählt.</string>
+    <string name="QuizWellDone">Gut gemacht!</string>
+    <string name="QuizWellDoneInfo">Du hast die richtige Antwort gewählt.</string>
+    <string name="PublicPoll">Umfrage</string>
+    <string name="QuizPoll">Quiz</string>
+    <string name="PollSubmitVotes">ABSTIMMEN</string>
+    <string name="PollViewResults">ERGEBNIS ANZEIGEN</string>
+    <string name="AnonymousQuizPoll">Anonymes Quiz</string>
     <string name="StopPoll">Umfrage beenden</string>
     <string name="StopPollAlertTitle">Umfrage beenden?</string>
     <string name="StopPollAlertText">Beendest du diese Umfrage, so kann niemand mehr abstimmen. Das lässt sich nicht rückgängig machen.</string>
+    <string name="StopQuiz">Quiz beenden</string>
+    <string name="StopQuizAlertTitle">Quiz beenden?</string>
+    <string name="StopQuizAlertText">Wenn du dieses Quiz jetzt beendest, kann niemand mehr abstimmen. Das kann nicht rückgängig gemacht werden.</string>
     <string name="CancelPollAlertTitle">Umfrage verwerfen?</string>
     <string name="CancelPollAlertText">Wirklich diese Umfrage verwerfen?</string>
     <string name="Unvote">Stimme entfernen</string>
     <string name="FinalResults">Endergebnis</string>
     <string name="NoVotes">Keine Stimmen</string>
+    <string name="NoVotesQuiz">Noch keine Antworten</string>
     <string name="Vote_zero">%1$d Stimmen</string>
     <string name="Vote_one">%1$d Stimme</string>
     <string name="Vote_two">%1$d Stimmen</string>
     <string name="Vote_few">%1$d Stimmen</string>
     <string name="Vote_many">%1$d Stimmen</string>
     <string name="Vote_other">%1$d Stimmen</string>
+    <string name="Answer_zero">%1$d Antworten</string>
+    <string name="Answer_one">%1$d Antwort</string>
+    <string name="Answer_two">%1$d Antworten</string>
+    <string name="Answer_few">%1$d Antworten</string>
+    <string name="Answer_many">%1$d Antworten</string>
+    <string name="Answer_other">%1$d Antworten</string>
+    <string name="ShowVotes_zero">Mehr anzeigen (%1$d)</string>
+    <string name="ShowVotes_one">Mehr anzeigen (%1$d)</string>
+    <string name="ShowVotes_two">Mehr anzeigen (%1$d)</string>
+    <string name="ShowVotes_few">Mehr anzeigen (%1$d)</string>
+    <string name="ShowVotes_many">Mehr anzeigen (%1$d)</string>
+    <string name="ShowVotes_other">Mehr anzeigen (%1$d)</string>
     <string name="Option_zero">%1$d weitere Optionen möglich.</string>
     <string name="Option_one">%1$d weitere Option möglich.</string>
     <string name="Option_two">%1$d weitere Optionen möglich.</string>
@@ -586,6 +627,7 @@
     <string name="EventLogPinnedMessages">un1 hat diese Nachricht angeheftet:</string>
     <string name="EventLogUnpinnedMessages">un1 hat angeheftete Nachricht entfernt</string>
     <string name="EventLogStopPoll">un1 hat Umfrage beendet:</string>
+    <string name="EventLogStopQuiz">un1 hat das Quiz beendet:</string>
     <string name="EventLogDeletedMessages">un1 hat diese Nachricht gelöscht:</string>
     <string name="EventLogChangedLocation">un1 hat Gruppenstandort zu \"%1$s\" geändert</string>
     <string name="EventLogRemovedLocation">un1 hat Gruppenstandort entfernt</string>
@@ -753,6 +795,7 @@
     <string name="YouLeft">Du hast die Gruppe verlassen</string>
     <string name="DeleteThisGroup">Diese Gruppe löschen</string>
     <string name="DeleteThisChat">Diesen Chat löschen</string>
+    <string name="DeleteTheseChats">Chats löschen</string>
     <string name="SlideToCancel">WISCHEN UM ABZUBRECHEN</string>
     <string name="SaveToDownloads">In Downloads speichern</string>
     <string name="SaveToGIFs">GIF hinzufügen</string>
@@ -915,10 +958,13 @@
     <string name="MessageScheduledLimitReached">Mehr als 100 Nachrichten kann man nicht planen.</string>
     <string name="MessageScheduledBotAction">Diese Aktion wird erst nach Veröffentlichung der Nachricht verfügbar sein.</string>
     <string name="MessageScheduledVote">Das Abstimmen wird erst nach Veröffentlichung der Nachricht verfügbar sein.</string>
+    <string name="MessageScheduledVoteResults">Ergebnisse werden sichtbar, sobald die Nachricht veröffentlicht wird.</string>
     <string name="MessageScheduledReminderNotification">&#128197; Erinnerung</string>
     <string name="OneResult">1 Ergebnis</string>
     <string name="VideoQualityIsTooLow">Die Videoqualität ist zu niedrig, um die Komprimierung zu ändern.</string>
     <string name="TextSelectionHit">**Wort** gedrückt halten und Cursor bewegen, um noch mehr Text zu markieren.</string>
+    <string name="CardNumberCopied">Card number copied to clipboard</string>
+    <string name="CopyCardNumber">Copy</string>
     <!--notification-->
     <string name="MessageLifetimeChanged">%1$s hat den Selbstzerstörungs-Timer auf %2$s gesetzt</string>
     <string name="MessageLifetimeChangedOutgoing">Du hast den Selbstzerstörungs-Timer auf %1$s gesetzt</string>
@@ -939,6 +985,7 @@
     <string name="NotificationMessageSDVideo">%1$s hat dir ein selbstzerstörendes Video gesendet</string>
     <string name="NotificationMessageContact2">%1$s hat einen Kontakt %2$s mit dir geteilt</string>
     <string name="NotificationMessagePoll2">%1$s hat dir eine Umfrage gesendet %2$s</string>
+    <string name="NotificationMessageQuiz2">%1$s hat dir das Quiz \"%2$s\" gesendet</string>
     <string name="NotificationMessageMap">%1$s hat dir einen Standort gesendet</string>
     <string name="NotificationMessageLiveLocation">%1$s hat dir einen Live-Standort gesendet</string>
     <string name="NotificationMessageGame">%1$s hat dich eingeladen, %2$s zu spielen</string>
@@ -955,6 +1002,7 @@
     <string name="NotificationMessageGroupPhoto">%1$s hat ein Bild an die Gruppe %2$s gesendet</string>
     <string name="NotificationMessageGroupVideo">%1$s hat ein Video an die Gruppe %2$s gesendet</string>
     <string name="NotificationMessageGroupPoll2">%1$s hat eine Umfrage %3$s an die Gruppe %2$s gesendet</string>
+    <string name="NotificationMessageGroupQuiz2">%1$s hat das Quiz \"%3$s\" an die Gruppe \"%2$s\" gesendet</string>
     <string name="NotificationMessageGroupContact2">%1$s hat einen Kontakt %3$s in der Gruppe %2$s geteilt</string>
     <string name="NotificationMessageGroupMap">%1$s hat einen Standort an die Gruppe %2$s gesendet</string>
     <string name="NotificationMessageGroupLiveLocation">%1$s hat Live-Standort mit der Gruppe %2$s geteilt</string>
@@ -996,6 +1044,7 @@
     <string name="NotificationActionPinnedText">%1$s hat \"%2$s\" in der Gruppe %3$s angeheftet</string>
     <string name="NotificationActionPinnedNoText">%1$s hat eine Nachricht in der der Gruppe %2$s angeheftet</string>
     <string name="NotificationActionPinnedPoll2">%1$s hat eine Umfrage %3$s in der Gruppe %2$s angeheftet</string>
+    <string name="NotificationActionPinnedQuiz2">%1$s hat das Quiz \"%3$s\" in der Gruppe \"%2$s\" angeheftet</string>
     <string name="NotificationActionPinnedPhoto">%1$s hat ein Bild in der Gruppe %2$s angeheftet</string>
     <string name="NotificationActionPinnedGame">%1$s hat ein Spiel in der Gruppe %2$s angeheftet</string>
     <string name="NotificationActionPinnedGameScore">%1$s hat ein Spielergebnis in der Gruppe %2$s angeheftet</string>
@@ -1014,6 +1063,7 @@
     <string name="NotificationActionPinnedTextChannel">%1$s hat \"%2$s\" angeheftet</string>
     <string name="NotificationActionPinnedNoTextChannel">%1$s hat eine Nachricht angeheftet</string>
     <string name="NotificationActionPinnedPollChannel2">%1$s hat eine Umfrage %2$s angeheftet</string>
+    <string name="NotificationActionPinnedQuizChannel2">%1$s hat das Quiz \"%2$s\" angeheftet</string>
     <string name="NotificationActionPinnedPhotoChannel">%1$s hat ein Bild angeheftet</string>
     <string name="NotificationActionPinnedGameChannel">%1$s hat ein Spiel angeheftet</string>
     <string name="NotificationActionPinnedGameScoreChannel">%1$s hat ein Spielergebnis angeheftet</string>
@@ -1069,7 +1119,6 @@
     <string name="SoftUserLimitAlert">Sobald du diese Gruppe zu einer Supergruppe erweitert hast, kannst du mehr Nutzer einladen.</string>
     <string name="EnterGroupNamePlaceholder">Gruppenname</string>
     <string name="GroupName">Gruppenname</string>
-    <string name="MembersCount">%1$d von %2$d ausgewählt</string>
     <string name="MembersCountZero">bis zu %1$s</string>
     <string name="JoinToGroupErrorFull">Leider ist diese Gruppe schon voll.</string>
     <string name="JoinToGroupErrorNotExist">Leider gibt es diesen Chat nicht.</string>
@@ -1121,6 +1170,9 @@
     <string name="Invite">Einladen</string>
     <string name="BlockContact">Nutzer blockieren</string>
     <string name="BlockUser">Nutzer blockieren</string>
+    <string name="BlockUsers">Nutzer blockieren</string>
+    <string name="BlockUserMessage">Do you want to block **%1$s** from messaging and calling you on Telegram?</string>
+    <string name="BlockUsersMessage">Möchtest du **%1$s** blockieren, so dass sie dich bei Telegram weder anschreiben noch anrufen dürfen?</string>
     <string name="UserBlocked">Nutzer blockiert</string>
     <string name="UserUnblocked">Nutzer freigegeben</string>
     <string name="EditContact">Kontakt bearbeiten</string>
@@ -1165,6 +1217,8 @@
     <string name="SharedPhotosAndVideos">Bilder und Videos</string>
     <string name="SharedLinks">Links</string>
     <string name="SharedAudioFiles">Audiodateien</string>
+    <string name="SendMessageLocation">Send Message</string>
+    <string name="ReportUserLocation">Report</string>
     <!--usernames-->
     <string name="Username">Benutzername</string>
     <string name="UsernamePlaceholder">Dein Benutzername</string>
@@ -1264,12 +1318,13 @@
     <string name="SaveTheme">THEMA SPEICHERN</string>
     <string name="NewTheme">Neues Farbthema</string>
     <string name="ColorTheme">Farbthema</string>
-    <string name="ColorThemeChanged">Color theme changed.</string>
-    <string name="ColorThemeChangedInfo">You can change it back in *Chat Settings*.</string>
+    <string name="ColorThemeChanged">Farbthema geändert.</string>
+    <string name="ColorThemeChangedInfo">Du kannst es wieder in den *Chat-Einstellungen* ändern.</string>
     <string name="BuiltInThemes">Eingebaute Themen</string>
     <string name="CustomThemes">Eigene Themen</string>
     <string name="ThemeSetUrl">Link festlegen</string>
     <string name="ThemeUrl">Link zum Thema</string>
+    <string name="BubbleRadius">Nachrichtenecken</string>
     <string name="ChatList">Ansicht der Chatliste</string>
     <string name="ChatListDefault">Zwei Zeilen</string>
     <string name="ChatListExpanded">Drei Zeilen</string>
@@ -1625,8 +1680,12 @@
     <string name="DebugMenuDisableLogs">Protokollierung deaktivieren</string>
     <string name="DebugMenuImportContacts">Kontakte importieren</string>
     <string name="DebugMenuReloadContacts">Kontakte neu laden</string>
-    <string name="DebugMenuResetDialogs">Dialoge zurücksetzen</string>
+    <string name="DebugMenuResetDialogs">Chats zurücksetzen</string>
     <string name="DebugMenuReadAllDialogs">Alle Chats lesen</string>
+    <string name="DebugMenuEnablePauseMusic">Enable pause music on record</string>
+    <string name="DebugMenuDisablePauseMusic">Disable pause music on record</string>
+    <string name="DebugMenuEnableSmoothKeyboard">Enable smooth keyboard</string>
+    <string name="DebugMenuDisableSmoothKeyboard">Disable smooth keyboard</string>
     <string name="DebugMenuEnableCamera">In-App Kamera aktivieren</string>
     <string name="DebugMenuDisableCamera">In-App Kamera deaktivieren</string>
     <string name="DebugMenuResetContacts">Importierte Kontakte zurücksetzen</string>
@@ -2001,11 +2060,13 @@
     <string name="October">Oktober</string>
     <string name="November">November</string>
     <string name="December">Dezember</string>
-    <string name="SharedFilesTab">DATEIEN</string>
-    <string name="SharedMediaTab">MEDIEN</string>
-    <string name="SharedLinksTab">LINKS</string>
-    <string name="SharedMusicTab">AUDIOS</string>
-    <string name="SharedVoiceTab">SPRACHE</string>
+    <string name="SharedFilesTab2">Files</string>
+    <string name="SharedMediaTab2">Media</string>
+    <string name="SharedMediaTabFull2">Shared Media</string>
+    <string name="SharedGroupsTab2">Groups</string>
+    <string name="SharedLinksTab2">Links</string>
+    <string name="SharedMusicTab2">Audio</string>
+    <string name="SharedVoiceTab2">Voice Messages</string>
     <string name="DocumentsTitle">Geteilte Dateien</string>
     <string name="SharedContentTitle">Geteilte Inhalte</string>
     <string name="LinksTitle">Geteilte Links</string>
@@ -2063,6 +2124,10 @@
     <string name="LiveLocationAlertGroup">Wähle, wie lange Leute in diesem Chat deinen Live-Standort sehen dürfen.</string>
     <string name="GpsDisabledAlertTitle">GPS aktivieren</string>
     <string name="GpsDisabledAlertText">Bitte aktiviere GPS, um auf ortsbezogene Funktionen zuzugreifen.</string>
+    <string name="MakeMyselfVisible">Make Myself Visible</string>
+    <string name="MakeMyselfVisibleTitle">Show Your Profile?</string>
+    <string name="MakeMyselfVisibleInfo">Users nearby will be able to view your profile and send you messages. This may help you find new friends, but could also attract excessive attention. You can stop sharing your profile at any time.\n\nYour phone number will remain hidden.</string>
+    <string name="StopShowingMe">Stop Showing Me</string>
     <string name="PeopleNearby">Leute in der Nähe</string>
     <string name="AddPeopleNearby">Leute in der Nähe</string>
     <string name="PeopleNearbyAccessInfo">Füge schnell Leute aus der Nähe hinzu, \ndie diesen Bereich ebenfalls ansehen,\nund entdecke lokale Gruppen-Chats.\n\nBitte aktiviere den Standortzugriff,\num diese Funktion nutzen zu können.</string>
@@ -2071,7 +2136,7 @@
     <string name="PeopleNearbyGpsInfo">Füge schnell Leute aus der Nähe hinzu, \ndie diesen Bereich ebenfalls ansehen,\nund entdecke lokale Gruppen-Chats.\n\nBitte aktiviere die Standortdienste,\num diese Funktion nutzen zu können.</string>
     <string name="PeopleNearbyGps">Einschalten</string>
     <string name="ChatsNearbyHeader">Gruppen in der Nähe</string>
-    <string name="PeopleNearbyInfo">Bitte deinen Freund in der Nähe, diese Seite zu öffnen, um Nummern auszutauschen.</string>
+    <string name="PeopleNearbyInfo2">Exchange contact info with people nearby and find new friends.</string>
     <string name="PeopleNearbyEmpty">Prüfe, wer bei dir in der Nähe ist...</string>
     <string name="NearbyCreateGroup">Erstelle eine lokale Gruppe</string>
     <string name="NearbyStartGroup">Gruppe erstellen</string>
@@ -2102,8 +2167,8 @@
     <string name="VideoDoesNotSupportStreaming">Dieses Video ist nicht für Streaming optimiert. Du musst es vollständig herunterladen, um es abzuspielen.</string>
     <string name="CantPlayVideo">App konnte dieses Video nicht abspielen. Möchtest du es mit einem externen Player abspielen?</string>
     <string name="NoRecentSearches">Keine kürzliche Suche</string>
-    <string name="ImagesTab">BILDER</string>
-    <string name="GifsTab">GIFS</string>
+    <string name="ImagesTab2">Bilder</string>
+    <string name="GifsTab2">GIFs</string>
     <string name="NoRecentGIFs">Suchverlauf</string>
     <string name="SearchImages">BILDERSUCHE</string>
     <string name="SearchImagesInfo">SUCHE IM WEB</string>
@@ -2233,9 +2298,9 @@
     <string name="DataUsage">Daten- und Speichernutzung</string>
     <string name="StorageUsage">Speichernutzung</string>
     <string name="NetworkUsage">Datenbenutzung</string>
-    <string name="NetworkUsageMobile">MOBIL</string>
-    <string name="NetworkUsageWiFi">WLAN</string>
-    <string name="NetworkUsageRoaming">ROAMING</string>
+    <string name="NetworkUsageMobileTab">Mobil</string>
+    <string name="NetworkUsageWiFiTab">Wi-Fi</string>
+    <string name="NetworkUsageRoamingTab">Roaming</string>
     <string name="MessagesDataUsage">Nachrichten und sonstige Daten</string>
     <string name="CountSent">Gesendet</string>
     <string name="CountReceived">Empfangen</string>
@@ -2801,6 +2866,12 @@
     <string name="items_few">%1$d Objekte</string>
     <string name="items_many">%1$d Objekte</string>
     <string name="items_other">%1$d Objekte</string>
+
+
+
+
+
+
     <string name="FromChats_zero">von %1$d Chats</string>
     <string name="FromChats_one">von %1$d Chat</string>
     <string name="FromChats_two">von %1$d Chats</string>
@@ -2958,12 +3029,36 @@
     <string name="Files_few">%1$d Dateien</string>
     <string name="Files_many">%1$d Dateien</string>
     <string name="Files_other">%1$d Dateien</string>
+    <string name="MusicFiles_zero">%1$d music files</string>
+    <string name="MusicFiles_one">%1$d music file</string>
+    <string name="MusicFiles_two">%1$d music files</string>
+    <string name="MusicFiles_few">%1$d music files</string>
+    <string name="MusicFiles_many">%1$d music files</string>
+    <string name="MusicFiles_other">%1$d music files</string>
+    <string name="CommonGroups_zero">%1$d groups in common</string>
+    <string name="CommonGroups_one">%1$d group in common</string>
+    <string name="CommonGroups_two">%1$d groups in common</string>
+    <string name="CommonGroups_few">%1$d groups in common</string>
+    <string name="CommonGroups_many">%1$d groups in common</string>
+    <string name="CommonGroups_other">%1$d groups in common</string>
     <string name="Media_zero">%1$d Medien</string>
     <string name="Media_one">%1$d Medium</string>
     <string name="Media_two">%1$d Medien</string>
     <string name="Media_few">%1$d Medien</string>
     <string name="Media_many">%1$d Medien</string>
     <string name="Media_other">%1$d Medien</string>
+    <string name="Voice_zero">%1$d voice messages</string>
+    <string name="Voice_one">%1$d voice message</string>
+    <string name="Voice_two">%1$d voice messages</string>
+    <string name="Voice_few">%1$d voice messages</string>
+    <string name="Voice_many">%1$d voice messages</string>
+    <string name="Voice_other">%1$d voice messages</string>
+    <string name="Links_zero">%1$d links</string>
+    <string name="Links_one">%1$d link</string>
+    <string name="Links_two">%1$d links</string>
+    <string name="Links_few">%1$d links</string>
+    <string name="Links_many">%1$d links</string>
+    <string name="Links_other">%1$d links</string>
     <string name="BlockedUsersCount_zero">%1$d blockierte Nutzer</string>
     <string name="BlockedUsersCount_one">%1$d blockierter Nutzer</string>
     <string name="BlockedUsersCount_two">%1$d blockierte Nutzer</string>
@@ -3066,6 +3161,24 @@
     <string name="CountOfResults_few">%1$d von %2$d Ergebnissen</string>
     <string name="CountOfResults_many">%1$d von %2$d Ergebnissen</string>
     <string name="CountOfResults_other">%1$d von %2$d Ergebnissen</string>
+    <string name="UsersCount_zero">%1$d Nutzer</string>
+    <string name="UsersCount_one">%1$d Nutzer</string>
+    <string name="UsersCount_two">%1$d Nutzer</string>
+    <string name="UsersCount_few">%1$d Nutzer</string>
+    <string name="UsersCount_many">%1$d Nutzer</string>
+    <string name="UsersCount_other">%1$d Nutzer</string>
+    <string name="UsersCountTitle_zero">%1$d Nutzer</string>
+    <string name="UsersCountTitle_one">%1$d Nutzer</string>
+    <string name="UsersCountTitle_two">%1$d Nutzer</string>
+    <string name="UsersCountTitle_few">%1$d Nutzer</string>
+    <string name="UsersCountTitle_many">%1$d Nutzer</string>
+    <string name="UsersCountTitle_other">%1$d Nutzer</string>
+    <string name="MembersCountSelected_zero">%1$d of %2$d selected</string>
+    <string name="MembersCountSelected_one">%1$d of %2$d selected</string>
+    <string name="MembersCountSelected_two">%1$d of %2$d selected</string>
+    <string name="MembersCountSelected_few">%1$d of %2$d selected</string>
+    <string name="MembersCountSelected_many">%1$d of %2$d selected</string>
+    <string name="MembersCountSelected_other">%1$d of %2$d selected</string>
     <!--accessibility descriptions-->
     <string name="AccDescrGroup">Gruppe</string>
     <string name="AccDescrChannel">Kanal</string>

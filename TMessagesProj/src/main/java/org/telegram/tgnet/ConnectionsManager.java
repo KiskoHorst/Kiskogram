@@ -496,11 +496,20 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static int getInitFlags() {
+        int flags = 0;
         EmuDetector detector = EmuDetector.with(ApplicationLoader.applicationContext);
         if (detector.detect()) {
-            return 1024;
+            flags |= 1024;
         }
-        return 0;
+        try {
+            String installer = ApplicationLoader.applicationContext.getPackageManager().getInstallerPackageName(ApplicationLoader.applicationContext.getPackageName());
+            if ("com.android.vending".equals(installer)) {
+                flags |= 2048;
+            }
+        } catch (Throwable ignore) {
+
+        }
+        return flags;
     }
 
     public static void onBytesSent(int amount, int networkType, final int currentAccount) {
@@ -996,7 +1005,6 @@ public class ConnectionsManager extends BaseController {
         protected NativeByteBuffer doInBackground(Void... voids) {
             ByteArrayOutputStream outbuf = null;
             InputStream httpConnectionStream = null;
-            //curl -s  "https://dns.google.com/resolve?name=apv2.stel.com&type=ANY&random_padding=askdkadaas3232dskdKFKDs"
             try {
                 String domain = native_isTestBackend(currentAccount) != 0 ? "tapv3.stel.com" : AccountInstance.getInstance(currentAccount).getMessagesController().dcDomainName;
                 int len = Utilities.random.nextInt(116) + 13;

@@ -201,6 +201,9 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
         }
 
         private boolean parseTheme() {
+            if (themeInfo == null || themeInfo.pathToFile == null) {
+                return false;
+            }
             boolean finished = false;
             File file = new File(themeInfo.pathToFile);
             try (FileInputStream stream = new FileInputStream(file)) {
@@ -390,6 +393,7 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
             themeInfo = theme;
             isFirst = first;
             isLast = last;
+            accentId = theme.currentAccentId;
             FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) button.getLayoutParams();
             layoutParams.leftMargin = AndroidUtilities.dp(isFirst ? 22 + 27 : 27);
             button.setLayoutParams(layoutParams);
@@ -614,7 +618,7 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
                     loadingDrawable.draw(canvas);
                 }
                 if (themeInfo.themeLoaded) {
-                    long newTime = SystemClock.uptimeMillis();
+                    long newTime = SystemClock.elapsedRealtime();
                     long dt = Math.min(17, newTime - lastDrawTime);
                     lastDrawTime = newTime;
                     placeholderAlpha -= dt / 180.0f;

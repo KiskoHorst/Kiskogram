@@ -203,6 +203,14 @@ public class ProfileSearchCell extends BaseCell {
         }
     }
 
+    public TLRPC.User getUser() {
+        return user;
+    }
+
+    public TLRPC.Chat getChat() {
+        return chat;
+    }
+
     public void setSublabelOffset(int x, int y) {
         sublabelOffsetX = x;
         sublabelOffsetY = y;

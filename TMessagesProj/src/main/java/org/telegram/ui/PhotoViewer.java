@@ -36,6 +36,7 @@ import android.graphics.SurfaceTexture;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaCodecInfo;
 import android.net.Uri;
 import android.os.Build;
@@ -64,7 +65,6 @@ import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.ContextThemeWrapper;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
@@ -74,6 +74,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowInsets;
@@ -147,6 +148,7 @@ import org.telegram.ui.Components.ChatAttachAlert;
 import org.telegram.ui.Components.CheckBox;
 import org.telegram.ui.Components.ClippingImageView;
 import org.telegram.messenger.ImageReceiver;
+import org.telegram.ui.Components.GestureDetector2;
 import org.telegram.ui.Components.GroupedPhotosListView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.NumberPicker;
@@ -179,7 +181,7 @@ import java.util.HashMap;
 import java.util.Locale;
 
 @SuppressWarnings("unchecked")
-public class PhotoViewer implements NotificationCenter.NotificationCenterDelegate, GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener {
+public class PhotoViewer implements NotificationCenter.NotificationCenterDelegate, GestureDetector2.OnGestureListener, GestureDetector2.OnDoubleTapListener {
 
     private int classGuid;
     private PhotoViewerProvider placeProvider;
@@ -248,6 +250,15 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private AnimatorSet compressItemAnimation;
     private ImageReceiver sideImage;
     private boolean isCurrentVideo;
+
+    private long lastPhotoSetTime;
+
+    private GradientDrawable[] pressedDrawable = new GradientDrawable[2];
+    private boolean[] drawPressedDrawable = new boolean[2];
+    private float[] pressedDrawableAlpha = new float[2];
+    private int touchSlop;
+
+    private boolean useSmoothKeyboard;
 
     private VideoForwardDrawable videoForwardDrawable;
 
@@ -330,6 +341,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private boolean firstAnimationDelay;
     private long lastBufferedPositionCheck;
     private View playButtonAccessibilityOverlay;
+
+    private int currentPanTranslationY;
     
     public final static int SELECT_TYPE_AVATAR = 1;
     public final static int SELECT_TYPE_WALLPAPER = 3;
@@ -444,9 +457,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     videoPlayerControlFrameLayout.invalidate();
                     if (shouldSavePositionForCurrentVideo != null) {
                         float value = progress;
-                        if (value >= 0 && shouldSavePositionForCurrentVideo != null && SystemClock.uptimeMillis() - lastSaveTime >= 1000) {
+                        if (value >= 0 && shouldSavePositionForCurrentVideo != null && SystemClock.elapsedRealtime() - lastSaveTime >= 1000) {
                             String saveFor = shouldSavePositionForCurrentVideo;
-                            lastSaveTime = SystemClock.uptimeMillis();
+                            lastSaveTime = SystemClock.elapsedRealtime();
                             Utilities.globalQueue.postRunnable(() -> {
                                 SharedPreferences.Editor editor = ApplicationLoader.applicationContext.getSharedPreferences("media_saved_pos", Activity.MODE_PRIVATE).edit();
                                 editor.putFloat(shouldSavePositionForCurrentVideo, value).commit();
@@ -559,7 +572,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
     };
 
-    private float[][] animationValues = new float[2][10];
+    private float[][] animationValues = new float[2][13];
 
     private ChatActivity parentChatActivity;
     private MentionsAdapter mentionsAdapter;
@@ -632,7 +645,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private long animationStartTime;
     private AnimatorSet imageMoveAnimation;
     private AnimatorSet changeModeAnimation;
-    private GestureDetector gestureDetector;
+    private GestureDetector2 gestureDetector;
     private boolean doubleTapEnabled;
     private DecelerateInterpolator interpolator = new DecelerateInterpolator(1.5f);
     private float pinchStartDistance;
@@ -1028,12 +1041,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         public int dialogId;
         public int index;
         public int size;
-        public int radius;
+        public int[] radius;
         public int clipBottomAddition;
         public int clipTopAddition;
         public float scale = 1.0f;
         public boolean isEvent;
         public ClippingImageView animatingImageView;
+        public int animatingImageViewYOffset;
     }
 
     public static class EmptyPhotoViewerProvider implements PhotoViewerProvider {
@@ -1193,7 +1207,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         private boolean ignoreLayout;
 
         public FrameLayoutDrawer(Context context) {
-            super(context);
+            super(context, false);
             setWillNotDraw(false);
             paint.setColor(0x33000000);
         }
@@ -1243,7 +1257,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         @Override
         protected void onLayout(boolean changed, int _l, int t, int _r, int _b) {
             final int count = getChildCount();
-            int paddingBottom = getKeyboardHeight() <= AndroidUtilities.dp(20) && !AndroidUtilities.isInMultiwindow ? captionEditText.getEmojiPadding() : 0;
+            int keyboardSize = useSmoothKeyboard ? 0 : getKeyboardHeight();
+            int paddingBottom = keyboardSize <= AndroidUtilities.dp(20) && !AndroidUtilities.isInMultiwindow ? captionEditText.getEmojiPadding() : 0;
 
             for (int i = 0; i < count; i++) {
                 final View child = getChildAt(i);
@@ -1336,7 +1351,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
             if (Build.VERSION.SDK_INT >= 21 && AndroidUtilities.statusBarHeight != 0 && actionBar != null) {
                 paint.setAlpha((int) (255 * actionBar.getAlpha() * 0.2f));
-                canvas.drawRect(0, 0, getMeasuredWidth(), AndroidUtilities.statusBarHeight, paint);
+                canvas.drawRect(0, currentPanTranslationY, getMeasuredWidth(), currentPanTranslationY + AndroidUtilities.statusBarHeight, paint);
                 paint.setAlpha((int) (255 * actionBar.getAlpha() * 0.498f));
                 if (getPaddingRight() > 0) {
                     canvas.drawRect(getMeasuredWidth() - getPaddingRight(), 0, getMeasuredWidth(), getMeasuredHeight(), paint);
@@ -1387,6 +1402,43 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 return;
             }
             super.requestLayout();
+        }
+
+        @Override
+        protected void onPanTranslationUpdate(int y) {
+            currentPanTranslationY = y;
+            actionBar.setTranslationY(y);
+            if (miniProgressView != null) {
+                miniProgressView.setTranslationY(y);
+            }
+            if (progressView != null) {
+                progressView.setTranslationY(y);
+            }
+            if (checkImageView != null) {
+                checkImageView.setTranslationY(y);
+            }
+            if (photosCounterView != null) {
+                photosCounterView.setTranslationY(y);
+            }
+            if (selectedPhotosListView != null) {
+                selectedPhotosListView.setTranslationY(y);
+            }
+            if (aspectRatioFrameLayout != null) {
+                aspectRatioFrameLayout.setTranslationY(y);
+            }
+            if (textureImageView != null) {
+                textureImageView.setTranslationY(y);
+            }
+            if (photoCropView != null) {
+                photoCropView.setTranslationY(y);
+            }
+            if (photoFilterView != null) {
+                photoFilterView.setTranslationY(y);
+            }
+            if (photoPaintView != null) {
+                photoPaintView.setTranslationY(y);
+            }
+            invalidate();
         }
     }
 
@@ -1456,7 +1508,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             String location = (String) args[0];
             for (int a = 0; a < 3; a++) {
                 if (currentFileNames[a] != null && currentFileNames[a].equals(location)) {
-                    Float loadProgress = (Float) args[1];
+                    Long loadedSize = (Long) args[1];
+                    Long totalSize = (Long) args[2];
+                    float loadProgress = Math.min(1f, loadedSize / (float) totalSize);
                     boolean animated = a == 0 || a == 1 && sideImage == rightImage || a == 2 && sideImage == leftImage;
                     photoProgressViews[a].setProgress(loadProgress, animated);
                     if (a == 0 && videoPlayer != null && videoPlayerSeekbar != null) {
@@ -1821,8 +1875,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
     private void setScaleToFill() {
         float bitmapWidth = centerImage.getBitmapWidth();
-        float containerWidth = getContainerViewWidth();
         float bitmapHeight = centerImage.getBitmapHeight();
+        if (bitmapWidth == 0 || bitmapHeight == 0) {
+            return;
+        }
+        float containerWidth = getContainerViewWidth();
         float containerHeight = getContainerViewHeight();
         float scaleFit = Math.min(containerHeight / bitmapHeight, containerWidth / bitmapWidth);
         float width = (int) (bitmapWidth * scaleFit);
@@ -1845,6 +1902,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         }
         parentActivity = activity;
         actvityContext = new ContextThemeWrapper(parentActivity, R.style.Theme_TMessages);
+        touchSlop = ViewConfiguration.get(parentActivity).getScaledTouchSlop();
 
         if (progressDrawables == null) {
             progressDrawables = new Drawable[4];
@@ -2002,7 +2060,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         animatingImageView.setTranslationX(animatingImageView.getTranslationX() - getLeftInset());
                         animationValues[0][2] = animatingImageView.getTranslationX();
                     }
-                    windowView.requestLayout();
+                    if (windowView != null) {
+                        windowView.requestLayout();
+                    }
                 }
                 containerView.setPadding(insets.getSystemWindowInsetLeft(), 0, insets.getSystemWindowInsetRight(), 0);
                 return insets.consumeSystemWindowInsets();
@@ -2403,6 +2463,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         bottomLayout.setBackgroundColor(0x7f000000);
         containerView.addView(bottomLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.LEFT));
 
+        pressedDrawable[0] = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[] {0x32000000, 0});
+        pressedDrawable[0].setShape(GradientDrawable.RECTANGLE);
+        pressedDrawable[1] = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT, new int[] {0x32000000, 0});
+        pressedDrawable[1].setShape(GradientDrawable.RECTANGLE);
+
         groupedPhotosListView = new GroupedPhotosListView(actvityContext);
         containerView.addView(groupedPhotosListView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 62, Gravity.BOTTOM | Gravity.LEFT, 0, 0, 0, 48));
         groupedPhotosListView.setDelegate(new GroupedPhotosListView.GroupedPhotosListViewDelegate() {
@@ -2531,6 +2596,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         qualityPicker.updateSelectedCount(0, false);
         qualityPicker.setTranslationY(AndroidUtilities.dp(120));
         qualityPicker.doneButton.setText(LocaleController.getString("Done", R.string.Done).toUpperCase());
+        qualityPicker.doneButton.setTextColor(Theme.getColor(Theme.key_dialogFloatingButton));
         containerView.addView(qualityPicker, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.BOTTOM | Gravity.LEFT));
         qualityPicker.cancelButton.setOnClickListener(view -> {
             selectedCompression = previousCompression;
@@ -2664,10 +2730,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         };
         pickerViewSendButton.setScaleType(ImageView.ScaleType.CENTER);
-        Drawable drawable = Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), 0xff66bffa, 0xff66bffa);
+        Drawable drawable = Theme.createSimpleSelectorCircleDrawable(AndroidUtilities.dp(56), Theme.getColor(Theme.key_dialogFloatingButton), Theme.getColor(Build.VERSION.SDK_INT >= 21 ? Theme.key_dialogFloatingButtonPressed : Theme.key_dialogFloatingButton));
         pickerViewSendButton.setBackgroundDrawable(drawable);
         pickerViewSendButton.setColorFilter(new PorterDuffColorFilter(0xffffffff, PorterDuff.Mode.MULTIPLY));
         pickerViewSendButton.setImageResource(R.drawable.attach_send);
+        pickerViewSendButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingIcon), PorterDuff.Mode.MULTIPLY));
         containerView.addView(pickerViewSendButton, LayoutHelper.createFrame(56, 56, Gravity.RIGHT | Gravity.BOTTOM, 0, 0, 14, 14));
         pickerViewSendButton.setContentDescription(LocaleController.getString("Send", R.string.Send));
         pickerViewSendButton.setOnClickListener(v -> {
@@ -2857,11 +2924,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 return;
             }
             if (compressItem.getTag() == null) {
-                if (tooltip == null) {
-                    tooltip = new Tooltip(activity, containerView, 0xcc111111, Color.WHITE);
+                if (videoConvertSupported) {
+                    if (tooltip == null) {
+                        tooltip = new Tooltip(activity, containerView, 0xcc111111, Color.WHITE);
+                    }
+                    tooltip.setText(LocaleController.getString("VideoQualityIsTooLow", R.string.VideoQualityIsTooLow));
+                    tooltip.show(compressItem);
                 }
-                tooltip.setText(LocaleController.getString("VideoQualityIsTooLow", R.string.VideoQualityIsTooLow));
-                tooltip.show(compressItem);
                 return;
             }
 
@@ -3023,7 +3092,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             textView.setMinWidth(AndroidUtilities.dp(64));
             textView.setTag(Dialog.BUTTON_POSITIVE);
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            textView.setTextColor(0xff49bcf2);
+            textView.setTextColor(Theme.getColor(Theme.key_dialogFloatingButton));
             textView.setGravity(Gravity.CENTER);
             textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             textView.setText(LocaleController.getString("Done", R.string.Done).toUpperCase());
@@ -3049,7 +3118,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 } else if (object1 instanceof MediaController.SearchImage) {
                     ((MediaController.SearchImage) object1).ttl = seconds;
                 }
-                timeItem.setColorFilter(seconds != 0 ? new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY) : null);
+                timeItem.setColorFilter(seconds != 0 ? new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY) : null);
                 if (!checkImageView.isChecked()) {
                     checkImageView.callOnClick();
                 }
@@ -3059,7 +3128,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             textView.setMinWidth(AndroidUtilities.dp(64));
             textView.setTag(Dialog.BUTTON_NEGATIVE);
             textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-            textView.setTextColor(0xff49bcf2);
+            textView.setTextColor(Theme.getColor(Theme.key_dialogFloatingButton));
             textView.setGravity(Gravity.CENTER);
             textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             textView.setText(LocaleController.getString("Cancel", R.string.Cancel).toUpperCase());
@@ -3097,7 +3166,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         editorDoneLayout.addView(resetButton, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.CENTER));
         resetButton.setOnClickListener(v -> photoCropView.reset());
 
-        gestureDetector = new GestureDetector(containerView.getContext(), this);
+        gestureDetector = new GestureDetector2(containerView.getContext(), this);
+        gestureDetector.setIsLongpressEnabled(false);
         setDoubleTapEnabled(true);
 
         ImageReceiver.ImageReceiverDelegate imageReceiverDelegate = (imageReceiver, set, thumb) -> {
@@ -3142,7 +3212,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         checkImageView.setHasBorder(true);
         checkImageView.setSize(40);
         checkImageView.setCheckOffset(AndroidUtilities.dp(1));
-        checkImageView.setColor(0xff66bffa, 0xffffffff);
+        checkImageView.setColor(Theme.getColor(Theme.key_dialogFloatingButton), 0xffffffff);
         checkImageView.setVisibility(View.GONE);
         containerView.addView(checkImageView, LayoutHelper.createFrame(40, 40, Gravity.RIGHT | Gravity.TOP, 0, rotation == Surface.ROTATION_270 || rotation == Surface.ROTATION_90 ? 58 : 68, 10, 0));
         if (Build.VERSION.SDK_INT >= 21) {
@@ -3187,7 +3257,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         selectedPhotosListView.setBackgroundColor(0x7f000000);
         selectedPhotosListView.setPadding(0, AndroidUtilities.dp(3), 0, AndroidUtilities.dp(3));
         selectedPhotosListView.setLayoutManager(new LinearLayoutManager(parentActivity, LinearLayoutManager.HORIZONTAL, false) {
-
             @Override
             public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
                 LinearSmoothScrollerEnd linearSmoothScroller = new LinearSmoothScrollerEnd(recyclerView.getContext());
@@ -3269,8 +3338,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
         });
-        if (Build.VERSION.SDK_INT >= 19)
+        if (Build.VERSION.SDK_INT >= 19) {
             captionEditText.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        }
         containerView.addView(captionEditText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT));
 
         mentionListView = new RecyclerListView(actvityContext) {
@@ -3704,37 +3774,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     }
 
     private void createVideoControlsInterface() {
-        videoPlayerSeekbar = new SeekBar(containerView.getContext());
-        videoPlayerSeekbar.setLineHeight(AndroidUtilities.dp(4));
-        videoPlayerSeekbar.setColors(0x66ffffff, 0x66ffffff, 0xffd5d0d7, 0xffffffff, 0xffffffff);
-        videoPlayerSeekbar.setDelegate(new SeekBar.SeekBarDelegate() {
-            @Override
-            public void onSeekBarDrag(float progress) {
-                if (videoPlayer != null) {
-                    if (!inPreview && videoTimelineView.getVisibility() == View.VISIBLE) {
-                        progress = videoTimelineView.getLeftProgress() + (videoTimelineView.getRightProgress() - videoTimelineView.getLeftProgress()) * progress;
-                    }
-                    long duration = videoPlayer.getDuration();
-                    if (duration == C.TIME_UNSET) {
-                        seekToProgressPending = progress;
-                    } else {
-                        videoPlayer.seekTo((int) (progress * duration));
-                    }
-                    showVideoSeekPreviewPosition(false);
-                    needShowOnReady = false;
-                }
-            }
-
-            @Override
-            public void onSeekBarContinuousDrag(float progress) {
-                if (videoPlayer != null && videoPreviewFrame != null) {
-                    videoPreviewFrame.setProgress(progress, videoPlayerSeekbar.getWidth());
-                }
-                showVideoSeekPreviewPosition(true);
-                updateVideoSeekPreviewPosition();
-            }
-        });
-
         videoPlayerControlFrameLayout = new FrameLayout(containerView.getContext()) {
 
             @Override
@@ -3797,6 +3836,37 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         };
         videoPlayerControlFrameLayout.setWillNotDraw(false);
         bottomLayout.addView(videoPlayerControlFrameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT));
+
+        videoPlayerSeekbar = new SeekBar(videoPlayerControlFrameLayout);
+        videoPlayerSeekbar.setLineHeight(AndroidUtilities.dp(4));
+        videoPlayerSeekbar.setColors(0x66ffffff, 0x66ffffff, 0xffd5d0d7, 0xffffffff, 0xffffffff);
+        videoPlayerSeekbar.setDelegate(new SeekBar.SeekBarDelegate() {
+            @Override
+            public void onSeekBarDrag(float progress) {
+                if (videoPlayer != null) {
+                    if (!inPreview && videoTimelineView.getVisibility() == View.VISIBLE) {
+                        progress = videoTimelineView.getLeftProgress() + (videoTimelineView.getRightProgress() - videoTimelineView.getLeftProgress()) * progress;
+                    }
+                    long duration = videoPlayer.getDuration();
+                    if (duration == C.TIME_UNSET) {
+                        seekToProgressPending = progress;
+                    } else {
+                        videoPlayer.seekTo((int) (progress * duration));
+                    }
+                    showVideoSeekPreviewPosition(false);
+                    needShowOnReady = false;
+                }
+            }
+
+            @Override
+            public void onSeekBarContinuousDrag(float progress) {
+                if (videoPlayer != null && videoPreviewFrame != null) {
+                    videoPreviewFrame.setProgress(progress, videoPlayerSeekbar.getWidth());
+                }
+                showVideoSeekPreviewPosition(true);
+                updateVideoSeekPreviewPosition();
+            }
+        });
 
         videoPreviewFrame = new VideoSeekPreviewImage(containerView.getContext(), () -> {
             if (needShowOnReady) {
@@ -4009,6 +4079,59 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 toast.show();
             }
             streamingAlertShown = true;
+        }
+    }
+
+    public void updateColors() {
+        int color = Theme.getColor(Theme.key_dialogFloatingButton);
+        if (pickerViewSendButton != null) {
+            Drawable drawable = pickerViewSendButton.getBackground();
+            Theme.setSelectorDrawableColor(drawable, color, false);
+            Theme.setSelectorDrawableColor(drawable, Theme.getColor(Build.VERSION.SDK_INT >= 21 ? Theme.key_dialogFloatingButtonPressed : Theme.key_dialogFloatingButton), true);
+            pickerViewSendButton.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingIcon), PorterDuff.Mode.MULTIPLY));
+        }
+        if (checkImageView != null) {
+            checkImageView.setColor(Theme.getColor(Theme.key_dialogFloatingButton), 0xffffffff);
+        }
+        PorterDuffColorFilter filter = new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY);
+        if (timeItem != null && timeItem.getColorFilter() != null) {
+            timeItem.setColorFilter(filter);
+        }
+        if (paintItem != null && paintItem.getColorFilter() != null) {
+            paintItem.setColorFilter(filter);
+        }
+        if (cropItem != null && cropItem.getColorFilter() != null) {
+            cropItem.setColorFilter(filter);
+        }
+        if (tuneItem != null && tuneItem.getColorFilter() != null) {
+            tuneItem.setColorFilter(filter);
+        }
+        if (muteItem != null && muteItem.getColorFilter() != null) {
+            muteItem.setColorFilter(filter);
+        }
+        if (editorDoneLayout != null) {
+            editorDoneLayout.doneButton.setTextColor(color);
+        }
+        if (qualityPicker != null) {
+            qualityPicker.doneButton.setTextColor(color);
+        }
+        if (photoPaintView != null) {
+            photoPaintView.updateColors();
+        }
+        if (photoFilterView != null) {
+            photoFilterView.updateColors();
+        }
+        if (captionEditText != null) {
+            captionEditText.updateColors();
+        }
+        if (selectedPhotosListView != null) {
+            int count = selectedPhotosListView.getChildCount();
+            for (int a = 0; a < count; a++) {
+                View view = selectedPhotosListView.getChildAt(a);
+                if (view instanceof PhotoPickerPhotoCell) {
+                    ((PhotoPickerPhotoCell) view).updateColors();
+                }
+            }
         }
     }
 
@@ -4492,13 +4615,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         entry.stickers.addAll(stickers);
                     }
                     if (currentEditMode == 1) {
-                        cropItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                        cropItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                         entry.isCropped = true;
                     } else if (currentEditMode == 2) {
-                        tuneItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                        tuneItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                         entry.isFiltered = true;
                     } else if (currentEditMode == 3) {
-                        paintItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                        paintItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                         entry.isPainted = true;
                     }
                     if (savedFilterState != null) {
@@ -4517,13 +4640,13 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         entry.stickers.addAll(stickers);
                     }
                     if (currentEditMode == 1) {
-                        cropItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                        cropItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                         entry.isCropped = true;
                     } else if (currentEditMode == 2) {
-                        tuneItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                        tuneItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                         entry.isFiltered = true;
                     } else if (currentEditMode == 3) {
-                        paintItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                        paintItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                         entry.isPainted = true;
                     }
                     if (savedFilterState != null) {
@@ -4729,7 +4852,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             photoCropView.onAppear();
 
             editorDoneLayout.doneButton.setText(LocaleController.getString("Crop", R.string.Crop));
-            editorDoneLayout.doneButton.setTextColor(0xff51bdf3);
+            editorDoneLayout.doneButton.setTextColor(Theme.getColor(Theme.key_dialogFloatingButton));
 
             changeModeAnimation = new AnimatorSet();
             ArrayList<Animator> arrayList = new ArrayList<>();
@@ -4977,7 +5100,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             });
             changeModeAnimation.start();
-        } else if (mode == 3) { // painting/text/masks
+        } else if (mode == 3) {
             if (photoPaintView == null) {
                 photoPaintView = new PhotoPaintView(parentActivity, centerImage.getBitmap(), centerImage.getOrientation());
                 containerView.addView(photoPaintView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -5680,7 +5803,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
             if (imageLocation == null) {
-                closePhoto(false, false);
                 return;
             }
             imagesArrLocations.add(imageLocation);
@@ -6169,7 +6291,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
 
             updateCaptionTextForCurrentPhoto(object);
-            PorterDuffColorFilter filter = new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY);
+            PorterDuffColorFilter filter = new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY);
             timeItem.setColorFilter(ttl != 0 ?  filter : null);
             paintItem.setColorFilter(isPainted ? filter : null);
             cropItem.setColorFilter(isCropped ? filter : null);
@@ -6199,6 +6321,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         currentFileNames[1] = getFileName(index + 1);
         currentFileNames[2] = getFileName(index - 1);
         placeProvider.willSwitchFromPhoto(currentMessageObject, getFileLocation(currentFileLocation), currentIndex);
+        lastPhotoSetTime = SystemClock.elapsedRealtime();
 
         int prevIndex = currentIndex;
         currentIndex = index;
@@ -6436,7 +6559,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 Spannable spannableString = SpannableString.valueOf(caption.toString());
                 messageObject.addEntitiesToText(spannableString, true, false);
                 if (messageObject.isVideo()) {
-                    MessageObject.addUrlsByPattern(messageObject.isOutOwner(), spannableString, false, 3, messageObject.getDuration());
+                    MessageObject.addUrlsByPattern(messageObject.isOutOwner(), spannableString, false, 3, messageObject.getDuration(), false);
                 }
                 str = Emoji.replaceEmoji(spannableString, captionTextView.getPaint().getFontMetricsInt(), AndroidUtilities.dp(20), false);
             } else {
@@ -6811,8 +6934,8 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     }
                     return;
                 } else if (currentAnimation != null) {
-                    imageReceiver.setImageBitmap(currentAnimation);
                     currentAnimation.setSecondParentView(containerView);
+                    imageReceiver.setImageBitmap(currentAnimation);
                     return;
                 } else if (sharedMediaType == MediaDataController.MEDIA_FILE) {
                     if (messageObject.canPreviewDocument()) {
@@ -7092,7 +7215,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             } else {
                 windowLayoutParams.flags &=~ WindowManager.LayoutParams.FLAG_SECURE;
             }
-            windowLayoutParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
+            windowLayoutParams.softInputMode = (useSmoothKeyboard ? WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN : WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
             windowView.setFocusable(false);
             containerView.setFocusable(false);
             wm.addView(windowView, windowLayoutParams);
@@ -7185,7 +7308,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 animatingImageViews[i].setVisibility(View.VISIBLE);
                 animatingImageViews[i].setRadius(object.radius);
                 animatingImageViews[i].setOrientation(orientation);
-                animatingImageViews[i].setNeedRadius(object.radius != 0);
                 animatingImageViews[i].setImageBitmap(object.thumb);
             }
 
@@ -7279,9 +7401,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     animationValues[0][4] = clipHorizontal * object.scale;
                     animationValues[0][5] = clipTop * object.scale;
                     animationValues[0][6] = clipBottom * object.scale;
-                    animationValues[0][7] = animatingImageView.getRadius();
-                    animationValues[0][8] = clipVertical * object.scale;
-                    animationValues[0][9] = clipHorizontal * object.scale;
+                    int[] rad = animatingImageView.getRadius();
+                    for (int a = 0; a < 4; a++) {
+                        animationValues[0][7 + a] = rad != null ? rad[a] : 0;
+                    }
+                    animationValues[0][11] = clipVertical * object.scale;
+                    animationValues[0][12] = clipHorizontal * object.scale;
 
                     animationValues[1][0] = scale;
                     animationValues[1][1] = scale;
@@ -7293,6 +7418,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     animationValues[1][7] = 0;
                     animationValues[1][8] = 0;
                     animationValues[1][9] = 0;
+                    animationValues[1][10] = 0;
+                    animationValues[1][11] = 0;
+                    animationValues[1][12] = 0;
 
                     for (int i = 0; i < animatingImageViews.length; i++) {
                         animatingImageViews[i].setAnimationProgress(0);
@@ -7332,7 +7460,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                             } else {
                                 windowLayoutParams.flags = 0;
                             }
-                            windowLayoutParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
+                            windowLayoutParams.softInputMode = (useSmoothKeyboard ? WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN : WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
                             WindowManager wm1 = (WindowManager) parentActivity.getSystemService(Context.WINDOW_SERVICE);
                             wm1.updateViewLayout(windowView, windowLayoutParams);
                             windowView.setFocusable(true);
@@ -7407,7 +7535,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 } else {
                     windowLayoutParams.flags = 0;
                 }
-                windowLayoutParams.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
+                windowLayoutParams.softInputMode = (useSmoothKeyboard ? WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN : WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE) | WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
                 wm.updateViewLayout(windowView, windowLayoutParams);
                 windowView.setFocusable(true);
                 containerView.setFocusable(true);
@@ -7557,7 +7685,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                         orientation = animatedOrientation;
                     }
                     for (int i = 0; i < animatingImageViews.length; i++) {
-                        animatingImageViews[i].setNeedRadius(object.radius != 0);
                         animatingImageViews[i].setOrientation(orientation);
                         animatingImageViews[i].setImageBitmap(object.thumb);
                     }
@@ -7565,7 +7692,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     layoutParams.width = centerImage.getImageWidth();
                     layoutParams.height = centerImage.getImageHeight();
                     for (int i = 0; i < animatingImageViews.length; i++) {
-                        animatingImageViews[i].setNeedRadius(false);
                         animatingImageViews[i].setOrientation(centerImage.getOrientation());
                         animatingImageViews[i].setImageBitmap(centerImage.getBitmapSafe());
                     }
@@ -7622,6 +7748,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     animationValues[0][7] = 0;
                     animationValues[0][8] = 0;
                     animationValues[0][9] = 0;
+                    animationValues[0][10] = 0;
+                    animationValues[0][11] = 0;
+                    animationValues[0][12] = 0;
 
                     animationValues[1][0] = object.scale;
                     animationValues[1][1] = object.scale;
@@ -7630,9 +7759,11 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     animationValues[1][4] = clipHorizontal * object.scale;
                     animationValues[1][5] = clipTop * object.scale;
                     animationValues[1][6] = clipBottom * object.scale;
-                    animationValues[1][7] = object.radius;
-                    animationValues[1][8] = clipVertical * object.scale;
-                    animationValues[1][9] = clipHorizontal * object.scale;
+                    for (int a = 0; a < 4; a++) {
+                        animationValues[1][7 + a] = object.radius != null ? object.radius[a] : 0;
+                    }
+                    animationValues[1][11] = clipVertical * object.scale;
+                    animationValues[1][12] = clipHorizontal * object.scale;
 
                     ArrayList<Animator> animators = new ArrayList<>((sendPhotoType == SELECT_TYPE_AVATAR ? 3 : 2) + animatingImageViews.length + (animatingImageViews.length > 1 ? 1 : 0));
                     for (int i = 0; i < animatingImageViews.length; i++) {
@@ -7736,6 +7867,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         animatingImageViews[0] = animatingImageView;
         if (hasSecondAnimatingImageView) {
             animatingImageViews[1] = object.animatingImageView;
+            object.animatingImageView.setAdditionalTranslationY(object.animatingImageViewYOffset);
         }
         return animatingImageViews;
     }
@@ -7999,6 +8131,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     pinchStartY = translationY;
                     zooming = true;
                     moving = false;
+                    hidePressedDrawables();
                     if (velocityTracker != null) {
                         velocityTracker.clear();
                     }
@@ -8026,14 +8159,16 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
                 float dx = Math.abs(ev.getX() - moveStartX);
                 float dy = Math.abs(ev.getY() - dragY);
-                if (dx > AndroidUtilities.dp(3) || dy > AndroidUtilities.dp(3)) {
+                if (dx > touchSlop || dy > touchSlop) {
                     discardTap = true;
+                    hidePressedDrawables();
                     if (qualityChooseView != null && qualityChooseView.getVisibility() == View.VISIBLE) {
                         return true;
                     }
                 }
                 if (placeProvider.canScrollAway() && currentEditMode == 0 && sendPhotoType != SELECT_TYPE_AVATAR && canDragDown && !draggingDown && scale == 1 && dy >= AndroidUtilities.dp(30) && dy / 2 > dx) {
                     draggingDown = true;
+                    hidePressedDrawables();
                     moving = false;
                     dragY = ev.getY();
                     if (isActionBarVisible && containerView.getTag() != null) {
@@ -8056,6 +8191,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                             moveDy = 0;
                             moving = true;
                             canDragDown = false;
+                            hidePressedDrawables();
                         }
 
                         moveStartX = ev.getX();
@@ -8241,6 +8377,18 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         return animationValue;
     }
 
+    private void switchToNextIndex(int add, boolean init) {
+        if (currentMessageObject != null) {
+            releasePlayer(false);
+            FileLoader.getInstance(currentAccount).cancelLoadFile(currentMessageObject.getDocument());
+        }
+        setImageIndex(currentIndex + add, init);
+        if (currentMessageObject != null && currentMessageObject.isVideo() && (currentMessageObject.mediaExists || currentMessageObject.attachPathExists || currentMessageObject.canStreamVideo() && SharedConfig.streamMedia) && SharedConfig.autoplayVideo) {
+            onActionClick(true);
+            checkProgress(0, false, true);
+        }
+    }
+
     @SuppressLint({"NewApi", "DrawAllocation"})
     private void onDraw(Canvas canvas) {
         if (animationInProgress == 1 || animationInProgress == 3 || !isVisible && animationInProgress != 2 && !pipAnimationInProgress) {
@@ -8256,6 +8404,12 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         float currentTranslationX;
         float currentScale;
         float aty = -1;
+        long newUpdateTime = System.currentTimeMillis();
+        long dt = newUpdateTime - videoCrossfadeAlphaLastTime;
+        if (dt > 20) {
+            dt = 17;
+        }
+        videoCrossfadeAlphaLastTime = newUpdateTime;
 
         if (imageMoveAnimation != null) {
             if (!scroller.isFinished()) {
@@ -8302,9 +8456,9 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     }
                 }
                 if (switchImageAfterAnimation == 1) {
-                    AndroidUtilities.runOnUIThread(() -> setImageIndex(currentIndex + 1, false));
+                    AndroidUtilities.runOnUIThread(() -> switchToNextIndex(1, false));
                 } else if (switchImageAfterAnimation == 2) {
-                    AndroidUtilities.runOnUIThread(() -> setImageIndex(currentIndex - 1, false));
+                    AndroidUtilities.runOnUIThread(() -> switchToNextIndex(-1, false));
                 }
                 switchImageAfterAnimation = 0;
             }
@@ -8392,7 +8546,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (centerImage.hasBitmapImage() || drawTextureView && textureUploaded) {
             canvas.save();
             canvas.translate(getContainerViewWidth() / 2 + getAdditionX(), getContainerViewHeight() / 2 + getAdditionY());
-            canvas.translate(translateX, currentTranslationY);
+            canvas.translate(translateX, currentTranslationY + currentPanTranslationY);
             canvas.scale(currentScale - scaleDiff, currentScale - scaleDiff);
 
             int bitmapWidth;
@@ -8430,9 +8584,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 videoTextureView.setAlpha(alpha * videoCrossfadeAlpha);
                 aspectRatioFrameLayout.draw(canvas);
                 if (videoCrossfadeStarted && videoCrossfadeAlpha < 1.0f) {
-                    long newUpdateTime = System.currentTimeMillis();
-                    long dt = newUpdateTime - videoCrossfadeAlphaLastTime;
-                    videoCrossfadeAlphaLastTime = newUpdateTime;
                     videoCrossfadeAlpha += dt / (playerInjected ? 100.0f : 200.0f);
                     containerView.invalidate();
                     if (videoCrossfadeAlpha > 1.0f) {
@@ -8441,6 +8592,34 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                 }
             }
             canvas.restore();
+            for (int a = 0; a < pressedDrawable.length; a++) {
+                if (drawPressedDrawable[a] || pressedDrawableAlpha[a] != 0) {
+                    pressedDrawable[a].setAlpha((int) (pressedDrawableAlpha[a] * 255));
+                    if (a == 0) {
+                        pressedDrawable[a].setBounds(0, 0, containerView.getMeasuredWidth() / 5, containerView.getMeasuredHeight());
+                    } else {
+                        pressedDrawable[a].setBounds(containerView.getMeasuredWidth() - containerView.getMeasuredWidth() / 5, 0, containerView.getMeasuredWidth(), containerView.getMeasuredHeight());
+                    }
+                    pressedDrawable[a].draw(canvas);
+                }
+                if (drawPressedDrawable[a]) {
+                    if (pressedDrawableAlpha[a] < 1.0f) {
+                        pressedDrawableAlpha[a] += dt / 180.0f;
+                        if (pressedDrawableAlpha[a] > 1.0f) {
+                            pressedDrawableAlpha[a] = 1.0f;
+                        }
+                        containerView.invalidate();
+                    }
+                } else {
+                    if (pressedDrawableAlpha[a] > 0.0f) {
+                        pressedDrawableAlpha[a] -= dt / 180.0f;
+                        if (pressedDrawableAlpha[a] < 0.0f) {
+                            pressedDrawableAlpha[a] = 0.0f;
+                        }
+                        containerView.invalidate();
+                    }
+                }
+            }
         }
         boolean drawProgress;
         if (isCurrentVideo) {
@@ -8631,7 +8810,44 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
 
     @Override
     public boolean onDown(MotionEvent e) {
+        if (!doubleTap && checkImageView.getVisibility() != View.VISIBLE && !drawPressedDrawable[0] && !drawPressedDrawable[1]) {
+            float x = e.getX();
+            int side = containerView.getMeasuredWidth() / 6;
+            if (x < side) {
+                if (leftImage.hasImageSet()) {
+                    drawPressedDrawable[0] = true;
+                    containerView.invalidate();
+                }
+            } else if (x > containerView.getMeasuredWidth() - side) {
+                if (rightImage.hasImageSet()) {
+                    drawPressedDrawable[1] = true;
+                    containerView.invalidate();
+                }
+            }
+        }
         return false;
+    }
+
+    @Override
+    public boolean canDoubleTap(MotionEvent e) {
+        if (checkImageView.getVisibility() != View.VISIBLE && !drawPressedDrawable[0] && !drawPressedDrawable[1]) {
+            float x = e.getX();
+            int side = containerView.getMeasuredWidth() / 6;
+            if (x < side || x > containerView.getMeasuredWidth() - side) {
+                return currentMessageObject == null || currentMessageObject.isVideo() && (SystemClock.elapsedRealtime() - lastPhotoSetTime) >= 500;
+            }
+        }
+        return true;
+    }
+
+    private void hidePressedDrawables() {
+        drawPressedDrawable[0] = drawPressedDrawable[1] = false;
+        containerView.invalidate();
+    }
+
+    @Override
+    public void onUp(MotionEvent e) {
+        hidePressedDrawables();
     }
 
     @Override
@@ -8672,9 +8888,23 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         if (discardTap) {
             return false;
         }
+        float x = e.getX();
+        if (checkImageView.getVisibility() != View.VISIBLE) {
+            int side = containerView.getMeasuredWidth() / 6;
+            if (x < side) {
+                if (leftImage.hasImageSet()) {
+                    switchToNextIndex(-1, true);
+                    return true;
+                }
+            } else if (x > containerView.getMeasuredWidth() - side) {
+                if (rightImage.hasImageSet()) {
+                    switchToNextIndex(1, true);
+                    return true;
+                }
+            }
+        }
         if (containerView.getTag() != null) {
             boolean drawTextureView = aspectRatioFrameLayout != null && aspectRatioFrameLayout.getVisibility() == View.VISIBLE;
-            float x = e.getX();
             float y = e.getY();
             if (sharedMediaType == MediaDataController.MEDIA_FILE && currentMessageObject != null) {
                 if (!currentMessageObject.canPreviewDocument()) {
@@ -8707,7 +8937,6 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         } else if (currentBotInlineResult != null && (currentBotInlineResult.type.equals("video") || MessageObject.isVideoDocument(currentBotInlineResult.document))) {
             int state = photoProgressViews[0].backgroundState;
             if (state > 0 && state <= 3) {
-                float x = e.getX();
                 float y = e.getY();
                 if (x >= (getContainerViewWidth() - AndroidUtilities.dp(100)) / 2.0f && x <= (getContainerViewWidth() + AndroidUtilities.dp(100)) / 2.0f &&
                         y >= (getContainerViewHeight() - AndroidUtilities.dp(100)) / 2.0f && y <= (getContainerViewHeight() + AndroidUtilities.dp(100)) / 2.0f) {
@@ -8778,6 +9007,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             animateTo(1.0f, 0, 0, true);
         }
         doubleTap = true;
+        hidePressedDrawables();
         return true;
     }
 
@@ -8915,8 +9145,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
                     int x = cx - circleSize / 2 - gapSize - lineSize;
                     float startPadding = a == (selectedCompression + 1) ? AndroidUtilities.dpf2(2) : 0;
                     float endPadding = a == selectedCompression ? AndroidUtilities.dpf2(2) : 0;
-                    canvas.drawRect(x + startPadding, cy - AndroidUtilities.dp(1),
-                            x + lineSize - endPadding, cy + AndroidUtilities.dp(2), paint);
+                    canvas.drawRect(x + startPadding, cy - AndroidUtilities.dp(1), x + lineSize - endPadding, cy + AndroidUtilities.dp(2), paint);
                 }
             }
 
@@ -8941,7 +9170,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (muteVideo) {
                 actionBar.setSubtitle(null);
                 muteItem.setImageResource(R.drawable.volume_off);
-                muteItem.setColorFilter(new PorterDuffColorFilter(0xff3dadee, PorterDuff.Mode.MULTIPLY));
+                muteItem.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_dialogFloatingButton), PorterDuff.Mode.MULTIPLY));
                 if (compressItem.getTag() != null) {
                     compressItem.setAlpha(0.5f);
                 }

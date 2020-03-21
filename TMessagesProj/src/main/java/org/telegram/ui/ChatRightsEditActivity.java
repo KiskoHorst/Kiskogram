@@ -294,6 +294,15 @@ public class ChatRightsEditActivity extends BaseFragment {
         listView.setVerticalScrollbarPosition(LocaleController.isRTL ? RecyclerListView.SCROLLBAR_POSITION_LEFT : RecyclerListView.SCROLLBAR_POSITION_RIGHT);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
+        listView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    AndroidUtilities.hideKeyboard(getParentActivity().getCurrentFocus());
+                }
+            }
+        });
+
         listView.setOnItemClickListener((view, position) -> {
             if (!canEdit) {
                 return;
@@ -837,7 +846,11 @@ public class ChatRightsEditActivity extends BaseFragment {
                     rightsShadowRow = rowCount++;
                     rankHeaderRow = rowCount++;
                     rankRow = rowCount++;
-                    rankInfoRow = rowCount++;
+                    if (currentChat.creator && UserObject.isUserSelf(currentUser)) {
+                        rankInfoRow = rowCount++;
+                    } else {
+                        cantEditInfoRow = rowCount++;
+                    }
                 } else {
                     cantEditInfoRow = rowCount++;
                 }

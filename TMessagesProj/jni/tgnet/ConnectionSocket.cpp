@@ -977,15 +977,17 @@ time_t ConnectionSocket::getTimeout() {
     return timeout;
 }
 
-void ConnectionSocket::checkTimeout(int64_t now) {
+bool ConnectionSocket::checkTimeout(int64_t now) {
     if (timeout != 0 && (now - lastEventTime) > (int64_t) timeout * 1000) {
         if (!onConnectedSent || hasPendingRequests()) {
             closeSocket(2, 0);
+            return true;
         } else {
             lastEventTime = ConnectionsManager::getInstance(instanceNum).getCurrentTimeMonotonicMillis();
             if (LOGS_ENABLED) DEBUG_D("connection(%p) reset last event time, no requests", this);
         }
     }
+    return false;
 }
 
 bool ConnectionSocket::hasTlsHashMismatch() {

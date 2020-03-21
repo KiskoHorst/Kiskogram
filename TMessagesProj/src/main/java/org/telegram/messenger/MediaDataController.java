@@ -1829,6 +1829,9 @@ public class MediaDataController extends BaseController {
     public void loadMedia(final long uid, final int count, final int max_id, final int type, final int fromCache, final int classGuid) {
         final boolean isChannel = (int) uid < 0 && ChatObject.isChannel(-(int) uid, currentAccount);
 
+        if (BuildVars.DEBUG_VERSION) {
+            FileLog.d("load media did " + uid + " count = " + count + " max_id " + max_id + " type = " + type + " cache = " + fromCache + " classGuid = " + classGuid);
+        }
         int lower_part = (int)uid;
         if (fromCache != 0 || lower_part == 0) {
             loadMediaDatabase(uid, count, max_id, type, classGuid, isChannel, fromCache);
@@ -2019,6 +2022,8 @@ public class MediaDataController extends BaseController {
                 return MEDIA_PHOTOVIDEO;
             } else if (MessageObject.isStickerMessage(message) || MessageObject.isAnimatedStickerMessage(message)) {
                 return -1;
+            } else if (MessageObject.isNewGifMessage(message)) {
+                return -1;
             } else if (MessageObject.isMusicMessage(message)) {
                 return MEDIA_MUSIC;
             } else {
@@ -2051,10 +2056,13 @@ public class MediaDataController extends BaseController {
                 }
             }
         }
-        return false;
+        return MediaDataController.getMediaType(message) != -1;
     }
 
     private void processLoadedMedia(final TLRPC.messages_Messages res, final long uid, int count, int max_id, final int type, final int fromCache, final int classGuid, final boolean isChannel, final boolean topReached) {
+        if (BuildVars.DEBUG_VERSION) {
+            FileLog.d("process load media did " + uid + " count = " + count + " max_id " + max_id + " type = " + type + " cache = " + fromCache + " classGuid = " + classGuid);
+        }
         int lower_part = (int)uid;
         if (fromCache != 0 && res.messages.isEmpty() && lower_part != 0) {
             if (fromCache == 2) {

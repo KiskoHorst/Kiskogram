@@ -2046,7 +2046,7 @@ public class MessagesStorage extends BaseController {
     }
 
     public void putDialogPhotos(final int did, final TLRPC.photos_Photos photos) {
-        if (photos == null || photos.photos.isEmpty()) {
+        if (photos == null) {
             return;
         }
         storageQueue.postRunnable(() -> {
@@ -2147,7 +2147,7 @@ public class MessagesStorage extends BaseController {
         });
     }
 
-    public void updateMessagePollResults(long pollId, TLRPC.TL_poll poll, TLRPC.TL_pollResults results) {
+    public void updateMessagePollResults(long pollId, TLRPC.TL_poll poll, TLRPC.PollResults results) {
         storageQueue.postRunnable(() -> {
             try {
                 ArrayList<Long> mids = null;
@@ -4726,6 +4726,24 @@ public class MessagesStorage extends BaseController {
         });
     }
 
+    public void isDialogHasTopMessage(long did, Runnable onDontExist) {
+        storageQueue.postRunnable(() -> {
+            boolean exists = false;
+            try {
+                SQLiteCursor cursor = database.queryFinalized(String.format(Locale.US, "SELECT last_mid FROM dialogs WHERE did = %d", did));
+                if (cursor.next()) {
+                    exists = cursor.intValue(0) != 0;
+                }
+                cursor.dispose();
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+            if (!exists) {
+                AndroidUtilities.runOnUIThread(onDontExist);
+            }
+        });
+    }
+
     public boolean isDialogHasMessages(final long did) {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         final boolean[] result = new boolean[1];
@@ -5231,10 +5249,11 @@ public class MessagesStorage extends BaseController {
                         data.reuse();
                         if (messageMedia.document != null) {
                             downloadObject.object = messageMedia.document;
+                            downloadObject.secret = MessageObject.isVideoDocument(messageMedia.document) && messageMedia.ttl_seconds > 0 && messageMedia.ttl_seconds <= 60;
                         } else if (messageMedia.photo != null) {
                             downloadObject.object = messageMedia.photo;
+                            downloadObject.secret = messageMedia.ttl_seconds > 0 && messageMedia.ttl_seconds <= 60;
                         }
-                        downloadObject.secret = messageMedia.ttl_seconds > 0 && messageMedia.ttl_seconds <= 60;
                         downloadObject.forceCache = (messageMedia.flags & 0x80000000) != 0;
                     }
                     objects.add(downloadObject);
@@ -7371,6 +7390,13 @@ public class MessagesStorage extends BaseController {
                             state_media.bindInteger(4, MediaDataController.getMediaType(message));
                             state_media.bindByteBuffer(5, data);
                             state_media.step();
+                        } else if (message instanceof TLRPC.TL_messageService && message.action instanceof TLRPC.TL_messageActionHistoryClear) {
+                            try {
+                                database.executeFast(String.format(Locale.US, "DELETE FROM media_v2 WHERE mid = %d", message.id)).stepThis().dispose();
+                                database.executeFast("DELETE FROM media_counts_v2 WHERE uid = " + dialog_id).stepThis().dispose();
+                            } catch (Exception e2) {
+                                FileLog.e(e2);
+                            }
                         }
                         data.reuse();
 
@@ -7480,6 +7506,12 @@ public class MessagesStorage extends BaseController {
         if (message.media != null) {
             if (message.media.user_id != 0 && !usersToLoad.contains(message.media.user_id)) {
                 usersToLoad.add(message.media.user_id);
+            }
+            if (message.media instanceof TLRPC.TL_messageMediaPoll) {
+                TLRPC.TL_messageMediaPoll messageMediaPoll = (TLRPC.TL_messageMediaPoll) message.media;
+                if (!messageMediaPoll.results.recent_voters.isEmpty()) {
+                    usersToLoad.addAll(messageMediaPoll.results.recent_voters);
+                }
             }
         }
         if (message.fwd_from != null) {
@@ -8121,6 +8153,33 @@ public class MessagesStorage extends BaseController {
                 FileLog.e(e);
             }
         });
+    }
+
+    public int getDialogMaxMessageId(final long dialog_id) {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final Integer[] max = new Integer[]{0};
+        storageQueue.postRunnable(() -> {
+            SQLiteCursor cursor = null;
+            try {
+                cursor = database.queryFinalized("SELECT MAX(mid) FROM messages WHERE uid = " + dialog_id);
+                if (cursor.next()) {
+                    max[0] = cursor.intValue(0);
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            } finally {
+                if (cursor != null) {
+                    cursor.dispose();
+                }
+            }
+            countDownLatch.countDown();
+        });
+        try {
+            countDownLatch.await();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return max[0];
     }
 
     public int getDialogReadMax(final boolean outbox, final long dialog_id) {

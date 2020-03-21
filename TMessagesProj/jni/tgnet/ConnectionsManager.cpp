@@ -197,9 +197,10 @@ void ConnectionsManager::select() {
         EventObject *eventObject = (EventObject *) epollEvents[a].data.ptr;
         eventObject->onEvent(epollEvents[a].events);
     }
-    size_t count = activeConnections.size();
-    for (uint32_t a = 0; a < count; a++) {
-        activeConnections[a]->checkTimeout(now);
+    activeConnectionsCopy.resize(activeConnections.size());
+    std::copy(std::begin(activeConnections), std::end(activeConnections), std::begin(activeConnectionsCopy));
+    for (auto connection : activeConnectionsCopy) {
+        connection->checkTimeout(now);
     }
 
     Datacenter *datacenter = getDatacenterWithId(currentDatacenterId);
@@ -374,8 +375,8 @@ void ConnectionsManager::loadConfig() {
                 if (version >= 5) {
                     int32_t lastServerTime = buffer->readInt32(nullptr);
                     int32_t currentTime = getCurrentTime();
-                    if (currentTime < lastServerTime) {
-                        timeDifference = lastServerTime - currentTime;
+                    if (currentTime > timeDifference && currentTime < lastServerTime) {
+                        timeDifference += (lastServerTime - currentTime);
                     }
                 }
 
@@ -551,7 +552,7 @@ int64_t ConnectionsManager::getCurrentTimeMillis() {
 }
 
 int64_t ConnectionsManager::getCurrentTimeMonotonicMillis() {
-    clock_gettime(CLOCK_MONOTONIC, &timeSpecMonotonic);
+    clock_gettime(CLOCK_BOOTTIME, &timeSpecMonotonic);
     return (int64_t) timeSpecMonotonic.tv_sec * 1000 + (int64_t) timeSpecMonotonic.tv_nsec / 1000000;
 }
 
@@ -656,7 +657,11 @@ void ConnectionsManager::onConnectionClosed(Connection *connection, int reason) 
                     if (!connection->hasUsefullData()) {
                         if (LOGS_ENABLED) DEBUG_D("start requesting new address and port due to timeout reach");
                         requestingSecondAddressByTlsHashMismatch = connection->hasTlsHashMismatch();
-                        requestingSecondAddress = 0;
+                        if (requestingSecondAddressByTlsHashMismatch) {
+                            requestingSecondAddress = 1;
+                        } else {
+                            requestingSecondAddress = 0;
+                        }
                         delegate->onRequestNewServerIpAndPort(requestingSecondAddress, instanceNum);
                     } else {
                         if (LOGS_ENABLED) DEBUG_D("connection has usefull data, don't request anything");
@@ -2225,7 +2230,7 @@ void ConnectionsManager::processRequestQueue(uint32_t connectionTypes, uint32_t 
                     uint32_t retryMax = 10;
                     if (!(request->requestFlags & RequestFlagForceDownload)) {
                         if (request->failedByFloodWait) {
-                            retryMax = 1;
+                            retryMax = 2;
                         } else {
                             retryMax = 6;
                         }
@@ -3094,7 +3099,7 @@ void ConnectionsManager::applyDnsConfig(NativeByteBuffer *buffer, std::string ph
         int currentDate = getCurrentTime();
         if (config != nullptr && config->date <= currentDate && currentDate <= config->expires) {
             if (realDate > 0 && requestingSecondAddressByTlsHashMismatch) {
-                timeDifference = realDate - currentDate;
+                timeDifference += (realDate - currentDate);
                 requestingSecondAddressByTlsHashMismatch = false;
             }
             for (std::vector<std::unique_ptr<TL_accessPointRule>>::iterator iter = config->rules.begin(); iter != config->rules.end(); iter++) {
@@ -3296,18 +3301,29 @@ void ConnectionsManager::setSystemLangCode(std::string langCode) {
 
 void ConnectionsManager::resumeNetwork(bool partial) {
     scheduleTask([&, partial] {
+        if (lastMonotonicPauseTime != 0) {
+            int64_t diff = (getCurrentTimeMonotonicMillis() - lastMonotonicPauseTime) / 1000;
+            int64_t systemDiff = getCurrentTime() - lastSystemPauseTime;
+            if (systemDiff < 0 || abs(systemDiff - diff) > 2) {
+                timeDifference -= (systemDiff - diff);
+            }
+        }
         if (partial) {
             if (networkPaused) {
-                lastPauseTime = getCurrentTimeMonotonicMillis();
+                lastMonotonicPauseTime = lastPauseTime = getCurrentTimeMonotonicMillis();
+                lastSystemPauseTime = getCurrentTime();
                 networkPaused = false;
                 if (LOGS_ENABLED) DEBUG_D("wakeup network in background account%u", instanceNum);
             } else if (lastPauseTime != 0) {
-                lastPauseTime = getCurrentTimeMonotonicMillis();
+                lastMonotonicPauseTime = lastPauseTime = getCurrentTimeMonotonicMillis();
+                lastSystemPauseTime = getCurrentTime();
                 networkPaused = false;
                 if (LOGS_ENABLED) DEBUG_D("reset sleep timeout account%u", instanceNum);
             }
         } else {
             lastPauseTime = 0;
+            lastMonotonicPauseTime = 0;
+            lastSystemPauseTime = 0;
             networkPaused = false;
             if (LOGS_ENABLED) DEBUG_D("wakeup network account%u", instanceNum);
         }
@@ -3327,7 +3343,9 @@ void ConnectionsManager::pauseNetwork() {
     if (lastPauseTime != 0) {
         return;
     }
-    lastPauseTime = getCurrentTimeMonotonicMillis();
+    lastMonotonicPauseTime = lastPauseTime = getCurrentTimeMonotonicMillis();
+    lastSystemPauseTime = getCurrentTime();
+    saveConfig();
 }
 
 void ConnectionsManager::setNetworkAvailable(bool value, int32_t type, bool slow) {

@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityManager;
@@ -38,7 +39,6 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.SecretChatHelper;
 import org.telegram.messenger.SendMessagesHelper;
-import org.telegram.messenger.TonController;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 
@@ -55,7 +55,6 @@ public class BaseFragment {
     protected boolean inPreviewMode;
     protected int classGuid;
     protected Bundle arguments;
-    protected boolean swipeBackEnabled = true;
     protected boolean hasOwnBackground = false;
     protected boolean isPaused = true;
 
@@ -97,6 +96,10 @@ public class BaseFragment {
 
     public int getClassGuid() {
         return classGuid;
+    }
+
+    public boolean isSwipeBackEnabled(MotionEvent event) {
+        return true;
     }
 
     protected void setInPreviewMode(boolean value) {
@@ -165,7 +168,7 @@ public class BaseFragment {
             }
             if (actionBar != null) {
                 boolean differentParent = parentLayout != null && parentLayout.getContext() != actionBar.getContext();
-                if (actionBar.getAddToContainer() || differentParent) {
+                if (actionBar.shouldAddToContainer() || differentParent) {
                     ViewGroup parent = (ViewGroup) actionBar.getParent();
                     if (parent != null) {
                         try {
@@ -450,6 +453,22 @@ public class BaseFragment {
 
     }
 
+    protected void onPanTranslationUpdate(int y) {
+
+    }
+
+    protected void onPanTransitionStart() {
+
+    }
+
+    protected void onPanTransitionEnd() {
+
+    }
+
+    public int getCurrentPanTranslationY() {
+        return parentLayout != null ? parentLayout.getCurrentPanTranslationY() : 0;
+    }
+
     public Dialog getVisibleDialog() {
         return visibleDialog;
     }
@@ -470,7 +489,7 @@ public class BaseFragment {
         return AccountInstance.getInstance(currentAccount);
     }
 
-    protected MessagesController getMessagesController() {
+    public MessagesController getMessagesController() {
         return getAccountInstance().getMessagesController();
     }
 
@@ -478,11 +497,11 @@ public class BaseFragment {
         return getAccountInstance().getContactsController();
     }
 
-    protected MediaDataController getMediaDataController() {
+    public MediaDataController getMediaDataController() {
         return getAccountInstance().getMediaDataController();
     }
 
-    protected ConnectionsManager getConnectionsManager() {
+    public ConnectionsManager getConnectionsManager() {
         return getAccountInstance().getConnectionsManager();
     }
 
@@ -498,11 +517,11 @@ public class BaseFragment {
         return getAccountInstance().getMessagesStorage();
     }
 
-    protected SendMessagesHelper getSendMessagesHelper() {
+    public SendMessagesHelper getSendMessagesHelper() {
         return getAccountInstance().getSendMessagesHelper();
     }
 
-    protected FileLoader getFileLoader() {
+    public FileLoader getFileLoader() {
         return getAccountInstance().getFileLoader();
     }
 
@@ -524,10 +543,6 @@ public class BaseFragment {
 
     public MediaController getMediaController() {
         return MediaController.getInstance();
-    }
-
-    public TonController getTonController() {
-        return getAccountInstance().getTonController();
     }
 
     public UserConfig getUserConfig() {
