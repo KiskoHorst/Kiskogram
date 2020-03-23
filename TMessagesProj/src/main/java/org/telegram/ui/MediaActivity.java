@@ -653,10 +653,10 @@ public class MediaActivity extends BaseFragment implements NotificationCenter.No
         actionMode.addView(selectedMessagesCountTextView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1.0f, 72, 0, 0, 0));
 
         if ((int) dialog_id != 0) {
-            actionModeViews.add(gotoItem = actionMode.addItemWithWidth(gotochat, R.drawable.msg_message, AndroidUtilities.dp(54), LocaleController.getString("AccDescrGoToMessage", R.string.AccDescrGoToMessage)));
-            actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.msg_forward, AndroidUtilities.dp(54), LocaleController.getString("Forward", R.string.Forward)));
+            actionModeViews.add(gotoItem = actionMode.addItemWithWidth(gotochat, R.drawable.eye, AndroidUtilities.dp(54), LocaleController.getString("AccDescrGoToMessage", R.string.AccDescrGoToMessage)));
+            actionModeViews.add(actionMode.addItemWithWidth(forward, R.drawable.forward, AndroidUtilities.dp(54), LocaleController.getString("Forward", R.string.Forward)));
         }
-        actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.msg_delete, AndroidUtilities.dp(54), LocaleController.getString("Delete", R.string.Delete)));
+        actionModeViews.add(actionMode.addItemWithWidth(delete, R.drawable.ic_ab_delete, AndroidUtilities.dp(54), LocaleController.getString("Delete", R.string.Delete)));
 
         photoVideoAdapter = new SharedPhotoVideoAdapter(context);
         documentsAdapter = new SharedDocumentsAdapter(context, 1);

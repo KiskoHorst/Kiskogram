@@ -2176,7 +2176,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             if (allowKick) {
                 items.add(LocaleController.getString("KickFromGroup", R.string.KickFromGroup));
-                icons.add(R.drawable.actions_remove_user);
+                icons.add(R.drawable.actions_removed);
                 actions.add(2);
                 hasRemove = true;
             }
@@ -4109,12 +4109,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             if (!user.bot_nochats) {
                                 otherItem.addSubItem(invite_to_group, R.drawable.msg_addbot, LocaleController.getString("BotInvite", R.string.BotInvite));
                             }
-                            otherItem.addSubItem(share, R.drawable.msg_share, LocaleController.getString("BotShare", R.string.BotShare));
+                            otherItem.addSubItem(share, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("BotShare", R.string.BotShare));
                         } else {
-                            otherItem.addSubItem(add_contact, R.drawable.msg_addcontact, LocaleController.getString("AddContact", R.string.AddContact));
+                            otherItem.addSubItem(add_contact, R.drawable.group_addmember, LocaleController.getString("AddContact", R.string.AddContact));
                         }
                         if (!TextUtils.isEmpty(user.phone)) {
-                            otherItem.addSubItem(share_contact, R.drawable.msg_share, LocaleController.getString("ShareContact", R.string.ShareContact));
+                            otherItem.addSubItem(share_contact, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("ShareContact", R.string.ShareContact));
                         }
                         if (isBot) {
                             otherItem.addSubItem(block_contact, !userBlocked ? R.drawable.msg_block : R.drawable.msg_retry, !userBlocked ? LocaleController.getString("BotStop", R.string.BotStop) : LocaleController.getString("BotRestart", R.string.BotRestart));
@@ -4124,17 +4124,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 } else {
                     if (!TextUtils.isEmpty(user.phone)) {
-                        otherItem.addSubItem(share_contact, R.drawable.msg_share, LocaleController.getString("ShareContact", R.string.ShareContact));
+                        otherItem.addSubItem(share_contact, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("ShareContact", R.string.ShareContact));
                     }
                     otherItem.addSubItem(block_contact, !userBlocked ? R.drawable.msg_block : R.drawable.msg_block, !userBlocked ? LocaleController.getString("BlockContact", R.string.BlockContact) : LocaleController.getString("Unblock", R.string.Unblock));
-                    otherItem.addSubItem(edit_contact, R.drawable.msg_edit, LocaleController.getString("EditContact", R.string.EditContact));
-                    otherItem.addSubItem(delete_contact, R.drawable.msg_delete, LocaleController.getString("DeleteContact", R.string.DeleteContact));
+                    otherItem.addSubItem(edit_contact, R.drawable.group_edit, LocaleController.getString("EditContact", R.string.EditContact));
+                    otherItem.addSubItem(delete_contact, R.drawable.ic_ab_delete, LocaleController.getString("DeleteContact", R.string.DeleteContact));
                 }
             } else {
-                otherItem.addSubItem(share_contact, R.drawable.msg_share, LocaleController.getString("ShareContact", R.string.ShareContact));
+                otherItem.addSubItem(share_contact, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("ShareContact", R.string.ShareContact));
             }
             if (!UserObject.isDeleted(user) && !isBot && currentEncryptedChat == null && user_id != getUserConfig().getClientUserId() && !userBlocked && user_id != 333000 && user_id != 777000 && user_id != 42777) {
-                otherItem.addSubItem(start_secret_chat, R.drawable.msg_start_secret, LocaleController.getString("StartEncryptedChat", R.string.StartEncryptedChat));
+                otherItem.addSubItem(start_secret_chat, R.drawable.lock_close, LocaleController.getString("StartEncryptedChat", R.string.StartEncryptedChat));
             }
         } else if (chat_id != 0) {
             if (chat_id > 0) {
@@ -4147,19 +4147,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         otherItem.addSubItem(statistics, R.drawable.msg_stats, LocaleController.getString("Statistics", R.string.Statistics));
                     }
                     if (chat.megagroup) {
-                        if (item == null) {
-                            item = menu.addItem(10, R.drawable.ic_ab_other);
-                        }
-                        item.addSubItem(search_members, R.drawable.ic_ab_search, LocaleController.getString("SearchMembers", R.string.SearchMembers));
+                        otherItem.addSubItem(search_members, R.drawable.ic_ab_search, LocaleController.getString("SearchMembers", R.string.SearchMembers));
                         if (!chat.creator && !chat.left && !chat.kicked) {
-                            item.addSubItem(leave_group, R.drawable.chats_leave, LocaleController.getString("LeaveMegaMenu", R.string.LeaveMegaMenu));
+                            otherItem.addSubItem(leave_group, R.drawable.chats_leave, LocaleController.getString("LeaveMegaMenu", R.string.LeaveMegaMenu));
                         }
                     } else {
                         if (!TextUtils.isEmpty(chat.username)) {
-                            otherItem.addSubItem(share, R.drawable.msg_share, LocaleController.getString("BotShare", R.string.BotShare));
+                            otherItem.addSubItem(share, R.drawable.abc_ic_menu_share_mtrl_alpha, LocaleController.getString("BotShare", R.string.BotShare));
                         }
                         if (!currentChat.creator && !currentChat.left && !currentChat.kicked) {
-                            otherItem.addSubItem(leave_group, R.drawable.msg_leave, LocaleController.getString("LeaveChannelMenu", R.string.LeaveChannelMenu));
+                            otherItem.addSubItem(leave_group, R.drawable.chats_leave, LocaleController.getString("LeaveChannelMenu", R.string.LeaveChannelMenu));
                         }
                     }
                 } else {
@@ -4167,14 +4164,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         editItemVisible = true;
                     }
                     if (!ChatObject.isKickedFromChat(chat) && !ChatObject.isLeftFromChat(chat)) {
-                        otherItem.addSubItem(search_members, R.drawable.msg_search, LocaleController.getString("SearchMembers", R.string.SearchMembers));
+                        otherItem.addSubItem(search_members, R.drawable.ic_ab_search, LocaleController.getString("SearchMembers", R.string.SearchMembers));
                     }
-                    otherItem.addSubItem(leave_group, R.drawable.msg_leave, LocaleController.getString("DeleteAndExit", R.string.DeleteAndExit));
+                    otherItem.addSubItem(leave_group, R.drawable.chats_leave, LocaleController.getString("DeleteAndExit", R.string.DeleteAndExit));
                 }
             }
         }
         otherItem.addSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
-        otherItem.addSubItem(gallery_menu_save, R.drawable.msg_gallery, LocaleController.getString("SaveToGallery", R.string.SaveToGallery));
+        otherItem.addSubItem(gallery_menu_save, R.drawable.download, LocaleController.getString("SaveToGallery", R.string.SaveToGallery));
         if (!isPulledDown) {
             otherItem.hideSubItem(gallery_menu_save);
         }

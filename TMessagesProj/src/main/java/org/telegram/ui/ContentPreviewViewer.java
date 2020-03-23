@@ -226,7 +226,7 @@ public class ContentPreviewViewer {
 
                 if (delegate.needSend() && !delegate.isInScheduleMode()) {
                     items.add(LocaleController.getString("SendGifPreview", R.string.SendGifPreview));
-                    icons.add(R.drawable.outline_send);
+                    icons.add(R.drawable.ic_send);
                     actions.add(0);
                 }
                 if (delegate.canSchedule()) {
@@ -239,11 +239,11 @@ public class ContentPreviewViewer {
                 if (currentDocument != null) {
                     if (canDelete = MediaDataController.getInstance(currentAccount).hasRecentGif(currentDocument)) {
                         items.add(LocaleController.formatString("Delete", R.string.Delete));
-                        icons.add(R.drawable.msg_delete);
+                        icons.add(R.drawable.ic_ab_delete);
                         actions.add(1);
                     } else {
                         items.add(LocaleController.formatString("SaveToGIFs", R.string.SaveToGIFs));
-                        icons.add(R.drawable.outline_add_gif);
+                        icons.add(R.drawable.download);
                         actions.add(2);
                     }
                 } else {
