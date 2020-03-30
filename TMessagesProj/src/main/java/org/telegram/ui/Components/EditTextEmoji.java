@@ -48,6 +48,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
     private int lastSizeChangeValue1;
     private boolean lastSizeChangeValue2;
     private int innerTextChange;
+    private boolean smoothKeyboard = SharedConfig.smoothKeyboard;
 
     private EditTextEmojiDelegate delegate;
 
@@ -105,7 +106,7 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
 
             @Override
             public boolean requestRectangleOnScreen(Rect rectangle) {
-                if (SharedConfig.smoothKeyboard) {
+                if (smoothKeyboard) {
                     rectangle.bottom += AndroidUtilities.dp(1000);
                 }
                 return super.requestRectangleOnScreen(rectangle);
@@ -133,6 +134,10 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
             editText.setPadding(0, 0, 0, 0);
             addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 48, 0, 0, 0));
         }
+    }
+
+    public void setAllowSmoothKeybord(boolean value) {
+        smoothKeyboard = value;
     }
 
     public void setSizeNotifierLayout(SizeNotifierFrameLayout layout) {
