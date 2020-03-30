@@ -548,8 +548,8 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                                 LocaleController.getString("FilterDeleteItem", R.string.FilterDeleteItem),
                         };
                         final int[] icons = new int[]{
-                                R.drawable.msg_edit,
-                                R.drawable.msg_delete
+                                R.drawable.group_edit,
+                                R.drawable.ic_ab_delete
                         };
                         builder1.setItems(items, icons, (dialog, which) -> {
                             if (which == 0) {
