@@ -217,6 +217,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             notificationCenter.addObserver(this, NotificationCenter.mediaDidLoad);
             notificationCenter.addObserver(this, NotificationCenter.messagesDeleted);
             notificationCenter.addObserver(this, NotificationCenter.replaceMessagesObjects);
+            notificationCenter.addObserver(this, NotificationCenter.chatInfoDidLoad);
         }
 
         public void addDelegate(SharedMediaPreloaderDelegate delegate) {
@@ -240,6 +241,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             notificationCenter.removeObserver(this, NotificationCenter.mediaDidLoad);
             notificationCenter.removeObserver(this, NotificationCenter.messagesDeleted);
             notificationCenter.removeObserver(this, NotificationCenter.replaceMessagesObjects);
+            notificationCenter.removeObserver(this, NotificationCenter.chatInfoDidLoad);
         }
 
         public int[] getLastMediaCount() {
@@ -439,12 +441,24 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                         }
                     }
                 }
+            } else if (id == NotificationCenter.chatInfoDidLoad) {
+                TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
+                if (dialogId < 0 && chatFull.id == -dialogId) {
+                    setChatInfo(chatFull);
+                }
             }
         }
 
         private void loadMediaCounts() {
             parentFragment.getMediaDataController().getMediaCounts(dialogId, parentFragment.getClassGuid());
             if (mergeDialogId != 0) {
+                parentFragment.getMediaDataController().getMediaCounts(mergeDialogId, parentFragment.getClassGuid());
+            }
+        }
+
+        private void setChatInfo(TLRPC.ChatFull chatInfo) {
+            if (chatInfo != null && chatInfo.migrated_from_chat_id != 0 && mergeDialogId == 0) {
+                mergeDialogId = -chatInfo.migrated_from_chat_id;
                 parentFragment.getMediaDataController().getMediaCounts(mergeDialogId, parentFragment.getClassGuid());
             }
         }
@@ -486,7 +500,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 } else if (view instanceof ContextLinkCell) {
                     ContextLinkCell cell = (ContextLinkCell) view;
                     MessageObject message = (MessageObject) cell.getParentObject();
-                    if (message.getId() == messageObject.getId()) {
+                    if (message != null && messageObject != null && message.getId() == messageObject.getId()) {
                         imageReceiver = cell.getPhotoImage();
                         cell.getLocationInWindow(coords);
                     }
@@ -638,13 +652,13 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
 
     private boolean isActionModeShowed;
 
-    public SharedMediaLayout(Context context, long did, SharedMediaPreloader preloader, int commonGroupsCount, ArrayList<Integer> sortedUsers, TLRPC.ChatFull chatInfo, ProfileActivity parent) {
+    public SharedMediaLayout(Context context, long did, SharedMediaPreloader preloader, int commonGroupsCount, ArrayList<Integer> sortedUsers, TLRPC.ChatFull chatInfo, boolean membersFirst, ProfileActivity parent) {
         super(context);
 
         sharedMediaPreloader = preloader;
         int[] mediaCount = preloader.getLastMediaCount();
         hasMedia = new int[]{mediaCount[0], mediaCount[1], mediaCount[2], mediaCount[3], mediaCount[4], mediaCount[5], commonGroupsCount};
-        if (chatInfo != null) {
+        if (membersFirst) {
             initialTab = 7;
         } else {
             for (int a = 0; a < hasMedia.length; a++) {
@@ -914,7 +928,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         commonGroupsAdapter = new CommonGroupsAdapter(context);
         chatUsersAdapter = new ChatUsersAdapter(context);
         chatUsersAdapter.sortedUsers = sortedUsers;
-        chatUsersAdapter.chatInfo = chatInfo;
+        chatUsersAdapter.chatInfo = membersFirst ? chatInfo : null;
         linksAdapter = new SharedLinksAdapter(context);
 
         setWillNotDraw(false);
@@ -1360,7 +1374,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             } else {
                 threshold = 6;
             }
-            if (visibleItemCount != 0 && firstVisibleItem + visibleItemCount > totalItemCount - threshold && !sharedMediaData[mediaPage.selectedType].loading) {
+            if (firstVisibleItem + visibleItemCount > totalItemCount - threshold && !sharedMediaData[mediaPage.selectedType].loading) {
                 int type;
                 if (mediaPage.selectedType == 0) {
                     type = MediaDataController.MEDIA_PHOTOVIDEO;
@@ -1874,6 +1888,14 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             return true;
         } else {
             return false;
+        }
+    }
+
+    public void setVisibleHeight(int height) {
+        height = Math.max(height, AndroidUtilities.dp(120));
+        for (int a = 0; a < mediaPages.length; a++) {
+            mediaPages[a].emptyView.setTranslationY(-(getMeasuredHeight() - height) / 2);
+            mediaPages[a].progressView.setTranslationY(-(getMeasuredHeight() - height) / 2);
         }
     }
 
@@ -2819,12 +2841,20 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                         link = ((SharedLinkCell) view).getLink(0);
                     }
                     if (link != null) {
-                        Browser.openUrl(profileActivity.getParentActivity(), link);
+                        openUrl(link);
                     }
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
             }
+        }
+    }
+
+    private void openUrl(String link) {
+        if (AndroidUtilities.shouldShowUrlInAlert(link)) {
+            AlertsCreator.showOpenUrlAlert(profileActivity, link, true, true);
+        } else {
+            Browser.openUrl(profileActivity.getParentActivity(), link);
         }
     }
 
@@ -2882,23 +2912,27 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         }
 
         @Override
-        public void onLinkLongPress(final String urlFinal) {
-            BottomSheet.Builder builder = new BottomSheet.Builder(profileActivity.getParentActivity());
-            builder.setTitle(urlFinal);
-            builder.setItems(new CharSequence[]{LocaleController.getString("Open", R.string.Open), LocaleController.getString("Copy", R.string.Copy)}, (dialog, which) -> {
-                if (which == 0) {
-                    Browser.openUrl(profileActivity.getParentActivity(), urlFinal, true);
-                } else if (which == 1) {
-                    String url = urlFinal;
-                    if (url.startsWith("mailto:")) {
-                        url = url.substring(7);
-                    } else if (url.startsWith("tel:")) {
-                        url = url.substring(4);
+        public void onLinkPress(String urlFinal, boolean longPress) {
+            if (longPress) {
+                BottomSheet.Builder builder = new BottomSheet.Builder(profileActivity.getParentActivity());
+                builder.setTitle(urlFinal);
+                builder.setItems(new CharSequence[]{LocaleController.getString("Open", R.string.Open), LocaleController.getString("Copy", R.string.Copy)}, (dialog, which) -> {
+                    if (which == 0) {
+                        openUrl(urlFinal);
+                    } else if (which == 1) {
+                        String url = urlFinal;
+                        if (url.startsWith("mailto:")) {
+                            url = url.substring(7);
+                        } else if (url.startsWith("tel:")) {
+                            url = url.substring(4);
+                        }
+                        AndroidUtilities.addToClipboard(url);
                     }
-                    AndroidUtilities.addToClipboard(url);
-                }
-            });
-            profileActivity.showDialog(builder.create());
+                });
+                profileActivity.showDialog(builder.create());
+            } else {
+                openUrl(urlFinal);
+            }
         }
     };
 

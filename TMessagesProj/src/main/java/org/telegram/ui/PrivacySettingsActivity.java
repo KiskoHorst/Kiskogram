@@ -10,6 +10,7 @@ package org.telegram.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -55,6 +56,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private AlertDialog progressDialog;
     @SuppressWarnings("FieldCanBeLocal")
     private LinearLayoutManager layoutManager;
+
+    private TLRPC.TL_account_password currentPassword;
 
     private int privacySectionRow;
     private int blockedRow;
@@ -111,6 +114,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         getNotificationCenter().addObserver(this, NotificationCenter.privacyRulesUpdated);
         getNotificationCenter().addObserver(this, NotificationCenter.blockedUsersDidLoad);
+        getNotificationCenter().addObserver(this, NotificationCenter.didSetOrRemoveTwoStepPassword);
 
         return true;
     }
@@ -120,6 +124,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         super.onFragmentDestroy();
         getNotificationCenter().removeObserver(this, NotificationCenter.privacyRulesUpdated);
         getNotificationCenter().removeObserver(this, NotificationCenter.blockedUsersDidLoad);
+        getNotificationCenter().removeObserver(this, NotificationCenter.didSetOrRemoveTwoStepPassword);
         if (currentSync != newSync) {
             getUserConfig().syncContacts = newSync;
             getUserConfig().saveConfig(false);
@@ -284,7 +289,25 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             } else if (position == forwardsRow) {
                 presentFragment(new PrivacyControlActivity(ContactsController.PRIVACY_RULES_TYPE_FORWARDS));
             } else if (position == passwordRow) {
-                presentFragment(new TwoStepVerificationActivity(0));
+                if (currentPassword == null) {
+                    return;
+                }
+                if (!TwoStepVerificationActivity.canHandleCurrentPassword(currentPassword, false)) {
+                    AlertsCreator.showUpdateAppAlert(getParentActivity(), LocaleController.getString("UpdateAppAlert", R.string.UpdateAppAlert), true);
+                }
+                if (currentPassword.has_password) {
+                    TwoStepVerificationActivity fragment = new TwoStepVerificationActivity();
+                    fragment.setPassword(currentPassword);
+                    presentFragment(fragment);
+                } else {
+                    int type;
+                    if (TextUtils.isEmpty(currentPassword.email_unconfirmed_pattern)) {
+                        type = TwoStepVerificationSetupActivity.TYPE_INTRO;
+                    } else {
+                        type = TwoStepVerificationSetupActivity.TYPE_EMAIL_CONFIRM;
+                    }
+                    presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
+                }
             } else if (position == passcodeRow) {
                 if (SharedConfig.passcodeHash.length() > 0) {
                     presentFragment(new PasscodeActivity(2));
@@ -447,6 +470,15 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             }
         } else if (id == NotificationCenter.blockedUsersDidLoad) {
             listAdapter.notifyItemChanged(blockedRow);
+        } else if (id == NotificationCenter.didSetOrRemoveTwoStepPassword) {
+            if (args.length > 0) {
+                currentPassword = (TLRPC.TL_account_password) args[0];
+                if (listAdapter != null) {
+                    listAdapter.notifyItemChanged(passwordRow);
+                }
+            } else {
+                loadPasswordSettings();
+            }
         }
     }
 
@@ -494,20 +526,23 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     }
 
     private void loadPasswordSettings() {
-        if (getUserConfig().hasSecureData) {
-            return;
-        }
         TLRPC.TL_account_getPassword req = new TLRPC.TL_account_getPassword();
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response != null) {
                 TLRPC.TL_account_password password = (TLRPC.TL_account_password) response;
-                if (password.has_secure_values) {
-                    AndroidUtilities.runOnUIThread(() -> {
+                AndroidUtilities.runOnUIThread(() -> {
+                    currentPassword = password;
+                    TwoStepVerificationActivity.initPasswordNewAlgo(currentPassword);
+                    if (!getUserConfig().hasSecureData && password.has_secure_values) {
                         getUserConfig().hasSecureData = true;
                         getUserConfig().saveConfig(false);
                         updateRows();
-                    });
-                }
+                    } else {
+                        if (listAdapter != null) {
+                            listAdapter.notifyItemChanged(passwordRow);
+                        }
+                    }
+                });
             }
         }, ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
     }
@@ -696,7 +731,15 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     } else if (position == webSessionsRow) {
                         textCell.setText(LocaleController.getString("WebSessionsTitle", R.string.WebSessionsTitle), false);
                     } else if (position == passwordRow) {
-                        textCell.setText(LocaleController.getString("TwoStepVerification", R.string.TwoStepVerification), true);
+                        String value;
+                        if (currentPassword == null) {
+                            value = LocaleController.getString("Loading", R.string.Loading);
+                        } else if (currentPassword.has_password) {
+                            value = LocaleController.getString("PasswordOn", R.string.PasswordOn);
+                        } else {
+                            value = LocaleController.getString("PasswordOff", R.string.PasswordOff);
+                        }
+                        textCell.setTextAndValue(LocaleController.getString("TwoStepVerification", R.string.TwoStepVerification), value, true);
                     } else if (position == passcodeRow) {
                         textCell.setText(LocaleController.getString("Passcode", R.string.Passcode), true);
                     } else if (position == phoneNumberRow) {
@@ -862,33 +905,35 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     }
 
     @Override
-    public ThemeDescription[] getThemeDescriptions() {
-        return new ThemeDescription[]{
-                new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, HeaderCell.class, TextCheckCell.class}, null, null, null, Theme.key_windowBackgroundWhite),
-                new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray),
+    public ArrayList<ThemeDescription> getThemeDescriptions() {
+        ArrayList<ThemeDescription> themeDescriptions = new ArrayList<>();
 
-                new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault),
-                new ThemeDescription(listView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault),
-                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_ITEMSCOLOR, null, null, null, null, Theme.key_actionBarDefaultIcon),
-                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_TITLECOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle),
-                new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SELECTORCOLOR, null, null, null, null, Theme.key_actionBarDefaultSelector),
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_CELLBACKGROUNDCOLOR, new Class[]{TextSettingsCell.class, HeaderCell.class, TextCheckCell.class}, null, null, null, Theme.key_windowBackgroundWhite));
+        themeDescriptions.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
 
-                new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector),
+        themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault));
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault));
+        themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_ITEMSCOLOR, null, null, null, null, Theme.key_actionBarDefaultIcon));
+        themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_TITLECOLOR, null, null, null, null, Theme.key_actionBarDefaultTitle));
+        themeDescriptions.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_AB_SELECTORCOLOR, null, null, null, null, Theme.key_actionBarDefaultSelector));
 
-                new ThemeDescription(listView, 0, new Class[]{View.class}, Theme.dividerPaint, null, null, Theme.key_divider),
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_SELECTOR, null, null, null, null, Theme.key_listSelector));
 
-                new ThemeDescription(listView, 0, new Class[]{TextSettingsCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
-                new ThemeDescription(listView, 0, new Class[]{TextSettingsCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText),
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{View.class}, Theme.dividerPaint, null, null, Theme.key_divider));
 
-                new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader),
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSettingsCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextSettingsCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteValueText));
 
-                new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow),
-                new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4),
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{HeaderCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlueHeader));
 
-                new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText),
-                new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2),
-                new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack),
-                new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrackChecked),
-        };
+        themeDescriptions.add(new ThemeDescription(listView, ThemeDescription.FLAG_BACKGROUNDFILTER, new Class[]{TextInfoPrivacyCell.class}, null, null, null, Theme.key_windowBackgroundGrayShadow));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextInfoPrivacyCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText4));
+
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"valueTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrack));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{TextCheckCell.class}, new String[]{"checkBox"}, null, null, null, Theme.key_switchTrackChecked));
+
+        return themeDescriptions;
     }
 }

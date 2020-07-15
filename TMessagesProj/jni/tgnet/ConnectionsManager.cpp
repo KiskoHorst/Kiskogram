@@ -125,6 +125,10 @@ ConnectionsManager::~ConnectionsManager() {
         close(epolFd);
         epolFd = 0;
     }
+    if (pipeFd != nullptr) {
+        delete[] pipeFd;
+        pipeFd = nullptr;
+    }
     pthread_mutex_destroy(&mutex);
 }
 
@@ -1645,6 +1649,7 @@ void ConnectionsManager::initDatacenters() {
         if (datacenters.find(2) == datacenters.end()) {
             datacenter = new Datacenter(instanceNum, 2);
             datacenter->addAddressAndPort("149.154.167.51", 443, 0, "");
+            datacenter->addAddressAndPort("95.161.76.100", 443, 0, "");
             datacenter->addAddressAndPort("2001:67c:4e8:f002:0000:0000:0000:000a", 443, 1, "");
             datacenters[2] = datacenter;
         }
@@ -2309,8 +2314,6 @@ void ConnectionsManager::processRequestQueue(uint32_t connectionTypes, uint32_t 
         if (genericConnection != nullptr && !sessionsToDestroy.empty() && genericConnection->getConnectionToken() != 0) {
             std::vector<int64_t>::iterator iter = sessionsToDestroy.begin();
 
-            sessionsToDestroy.erase(iter);
-
             if (abs(currentTime - lastDestroySessionRequestTime) > 2) {
                 lastDestroySessionRequestTime = currentTime;
                 TL_destroy_session *request = new TL_destroy_session();
@@ -2324,6 +2327,7 @@ void ConnectionsManager::processRequestQueue(uint32_t connectionTypes, uint32_t 
                 networkMessage->message->seqno = genericConnection->generateMessageSeqNo(false);
                 addMessageToDatacenter(defaultDatacenter->getDatacenterId(), networkMessage, genericMessagesToDatacenters);
             }
+            sessionsToDestroy.erase(iter);
         }
     }
 
@@ -2700,31 +2704,39 @@ std::unique_ptr<TLObject> ConnectionsManager::wrapInLayer(TLObject *object, Data
             request->lang_pack = "android";
             request->system_lang_code = currentSystemLangCode;
 
-            if (!currentRegId.empty() || !certFingerprint.empty()) {
-                TL_jsonObject *jsonObject = new TL_jsonObject();
-                request->params = std::unique_ptr<JSONValue>(jsonObject);
 
-                if (!currentRegId.empty()) {
-                    TL_jsonObjectValue *objectValue = new TL_jsonObjectValue();
-                    jsonObject->value.push_back(std::unique_ptr<TL_jsonObjectValue>(objectValue));
+            TL_jsonObject *jsonObject = new TL_jsonObject();
+            request->params = std::unique_ptr<JSONValue>(jsonObject);
 
-                    TL_jsonString *jsonString = new TL_jsonString();
-                    jsonString->value = currentRegId;
-                    objectValue->key = "device_token";
-                    objectValue->value = std::unique_ptr<JSONValue>(jsonString);
-                }
-                if (!certFingerprint.empty()) {
-                    TL_jsonObjectValue *objectValue = new TL_jsonObjectValue();
-                    jsonObject->value.push_back(std::unique_ptr<TL_jsonObjectValue>(objectValue));
+            if (!currentRegId.empty()) {
+                TL_jsonObjectValue *objectValue = new TL_jsonObjectValue();
+                jsonObject->value.push_back(std::unique_ptr<TL_jsonObjectValue>(objectValue));
 
-                    TL_jsonString *jsonString = new TL_jsonString();
-                    jsonString->value = certFingerprint;
-                    objectValue->key = "data";
-                    objectValue->value = std::unique_ptr<JSONValue>(jsonString);
-                }
-
-                request->flags |= 2;
+                TL_jsonString *jsonString = new TL_jsonString();
+                jsonString->value = currentRegId;
+                objectValue->key = "device_token";
+                objectValue->value = std::unique_ptr<JSONValue>(jsonString);
             }
+            if (!certFingerprint.empty()) {
+                TL_jsonObjectValue *objectValue = new TL_jsonObjectValue();
+                jsonObject->value.push_back(std::unique_ptr<TL_jsonObjectValue>(objectValue));
+
+                TL_jsonString *jsonString = new TL_jsonString();
+                jsonString->value = certFingerprint;
+                objectValue->key = "data";
+                objectValue->value = std::unique_ptr<JSONValue>(jsonString);
+            }
+
+            TL_jsonObjectValue *objectValue = new TL_jsonObjectValue();
+            jsonObject->value.push_back(std::unique_ptr<TL_jsonObjectValue>(objectValue));
+
+            TL_jsonNumber *jsonNumber = new TL_jsonNumber();
+            jsonNumber->value = currentDeviceTimezone;
+            objectValue->key = "tz_offset";
+            objectValue->value = std::unique_ptr<JSONValue>(jsonNumber);
+
+            request->flags |= 2;
+
             if (!proxyAddress.empty() && !proxySecret.empty()) {
                 request->flags |= 1;
                 request->proxy = std::unique_ptr<TL_inputClientProxy>(new TL_inputClientProxy());
@@ -3163,7 +3175,7 @@ void ConnectionsManager::applyDnsConfig(NativeByteBuffer *buffer, std::string ph
     });
 }
 
-void ConnectionsManager::init(uint32_t version, int32_t layer, int32_t apiId, std::string deviceModel, std::string systemVersion, std::string appVersion, std::string langCode, std::string systemLangCode, std::string configPath, std::string logPath, std::string regId, std::string cFingerpting, int32_t userId, bool isPaused, bool enablePushConnection, bool hasNetwork, int32_t networkType) {
+void ConnectionsManager::init(uint32_t version, int32_t layer, int32_t apiId, std::string deviceModel, std::string systemVersion, std::string appVersion, std::string langCode, std::string systemLangCode, std::string configPath, std::string logPath, std::string regId, std::string cFingerpting, int32_t timezoneOffset, int32_t userId, bool isPaused, bool enablePushConnection, bool hasNetwork, int32_t networkType) {
     currentVersion = version;
     currentLayer = layer;
     currentApiId = apiId;
@@ -3174,6 +3186,7 @@ void ConnectionsManager::init(uint32_t version, int32_t layer, int32_t apiId, st
     currentLangCode = langCode;
     currentRegId = regId;
     certFingerprint = cFingerpting;
+    currentDeviceTimezone = timezoneOffset;
     currentSystemLangCode = systemLangCode;
     currentUserId = userId;
     currentLogPath = logPath;

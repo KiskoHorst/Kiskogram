@@ -18,6 +18,7 @@ import android.graphics.PorterDuffColorFilter;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.TypedValue;
+import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +34,7 @@ import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.CheckBox2;
 import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.ArrayList;
@@ -50,33 +52,84 @@ public class PollEditTextCell extends FrameLayout {
     private boolean alwaysShowText2;
 
     public PollEditTextCell(Context context, OnClickListener onDelete) {
+        this(context, false, onDelete);
+    }
+
+    public PollEditTextCell(Context context, boolean caption, OnClickListener onDelete) {
         super(context);
 
-        textView = new EditTextBoldCursor(context) {
-
-            @Override
-            public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-                InputConnection conn = super.onCreateInputConnection(outAttrs);
-                if (showNextButton) {
-                    outAttrs.imeOptions &= ~EditorInfo.IME_FLAG_NO_ENTER_ACTION;
+        if (caption) {
+            textView = new EditTextCaption(context) {
+                @Override
+                public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+                    InputConnection conn = super.onCreateInputConnection(outAttrs);
+                    if (showNextButton) {
+                        outAttrs.imeOptions &= ~EditorInfo.IME_FLAG_NO_ENTER_ACTION;
+                    }
+                    return conn;
                 }
-                return conn;
-            }
 
-            @Override
-            protected void onDraw(Canvas canvas) {
-                super.onDraw(canvas);
-                onEditTextDraw(this, canvas);
-            }
-
-            @Override
-            public boolean onTouchEvent(MotionEvent event) {
-                if (!isEnabled()) {
-                    return false;
+                @Override
+                protected void onDraw(Canvas canvas) {
+                    super.onDraw(canvas);
+                    onEditTextDraw(this, canvas);
                 }
-                return super.onTouchEvent(event);
-            }
-        };
+
+                @Override
+                public boolean onTouchEvent(MotionEvent event) {
+                    if (!isEnabled()) {
+                        return false;
+                    }
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        onFieldTouchUp(this);
+                    }
+                    return super.onTouchEvent(event);
+                }
+
+                @Override
+                public ActionMode startActionMode(ActionMode.Callback callback, int type) {
+                    ActionMode actionMode = super.startActionMode(callback, type);
+                    onActionModeStart(this, actionMode);
+                    return actionMode;
+                }
+
+                @Override
+                public ActionMode startActionMode(ActionMode.Callback callback) {
+                    ActionMode actionMode = super.startActionMode(callback);
+                    onActionModeStart(this, actionMode);
+                    return actionMode;
+                }
+            };
+            ((EditTextCaption) textView).setAllowTextEntitiesIntersection(true);
+        } else {
+            textView = new EditTextBoldCursor(context) {
+                @Override
+                public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+                    InputConnection conn = super.onCreateInputConnection(outAttrs);
+                    if (showNextButton) {
+                        outAttrs.imeOptions &= ~EditorInfo.IME_FLAG_NO_ENTER_ACTION;
+                    }
+                    return conn;
+                }
+
+                @Override
+                protected void onDraw(Canvas canvas) {
+                    super.onDraw(canvas);
+                    onEditTextDraw(this, canvas);
+                }
+
+                @Override
+                public boolean onTouchEvent(MotionEvent event) {
+                    if (!isEnabled()) {
+                        return false;
+                    }
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        onFieldTouchUp(this);
+                    }
+                    return super.onTouchEvent(event);
+                }
+            };
+        }
         textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         textView.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteHintText));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
@@ -84,6 +137,7 @@ public class PollEditTextCell extends FrameLayout {
         textView.setBackgroundDrawable(null);
         textView.setImeOptions(textView.getImeOptions() | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         textView.setInputType(textView.getInputType() | EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        textView.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(10), AndroidUtilities.dp(4), AndroidUtilities.dp(11));
 
         if (onDelete != null) {
             addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 58 : 64, 0, !LocaleController.isRTL ? 58 : 64, 0));
@@ -151,7 +205,15 @@ public class PollEditTextCell extends FrameLayout {
         if (checkBox != null) {
             checkBox.measure(MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(48), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(48), MeasureSpec.EXACTLY));
         }
-        textView.measure(MeasureSpec.makeMeasureSpec(width - getPaddingLeft() - getPaddingRight() - AndroidUtilities.dp(textView2 != null && textView.getBackground() == null ? 122 : 42), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        int right;
+        if (textView2 == null) {
+            right = 42;
+        } else if (deleteImageView == null) {
+            right = 70;
+        } else {
+            right = 122;
+        }
+        textView.measure(MeasureSpec.makeMeasureSpec(width - getPaddingLeft() - getPaddingRight() - AndroidUtilities.dp(right), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
         int h = textView.getMeasuredHeight();
         setMeasuredDimension(width, Math.max(AndroidUtilities.dp(50), textView.getMeasuredHeight()) + (needDivider ? 1 : 0));
         if (textView2 != null && !alwaysShowText2) {
@@ -174,6 +236,10 @@ public class PollEditTextCell extends FrameLayout {
 
     protected boolean isChecked(PollEditTextCell editText) {
         return false;
+    }
+
+    protected void onActionModeStart(EditTextBoldCursor editText, ActionMode actionMode) {
+
     }
 
     public void callOnDelete() {
@@ -270,6 +336,10 @@ public class PollEditTextCell extends FrameLayout {
 
     public void setEnabled(boolean value, ArrayList<Animator> animators) {
         setEnabled(value);
+    }
+
+    protected void onFieldTouchUp(EditTextBoldCursor editText) {
+
     }
 
     public void setText2(String text) {

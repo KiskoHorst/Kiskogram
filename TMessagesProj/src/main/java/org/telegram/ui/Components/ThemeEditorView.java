@@ -571,6 +571,11 @@ public class ThemeEditorView {
                             startColorChange(true);
                             int color = getColor();
                             for (int a = 0; a < currentThemeDesription.size(); a++) {
+                                ThemeDescription description = currentThemeDesription.get(a);
+                                String key = description.getCurrentKey();
+                                if (a == 0 && key.equals(Theme.key_chat_wallpaper) || key.equals(Theme.key_chat_wallpaper_gradient_to) || key.equals(Theme.key_windowBackgroundWhite) || key.equals(Theme.key_windowBackgroundGray)) {
+                                    color = 0xff000000 | color;
+                                }
                                 currentThemeDesription.get(a).setColor(color, false);
                             }
                             int red = Color.red(color);
@@ -630,7 +635,7 @@ public class ThemeEditorView {
             }
         }
 
-        public EditorAlert(final Context context, ThemeDescription[] items) {
+        public EditorAlert(final Context context, ArrayList<ThemeDescription> items) {
             super(context, true);
 
             shadowDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow_round).mutate();
@@ -1282,11 +1287,11 @@ public class ThemeEditorView {
             private int currentCount;
             private ArrayList<ArrayList<ThemeDescription>> items = new ArrayList<>();
 
-            public ListAdapter(Context context, ThemeDescription[] descriptions) {
+            public ListAdapter(Context context, ArrayList<ThemeDescription> descriptions) {
                 this.context = context;
                 HashMap<String, ArrayList<ThemeDescription>> itemsMap = new HashMap<>();
-                for (int a = 0; a < descriptions.length; a++) {
-                    ThemeDescription description = descriptions[a];
+                for (int a = 0, N = descriptions.size(); a < N; a++) {
+                    ThemeDescription description = descriptions.get(a);
                     String key = description.getCurrentKey();
                     ArrayList<ThemeDescription> arrayList = itemsMap.get(key);
                     if (arrayList == null) {
@@ -1422,7 +1427,7 @@ public class ThemeEditorView {
                                     fragment = null;
                                 }
                                 if (fragment != null) {
-                                    ThemeDescription[] items = fragment.getThemeDescriptions();
+                                    ArrayList<ThemeDescription> items = fragment.getThemeDescriptions();
                                     if (items != null) {
                                         editorAlert = new EditorAlert(parentActivity, items);
                                         editorAlert.setOnDismissListener(dialog -> {

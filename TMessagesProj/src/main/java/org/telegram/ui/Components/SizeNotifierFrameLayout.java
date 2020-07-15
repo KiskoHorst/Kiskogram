@@ -29,7 +29,7 @@ public class SizeNotifierFrameLayout extends AdjustPanFrameLayout {
 
     private Rect rect = new Rect();
     private Drawable backgroundDrawable;
-    private int keyboardHeight;
+    protected int keyboardHeight;
     private int bottomClip;
     private SizeNotifierFrameLayoutDelegate delegate;
     private boolean occupyStatusBar = true;
@@ -117,14 +117,18 @@ public class SizeNotifierFrameLayout extends AdjustPanFrameLayout {
         notifyHeightChanged();
     }
 
-    public int getKeyboardHeight() {
+    public int measureKeyboardHeight() {
         View rootView = getRootView();
         getWindowVisibleDisplayFrame(rect);
         if (rect.bottom == 0 && rect.top == 0) {
             return 0;
         }
         int usableViewHeight = rootView.getHeight() - (rect.top != 0 ? AndroidUtilities.statusBarHeight : 0) - AndroidUtilities.getViewInset(rootView);
-        return Math.max(0, usableViewHeight - (rect.bottom - rect.top));
+        return keyboardHeight = Math.max(0, usableViewHeight - (rect.bottom - rect.top));
+    }
+
+    public int getKeyboardHeight() {
+        return keyboardHeight;
     }
 
     public void notifyHeightChanged() {
@@ -132,7 +136,7 @@ public class SizeNotifierFrameLayout extends AdjustPanFrameLayout {
             parallaxScale = parallaxEffect.getScale(getMeasuredWidth(), getMeasuredHeight());
         }
         if (delegate != null) {
-            keyboardHeight = getKeyboardHeight();
+            keyboardHeight = measureKeyboardHeight();
             final boolean isWidthGreater = AndroidUtilities.displaySize.x > AndroidUtilities.displaySize.y;
             post(() -> {
                 if (delegate != null) {
@@ -151,7 +155,7 @@ public class SizeNotifierFrameLayout extends AdjustPanFrameLayout {
     }
 
     public int getHeightWithKeyboard() {
-        return getKeyboardHeight() + getMeasuredHeight();
+        return keyboardHeight + getMeasuredHeight();
     }
 
     @Override
@@ -213,7 +217,7 @@ public class SizeNotifierFrameLayout extends AdjustPanFrameLayout {
                     int viewHeight = getMeasuredHeight() - actionBarHeight;
                     float scaleX = (float) getMeasuredWidth() / (float) drawable.getIntrinsicWidth();
                     float scaleY = (float) (viewHeight + kbHeight) / (float) drawable.getIntrinsicHeight();
-                    float scale = scaleX < scaleY ? scaleY : scaleX;
+                    float scale = Math.max(scaleX, scaleY);
                     int width = (int) Math.ceil(drawable.getIntrinsicWidth() * scale * parallaxScale);
                     int height = (int) Math.ceil(drawable.getIntrinsicHeight() * scale * parallaxScale);
                     int x = (getMeasuredWidth() - width) / 2 + (int) translationX;

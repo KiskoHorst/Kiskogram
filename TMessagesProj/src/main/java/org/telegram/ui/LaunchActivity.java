@@ -804,7 +804,6 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.needShowPlayServicesAlert);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidLoad);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidFailToLoad);
-            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.dialogFiltersUpdated);
         }
         currentAccount = UserConfig.selectedAccount;
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.appDidLogout);
@@ -817,7 +816,6 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.needShowPlayServicesAlert);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidLoad);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileDidFailToLoad);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.dialogFiltersUpdated);
     }
 
     private void checkLayout() {
@@ -2006,6 +2004,16 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                                             ChatActivity fragment = new ChatActivity(args);
                                             actionBarLayout.presentFragment(fragment);
                                         }
+                                    }, () -> {
+                                        if (!LaunchActivity.this.isFinishing()) {
+                                            BaseFragment fragment = mainFragmentsStack.get(mainFragmentsStack.size() - 1);
+                                            AlertsCreator.showSimpleAlert(fragment, LocaleController.getString("JoinToGroupErrorNotExist", R.string.JoinToGroupErrorNotExist));
+                                        }
+                                        try {
+                                            progressDialog.dismiss();
+                                        } catch (Exception e) {
+                                            FileLog.e(e);
+                                        }
                                     });
                                     hideProgressDialog = false;
                                 }
@@ -2037,7 +2045,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                         boolean hideProgressDialog = true;
                         if (error == null && actionBarLayout != null) {
                             TLRPC.ChatInvite invite = (TLRPC.ChatInvite) response;
-                            if (invite.chat != null && (!ChatObject.isLeftFromChat(invite.chat) || !invite.chat.kicked && !TextUtils.isEmpty(invite.chat.username))) {
+                            if (invite.chat != null && (!ChatObject.isLeftFromChat(invite.chat) || !invite.chat.kicked && (!TextUtils.isEmpty(invite.chat.username) || BuildVars.DEBUG_PRIVATE_VERSION))) {
                                 MessagesController.getInstance(intentAccount).putChat(invite.chat, false);
                                 ArrayList<TLRPC.Chat> chats = new ArrayList<>();
                                 chats.add(invite.chat);
@@ -2059,6 +2067,16 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                                         }
                                         ChatActivity fragment = new ChatActivity(args);
                                         actionBarLayout.presentFragment(fragment);
+                                    }, () -> {
+                                        if (!LaunchActivity.this.isFinishing()) {
+                                            BaseFragment fragment = mainFragmentsStack.get(mainFragmentsStack.size() - 1);
+                                            AlertsCreator.showSimpleAlert(fragment, LocaleController.getString("JoinToGroupErrorNotExist", R.string.JoinToGroupErrorNotExist));
+                                        }
+                                        try {
+                                            progressDialog.dismiss();
+                                        } catch (Exception e) {
+                                            FileLog.e(e);
+                                        }
                                     });
                                     hideProgressDialog = false;
                                 }
@@ -2579,7 +2597,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
         }
 
         if (contactsToSend != null && contactsToSend.size() == 1 && !mainFragmentsStack.isEmpty()) {
-            PhonebookShareAlert alert = new PhonebookShareAlert(mainFragmentsStack.get(mainFragmentsStack.size() - 1), null, null, contactsToSendUri, null, null);
+            PhonebookShareAlert alert = new PhonebookShareAlert(mainFragmentsStack.get(mainFragmentsStack.size() - 1), null, null, contactsToSendUri, null, null, null);
             alert.setDelegate((user, notify, scheduleDate) -> {
                 if (fragment != null) {
                     actionBarLayout.presentFragment(fragment, true, false, true, false);
@@ -2603,7 +2621,16 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                         sendingText = null;
                     }
                 } else {
-
+                    if (videoPath != null) {
+                        String caption = null;
+                        if (sendingText != null && sendingText.length() <= 1024) {
+                            caption = sendingText;
+                            sendingText = null;
+                        }
+                        ArrayList<String> arrayList = new ArrayList<>();
+                        arrayList.add(videoPath);
+                        SendMessagesHelper.prepareSendingDocuments(accountInstance, arrayList, arrayList, null, caption, null, did, null, null, null, true, 0);
+                    }
                 }
                 if (photoPathsArray != null) {
                     if (sendingText != null && sendingText.length() <= 1024 && photoPathsArray.size() == 1) {
@@ -2648,14 +2675,14 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
     }
 
     private void onFinish() {
-        if (finished) {
-            return;
-        }
-        finished = true;
         if (lockRunnable != null) {
             AndroidUtilities.cancelRunOnUIThread(lockRunnable);
             lockRunnable = null;
         }
+        if (finished) {
+            return;
+        }
+        finished = true;
         if (currentAccount != -1) {
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.appDidLogout);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.mainUserInfoChanged);
@@ -2664,6 +2691,9 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.wasUnableToFindCurrentLocation);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.openArticle);
             NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.hasNewContactsToImport);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.needShowPlayServicesAlert);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidLoad);
+            NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileDidFailToLoad);
         }
 
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.needShowAlert);

@@ -103,9 +103,9 @@ include $(MY_LOCAL_PATH)/libtgvoip/Android.mk
 LOCAL_PATH := $(MY_LOCAL_PATH) # restore local path after include
 include $(CLEAR_VARS)
 
-TGVOIP_NATIVE_VERSION := 2.1
+TGVOIP_NATIVE_VERSION := 3.1
 TGVOIP_ADDITIONAL_CFLAGS := -DTGVOIP_NO_VIDEO
-include $(MY_LOCAL_PATH)/libtgvoip2/Android.mk
+include $(MY_LOCAL_PATH)/libtgvoip3/Android.mk
 LOCAL_PATH := $(MY_LOCAL_PATH) # restore local path after include
 include $(CLEAR_VARS)
 
@@ -624,7 +624,7 @@ endif
 LOCAL_SRC_FILES     += \
 ./jni.c \
 ./audio.c \
-./image.c \
+./image.cpp \
 ./video.c \
 ./intro/IntroRenderer.c \
 ./utilities.cpp \

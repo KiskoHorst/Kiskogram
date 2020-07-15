@@ -299,7 +299,6 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
     private static final int done_button = 2;
 
     private final static int attach_photo = 0;
-    private final static int attach_gallery = 1;
     private final static int attach_document = 4;
 
     private long secureSecretId;
@@ -931,7 +930,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
     public boolean onFragmentCreate() {
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.FileDidUpload);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.FileDidFailUpload);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didSetTwoStepPassword);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.twoStepPasswordChanged);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didRemoveTwoStepPassword);
         return super.onFragmentCreate();
     }
@@ -941,7 +940,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         super.onFragmentDestroy();
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.FileDidUpload);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.FileDidFailUpload);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didSetTwoStepPassword);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.twoStepPasswordChanged);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didRemoveTwoStepPassword);
         callCallback(false);
         if (chatAttachAlert != null) {
@@ -1344,9 +1343,9 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
     @Override
     public void dismissCurrentDialig() {
         if (chatAttachAlert != null && visibleDialog == chatAttachAlert) {
-            chatAttachAlert.closeCamera(false);
+            chatAttachAlert.getPhotoLayout().closeCamera(false);
             chatAttachAlert.dismissInternal();
-            chatAttachAlert.hideCamera(true);
+            chatAttachAlert.getPhotoLayout().hideCamera(true);
             return;
         }
         super.dismissCurrentDialig();
@@ -1560,9 +1559,8 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         noPasswordSetTextView.setText(LocaleController.getString("TelegramPassportCreatePassword", R.string.TelegramPassportCreatePassword));
         linearLayout2.addView(noPasswordSetTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 24, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, 21, 9, 21, 0));
         noPasswordSetTextView.setOnClickListener(v -> {
-            TwoStepVerificationActivity activity = new TwoStepVerificationActivity(currentAccount, 1);
+            TwoStepVerificationSetupActivity activity = new TwoStepVerificationSetupActivity(currentAccount, TwoStepVerificationSetupActivity.TYPE_ENTER_FIRST, currentPassword);
             activity.setCloseAfterSet(true);
-            activity.setCurrentPasswordInfo(new byte[0], currentPassword);
             presentFragment(activity);
         });
 
@@ -1641,9 +1639,8 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
                         builder.setMessage(LocaleController.formatString("RestoreEmailSent", R.string.RestoreEmailSent, res.email_pattern));
                         builder.setTitle(LocaleController.getString("RestoreEmailSentTitle", R.string.RestoreEmailSentTitle));
                         builder.setPositiveButton(LocaleController.getString("OK", R.string.OK), (dialogInterface, i) -> {
-                            TwoStepVerificationActivity fragment = new TwoStepVerificationActivity(currentAccount, 1);
-                            fragment.setRecoveryParams(currentPassword);
                             currentPassword.email_unconfirmed_pattern = res.email_pattern;
+                            TwoStepVerificationSetupActivity fragment = new TwoStepVerificationSetupActivity(currentAccount, TwoStepVerificationSetupActivity.TYPE_EMAIL_RECOVERY, currentPassword);
                             presentFragment(fragment);
                         });
                         Dialog dialog = showDialog(builder.create());
@@ -3058,7 +3055,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
                         }
                         phoneField.setText(builder);
                         if (start >= 0) {
-                            phoneField.setSelection(start <= phoneField.length() ? start : phoneField.length());
+                            phoneField.setSelection(Math.min(start, phoneField.length()));
                         }
                         phoneField.onTextChange();
                         ignoreOnPhoneChange = false;
@@ -6023,7 +6020,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         return view;
     }
 
-    private class EncryptionResult {
+    private static class EncryptionResult {
         byte[] fileSecret;
         byte[] decrypyedFileSecret;
         byte[] encryptedData;
@@ -6517,7 +6514,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
             }
         } else if (id == NotificationCenter.FileDidFailUpload) {
 
-        } else if (id == NotificationCenter.didSetTwoStepPassword) {
+        } else if (id == NotificationCenter.twoStepPasswordChanged) {
             if (args != null && args.length > 0) {
                 if (args[7] != null && inputFields[FIELD_PASSWORD] != null) {
                     inputFields[FIELD_PASSWORD].setText((String) args[7]);
@@ -6621,7 +6618,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
     public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
         if ((currentActivityType == TYPE_IDENTITY || currentActivityType == TYPE_ADDRESS) && chatAttachAlert != null) {
             if (requestCode == 17 && chatAttachAlert != null) {
-                chatAttachAlert.checkCamera(false);
+                chatAttachAlert.getPhotoLayout().checkCamera(false);
             } else if (requestCode == 21) {
                 if (getParentActivity() == null) {
                     return;
@@ -6804,7 +6801,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         createChatAttachView();
         chatAttachAlert.setOpenWithFrontFaceCamera(uploadingFileType == UPLOADING_TYPE_SELFIE);
         chatAttachAlert.setMaxSelectedPhotos(getMaxSelectedDocuments(), false);
-        chatAttachAlert.loadGalleryPhotos();
+        chatAttachAlert.getPhotoLayout().loadGalleryPhotos();
         if (Build.VERSION.SDK_INT == 21 || Build.VERSION.SDK_INT == 22) {
             AndroidUtilities.hideKeyboard(fragmentView.findFocus());
         }
@@ -6829,17 +6826,16 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
                         if (button != 8) {
                             chatAttachAlert.dismiss();
                         }
-                        HashMap<Object, Object> selectedPhotos = chatAttachAlert.getSelectedPhotos();
-                        ArrayList<Object> selectedPhotosOrder = chatAttachAlert.getSelectedPhotosOrder();
+                        HashMap<Object, Object> selectedPhotos = chatAttachAlert.getPhotoLayout().getSelectedPhotos();
+                        ArrayList<Object> selectedPhotosOrder = chatAttachAlert.getPhotoLayout().getSelectedPhotosOrder();
                         if (!selectedPhotos.isEmpty()) {
                             ArrayList<SendMessagesHelper.SendingMediaInfo> photos = new ArrayList<>();
                             for (int a = 0; a < selectedPhotosOrder.size(); a++) {
                                 MediaController.PhotoEntry photoEntry = (MediaController.PhotoEntry) selectedPhotos.get(selectedPhotosOrder.get(a));
-
                                 SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
                                 if (photoEntry.imagePath != null) {
                                     info.path = photoEntry.imagePath;
-                                } else if (photoEntry.path != null) {
+                                } else {
                                     info.path = photoEntry.path;
                                 }
                                 photos.add(info);
@@ -6872,6 +6868,11 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
                 @Override
                 public void needEnterComment() {
 
+                }
+
+                @Override
+                public void doOnIdle(Runnable runnable) {
+                    runnable.run();
                 }
             });
         }
@@ -6910,77 +6911,34 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
             } catch (Exception e) {
                 FileLog.e(e);
             }
-        } else if (which == attach_gallery) {
-            if (Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                getParentActivity().requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 4);
-                return;
-            }
-            PhotoAlbumPickerActivity fragment = new PhotoAlbumPickerActivity(0, false, false, null);
-            fragment.setCurrentAccount(currentAccount);
-            fragment.setMaxSelectedPhotos(getMaxSelectedDocuments(), false);
-            fragment.setAllowSearchImages(false);
-            fragment.setDelegate(new PhotoAlbumPickerActivity.PhotoAlbumPickerActivityDelegate() {
-                @Override
-                public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
-                    processSelectedFiles(photos);
-                }
-
-                @Override
-                public void startPhotoSelectActivity() {
-                    try {
-                        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                        photoPickerIntent.setType("image/*");
-                        startActivityForResult(photoPickerIntent, 1);
-                    } catch (Exception e) {
-                        FileLog.e(e);
-                    }
-                }
-            });
-            presentFragment(fragment);
-        } else if (which == attach_document) {
-            if (Build.VERSION.SDK_INT >= 23 && getParentActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                getParentActivity().requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 4);
-                return;
-            }
-            DocumentSelectActivity fragment = new DocumentSelectActivity(false);
-            fragment.setCurrentAccount(currentAccount);
-            fragment.setCanSelectOnlyImageFiles(true);
-            fragment.setMaxSelectedFiles(getMaxSelectedDocuments());
-            fragment.setDelegate(new DocumentSelectActivity.DocumentSelectActivityDelegate() {
-
-                @Override
-                public void didSelectFiles(DocumentSelectActivity activity, ArrayList<String> files, String caption, boolean notify, int scheduleDate) {
-                    activity.finishFragment();
-                    ArrayList<SendMessagesHelper.SendingMediaInfo> arrayList = new ArrayList<>();
-                    for (int a = 0, count = files.size(); a < count; a++) {
-                        SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
-                        info.path = files.get(a);
-                        arrayList.add(info);
-                    }
-                    processSelectedFiles(arrayList);
-                }
-
-                @Override
-                public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
-                    processSelectedFiles(photos);
-                }
-
-                @Override
-                public void startDocumentSelectActivity() {
-                    try {
-                        Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                        if (Build.VERSION.SDK_INT >= 18) {
-                            photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                        }
-                        photoPickerIntent.setType("*/*");
-                        startActivityForResult(photoPickerIntent, 21);
-                    } catch (Exception e) {
-                        FileLog.e(e);
-                    }
-                }
-            });
-            presentFragment(fragment);
         }
+    }
+
+    public void didSelectPhotos(ArrayList<SendMessagesHelper.SendingMediaInfo> photos, boolean notify, int scheduleDate) {
+        processSelectedFiles(photos);
+    }
+
+    public void startDocumentSelectActivity() {
+        try {
+            Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT);
+            if (Build.VERSION.SDK_INT >= 18) {
+                photoPickerIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            }
+            photoPickerIntent.setType("*/*");
+            startActivityForResult(photoPickerIntent, 21);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    public void didSelectFiles(ArrayList<String> files, String caption, boolean notify, int scheduleDate) {
+        ArrayList<SendMessagesHelper.SendingMediaInfo> arrayList = new ArrayList<>();
+        for (int a = 0, count = files.size(); a < count; a++) {
+            SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
+            info.path = files.get(a);
+            arrayList.add(info);
+        }
+        processSelectedFiles(arrayList);
     }
 
     private void fillInitialValues() {
@@ -7236,7 +7194,7 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         this.needActivityResult = needActivityResult;
     }
 
-    private class ProgressView extends View {
+    private static class ProgressView extends View {
 
         private Paint paint = new Paint();
         private Paint paint2 = new Paint();
@@ -7436,10 +7394,8 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
                 int maxHeight = AndroidUtilities.dp(291);
                 if (scrollHeight - innerHeight < requiredHeight) {
                     setMeasuredDimension(getMeasuredWidth(), innerHeight + requiredHeight);
-                } else if (scrollHeight > maxHeight) {
-                    setMeasuredDimension(getMeasuredWidth(), maxHeight);
                 } else {
-                    setMeasuredDimension(getMeasuredWidth(), scrollHeight);
+                    setMeasuredDimension(getMeasuredWidth(), Math.min(scrollHeight, maxHeight));
                 }
             }
         }
@@ -7963,8 +7919,9 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
     }
 
     @Override
-    public ThemeDescription[] getThemeDescriptions() {
+    public ArrayList<ThemeDescription> getThemeDescriptions() {
         ArrayList<ThemeDescription> arrayList = new ArrayList<>();
+
         arrayList.add(new ThemeDescription(fragmentView, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_windowBackgroundGray));
         arrayList.add(new ThemeDescription(actionBar, ThemeDescription.FLAG_BACKGROUND, null, null, null, null, Theme.key_actionBarDefault));
         arrayList.add(new ThemeDescription(scrollView, ThemeDescription.FLAG_LISTGLOWCOLOR, null, null, null, null, Theme.key_actionBarDefault));
@@ -8065,6 +8022,6 @@ public class PassportActivity extends BaseFragment implements NotificationCenter
         arrayList.add(new ThemeDescription(emptyTextView2, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
         arrayList.add(new ThemeDescription(emptyTextView3, ThemeDescription.FLAG_TEXTCOLOR, null, null, null, null, Theme.key_windowBackgroundWhiteBlueText4));
 
-        return arrayList.toArray(new ThemeDescription[0]);
+        return arrayList;
     }
 }

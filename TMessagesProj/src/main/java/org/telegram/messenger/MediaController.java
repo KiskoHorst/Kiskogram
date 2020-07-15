@@ -55,7 +55,6 @@ import android.widget.FrameLayout;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.util.Log;
 
 import org.telegram.messenger.audioinfo.AudioInfo;
 import org.telegram.messenger.video.MediaCodecVideoConvertor;
@@ -64,6 +63,7 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ChatActivity;
 import org.telegram.ui.Components.EmbedBottomSheet;
 import org.telegram.ui.Components.PhotoFilterView;
@@ -95,7 +95,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
     public native byte[] getWaveform(String path);
     public native byte[] getWaveform2(short[] array, int length);
 
-    private class AudioBuffer {
+    private static class AudioBuffer {
         public AudioBuffer(int capacity) {
             buffer = ByteBuffer.allocateDirect(capacity);
             bufferBytes = new byte[capacity];
@@ -184,7 +184,52 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         public float blurAngle;
     }
 
-    public static class PhotoEntry {
+    public static class MediaEditState {
+
+        public CharSequence caption;
+
+        public String thumbPath;
+        public String imagePath;
+        public String filterPath;
+        public String paintPath;
+        public String fullPaintPath;
+        public String croppedPath;
+
+        public ArrayList<TLRPC.MessageEntity> entities;
+        public SavedFilterState savedFilterState;
+        public ArrayList<VideoEditedInfo.MediaEntity> mediaEntities;
+        public ArrayList<TLRPC.InputDocument> stickers;
+        public VideoEditedInfo editedInfo;
+        public long averageDuration;
+        public boolean isFiltered;
+        public boolean isPainted;
+        public boolean isCropped;
+        public int ttl;
+
+        public String getPath() {
+            return null;
+        }
+
+        public void reset() {
+            caption = null;
+            thumbPath = null;
+            filterPath = null;
+            imagePath = null;
+            paintPath = null;
+            isFiltered = false;
+            isPainted = false;
+            isCropped = false;
+            ttl = 0;
+            mediaEntities = null;
+            editedInfo = null;
+            entities = null;
+            savedFilterState = null;
+            croppedPath = null;
+            stickers = null;
+        }
+    }
+
+    public static class PhotoEntry extends MediaEditState {
         public int bucketId;
         public int imageId;
         public long dateTaken;
@@ -194,20 +239,9 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         public long size;
         public String path;
         public int orientation;
-        public String thumbPath;
-        public String imagePath;
-        public VideoEditedInfo editedInfo;
         public boolean isVideo;
-        public CharSequence caption;
-        public ArrayList<TLRPC.MessageEntity> entities;
-        public boolean isFiltered;
-        public boolean isPainted;
-        public boolean isCropped;
         public boolean isMuted;
-        public int ttl;
         public boolean canDeleteAfter;
-        public SavedFilterState savedFilterState;
-        public ArrayList<TLRPC.InputDocument> stickers = new ArrayList<>();
 
         public PhotoEntry(int bucketId, int imageId, long dateTaken, String path, int orientation, boolean isVideo, int width, int height, long size) {
             this.bucketId = bucketId;
@@ -225,24 +259,24 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             this.isVideo = isVideo;
         }
 
+        @Override
+        public String getPath() {
+            return path;
+        }
+
+        @Override
         public void reset() {
-            isFiltered = false;
-            isPainted = false;
-            isCropped = false;
-            ttl = 0;
-            imagePath = null;
-            if (!isVideo) {
-                thumbPath = null;
+            if (isVideo) {
+                if (filterPath != null) {
+                    new File(filterPath).delete();
+                    filterPath = null;
+                }
             }
-            editedInfo = null;
-            caption = null;
-            entities = null;
-            savedFilterState = null;
-            stickers.clear();
+            super.reset();
         }
     }
 
-    public static class SearchImage {
+    public static class SearchImage extends MediaEditState {
         public String id;
         public String imageUrl;
         public String thumbUrl;
@@ -251,34 +285,28 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         public int size;
         public int type;
         public int date;
-        public String thumbPath;
-        public String imagePath;
         public CharSequence caption;
-        public ArrayList<TLRPC.MessageEntity> entities;
         public TLRPC.Document document;
         public TLRPC.Photo photo;
         public TLRPC.PhotoSize photoSize;
         public TLRPC.PhotoSize thumbPhotoSize;
-        public boolean isFiltered;
-        public boolean isPainted;
-        public boolean isCropped;
-        public int ttl;
         public TLRPC.BotInlineResult inlineResult;
         public HashMap<String, String> params;
-        public SavedFilterState savedFilterState;
-        public ArrayList<TLRPC.InputDocument> stickers = new ArrayList<>();
 
+        @Override
+        public String getPath() {
+            if (photoSize != null) {
+                return FileLoader.getPathToAttach(photoSize, true).getAbsolutePath();
+            } else if (document != null) {
+                return FileLoader.getPathToAttach(document, true).getAbsolutePath();
+            } else {
+                return ImageLoader.getHttpFilePath(imageUrl, "jpg").getAbsolutePath();
+            }
+        }
+
+        @Override
         public void reset() {
-            isFiltered = false;
-            isPainted = false;
-            isCropped = false;
-            ttl = 0;
-            imagePath = null;
-            thumbPath = null;
-            caption = null;
-            entities = null;
-            savedFilterState = null;
-            stickers.clear();
+            super.reset();
         }
 
         public String getAttachName() {
@@ -358,7 +386,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
     private static final int AUDIO_NO_FOCUS_CAN_DUCK = 1;
     private static final int AUDIO_FOCUSED  = 2;
 
-    private class VideoConvertMessage {
+    private static class VideoConvertMessage {
         public MessageObject messageObject;
         public VideoEditedInfo videoEditedInfo;
         public int currentAccount;
@@ -570,7 +598,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         }
     }
 
-    private class GalleryObserverInternal extends ContentObserver {
+    private static class GalleryObserverInternal extends ContentObserver {
         public GalleryObserverInternal() {
             super(null);
         }
@@ -596,9 +624,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         }
     }
 
-
-
-    private class GalleryObserverExternal extends ContentObserver {
+    private static class GalleryObserverExternal extends ContentObserver {
         public GalleryObserverExternal() {
             super(null);
         }
@@ -1611,6 +1637,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 FileLog.e(e);
             }
             audioPlayer = null;
+            Theme.unrefAudioVisualizeDrawable(playingMessageObject);
         } else if (videoPlayer != null) {
             currentAspectRatioFrameLayout = null;
             currentTextureViewContainer = null;
@@ -1869,6 +1896,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                         FileLog.e(e);
                     }
                     audioPlayer = null;
+                    Theme.unrefAudioVisualizeDrawable(playingMessageObject);
                 } else if (videoPlayer != null) {
                     currentAspectRatioFrameLayout = null;
                     currentTextureViewContainer = null;
@@ -2205,7 +2233,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             }
 
             @Override
-            public void onError(Exception e) {
+            public void onError(VideoPlayer player, Exception e) {
                 FileLog.e(e);
             }
 
@@ -2417,7 +2445,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 }
 
                 @Override
-                public void onError(Exception e) {
+                public void onError(VideoPlayer player, Exception e) {
                     FileLog.e(e);
                 }
 
@@ -2577,7 +2605,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                     }
 
                     @Override
-                    public void onError(Exception e) {
+                    public void onError(VideoPlayer player, Exception e) {
 
                     }
 
@@ -2599,6 +2627,17 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                     @Override
                     public boolean onSurfaceDestroyed(SurfaceTexture surfaceTexture) {
                         return false;
+                    }
+                });
+                audioPlayer.setAudioVisualizerDelegate(new VideoPlayer.AudioVisualizerDelegate() {
+                    @Override
+                    public void onVisualizerUpdate(boolean playing, boolean animate, float[] values) {
+                        Theme.getCurrentAudiVisualizerDrawable().setWaveform(playing, animate, values);
+                    }
+
+                    @Override
+                    public boolean needUpdate() {
+                        return Theme.getCurrentAudiVisualizerDrawable().getParentView() != null;
                     }
                 });
                 if (exists) {
@@ -2659,6 +2698,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 if (audioPlayer != null) {
                     audioPlayer.releasePlayer(true);
                     audioPlayer = null;
+                    Theme.unrefAudioVisualizeDrawable(playingMessageObject);
                     isPaused = false;
                     playingMessageObject = null;
                     downloadingCurrentMessage = false;
@@ -3520,9 +3560,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             allPhotosAlbumEntry = allPhotosAlbumFinal;
             allMediaAlbumEntry = allMediaAlbumFinal;
             allVideosAlbumEntry = allVideosAlbumFinal;
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                NotificationCenter.getInstance(a).postNotificationName(NotificationCenter.albumsDidLoad, guid, mediaAlbumsSorted, photoAlbumsSorted, cameraAlbumIdFinal);
-            }
+            NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.albumsDidLoad, guid, mediaAlbumsSorted, photoAlbumsSorted, cameraAlbumIdFinal);
         }, delay);
     }
 
@@ -3789,7 +3827,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
             rotateRender = 90;
         }
 
-        boolean needCompress = resultWidth != originalWidth || resultHeight != originalHeight || rotateRender != 0
+        boolean needCompress = info.mediaEntities != null || info.paintPath != null || info.filterState != null || resultWidth != originalWidth || resultHeight != originalHeight || rotateRender != 0
                 || info.roundVideo || Build.VERSION.SDK_INT >= 18 && startTime != -1;
 
 
@@ -3833,6 +3871,10 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 framerate, bitrate,
                 startTime, endTime,
                 needCompress, duration,
+                info.filterState,
+                info.paintPath,
+                info.mediaEntities,
+                info.isPhoto,
                 callback);
 
 
@@ -3891,10 +3933,13 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         int remeasuredBitrate = (int) (originalBitrate / (Math.min(originalHeight / (float) (height), originalWidth / (float) (width))));
         remeasuredBitrate *= compressFactor;
         int minBitrate = (int) (getVideoBitrateWithFactor(minCompressFactor) / (1280f * 720f / (width * height)));
-        if (originalBitrate < minBitrate) return remeasuredBitrate;
-        if (remeasuredBitrate > maxBitrate) return maxBitrate;
-        if (remeasuredBitrate < minBitrate) return minBitrate;
-        return remeasuredBitrate;
+        if (originalBitrate < minBitrate) {
+            return remeasuredBitrate;
+        }
+        if (remeasuredBitrate > maxBitrate) {
+            return maxBitrate;
+        }
+        return Math.max(remeasuredBitrate, minBitrate);
     }
 
     private static int getVideoBitrateWithFactor(float f) {
