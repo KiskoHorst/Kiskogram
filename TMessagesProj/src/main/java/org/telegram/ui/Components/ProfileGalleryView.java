@@ -289,7 +289,7 @@ public class ProfileGalleryView extends CircularViewPager implements Notificatio
                         boolean cont = false;
                         for (int b = 0; b < photo.sizes.size(); b++) {
                             TLRPC.PhotoSize size = photo.sizes.get(b);
-                            if (size.location.local_id == currentImageLocation.location.local_id && size.location.volume_id == currentImageLocation.location.volume_id) {
+                            if (size.location != null && size.location.local_id == currentImageLocation.location.local_id && size.location.volume_id == currentImageLocation.location.volume_id) {
                                 cont = true;
                                 break;
                             }

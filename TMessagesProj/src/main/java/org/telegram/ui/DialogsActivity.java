@@ -2156,8 +2156,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         ActionBarMenuItem otherItem = actionMode.addItemWithWidth(0, R.drawable.ic_ab_other, AndroidUtilities.dp(54), LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));
         archiveItem = otherItem.addSubItem(archive, R.drawable.msg_archive, LocaleController.getString("Archive", R.string.Archive));
         pin2Item = otherItem.addSubItem(pin2, R.drawable.chats_pin, LocaleController.getString("DialogPin", R.string.DialogPin));
-        addToFolderItem = otherItem.addSubItem(add_to_folder, R.drawable.msg_addfolder, LocaleController.getString("FilterAddTo", R.string.FilterAddTo));
-        removeFromFolderItem = otherItem.addSubItem(remove_from_folder, R.drawable.msg_removefolder, LocaleController.getString("FilterRemoveFrom", R.string.FilterRemoveFrom));
+        addToFolderItem = otherItem.addSubItem(add_to_folder, R.drawable.folder, LocaleController.getString("FilterAddTo", R.string.FilterAddTo));
+        removeFromFolderItem = otherItem.addSubItem(remove_from_folder, R.drawable.folder_remove, LocaleController.getString("FilterRemoveFrom", R.string.FilterRemoveFrom));
         readItem = otherItem.addSubItem(read, R.drawable.menu_read, LocaleController.getString("MarkAsRead", R.string.MarkAsRead));
         clearItem = otherItem.addSubItem(clear, R.drawable.chats_clear, LocaleController.getString("ClearHistory", R.string.ClearHistory));
         blockItem = otherItem.addSubItem(block, R.drawable.msg_block, LocaleController.getString("BlockUser", R.string.BlockUser));

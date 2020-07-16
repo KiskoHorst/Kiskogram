@@ -3941,7 +3941,7 @@ compressItem = new ImageView(parentActivity);
 
         paintItem = new ImageView(parentActivity);
         paintItem.setScaleType(ImageView.ScaleType.CENTER);
-        paintItem.setImageResource(R.drawable.photo_paint);
+        paintItem.setImageResource(R.drawable.brush);
         paintItem.setBackgroundDrawable(Theme.createSelectorDrawable(Theme.ACTION_BAR_WHITE_SELECTOR_COLOR));
         itemsLayout.addView(paintItem, LayoutHelper.createLinear(70, 48));
         paintItem.setOnClickListener(v -> {

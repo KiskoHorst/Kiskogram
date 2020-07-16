@@ -303,9 +303,9 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
 
         ActionBarMenu menu = actionBar.createMenu();
         menuItem = menu.addItem(0, R.drawable.ic_ab_other);
-        menuItem.addSubItem(1, R.drawable.msg_forward, LocaleController.getString("Forward", R.string.Forward));
-        menuItem.addSubItem(2, R.drawable.msg_shareout, LocaleController.getString("ShareFile", R.string.ShareFile));
-        menuItem.addSubItem(4, R.drawable.msg_message, LocaleController.getString("ShowInChat", R.string.ShowInChat));
+        menuItem.addSubItem(1, R.drawable.forward, LocaleController.getString("Forward", R.string.Forward));
+        menuItem.addSubItem(2, R.drawable.share, LocaleController.getString("ShareFile", R.string.ShareFile));
+        menuItem.addSubItem(4, R.drawable.eye, LocaleController.getString("ShowInChat", R.string.ShowInChat));
         menuItem.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));
         menuItem.setTranslationX(AndroidUtilities.dp(48));
         menuItem.setAlpha(0.0f);
@@ -487,9 +487,9 @@ public class AudioPlayerAlert extends BottomSheet implements NotificationCenter.
         optionsButton.setIcon(R.drawable.ic_ab_other);
         optionsButton.setAdditionalYOffset(-AndroidUtilities.dp(120));
         playerLayout.addView(optionsButton, LayoutHelper.createFrame(40, 40, Gravity.TOP | Gravity.RIGHT, 0, 19, 10, 0));
-        optionsButton.addSubItem(1, R.drawable.msg_forward, LocaleController.getString("Forward", R.string.Forward));
-        optionsButton.addSubItem(2, R.drawable.msg_shareout, LocaleController.getString("ShareFile", R.string.ShareFile));
-        optionsButton.addSubItem(4, R.drawable.msg_message, LocaleController.getString("ShowInChat", R.string.ShowInChat));
+        optionsButton.addSubItem(1, R.drawable.forward, LocaleController.getString("Forward", R.string.Forward));
+        optionsButton.addSubItem(2, R.drawable.share, LocaleController.getString("ShareFile", R.string.ShareFile));
+        optionsButton.addSubItem(4, R.drawable.eye, LocaleController.getString("ShowInChat", R.string.ShowInChat));
         optionsButton.setOnClickListener(v -> optionsButton.toggleSubMenu());
         optionsButton.setDelegate(this::onSubItemClick);
         optionsButton.setContentDescription(LocaleController.getString("AccDescrMoreOptions", R.string.AccDescrMoreOptions));

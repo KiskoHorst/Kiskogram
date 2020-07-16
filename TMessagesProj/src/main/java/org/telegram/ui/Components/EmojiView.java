@@ -1012,16 +1012,16 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         stickerIcons = new Drawable[]{
                 Theme.createEmojiIconSelectorDrawable(context, R.drawable.history, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
                 Theme.createEmojiIconSelectorDrawable(context, R.drawable.star, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
-                Theme.createEmojiIconSelectorDrawable(context, R.drawable.stickers_trending3, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
+                Theme.createEmojiIconSelectorDrawable(context, R.drawable.plus_circle, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
                 new LayerDrawable(new Drawable[]{
-                        Theme.createEmojiIconSelectorDrawable(context, R.drawable.stickers_trending1, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
+                        Theme.createEmojiIconSelectorDrawable(context, R.drawable.plus_circle, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
                         Theme.createEmojiIconSelectorDrawable(context, R.drawable.stickers_trending2, Theme.getColor(Theme.key_chat_emojiPanelStickerPackSelectorLine), Theme.getColor(Theme.key_chat_emojiPanelStickerPackSelectorLine))
                 })
         };
 
         gifIcons = new Drawable[]{
                 Theme.createEmojiIconSelectorDrawable(context, R.drawable.history, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
-                Theme.createEmojiIconSelectorDrawable(context, R.drawable.stickers_gifs_trending, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
+                Theme.createEmojiIconSelectorDrawable(context, R.drawable.plus_circle, Theme.getColor(Theme.key_chat_emojiBottomPanelIcon), Theme.getColor(Theme.key_chat_emojiPanelIconSelected)),
         };
 
         emojiTitles = new String[]{
@@ -3010,8 +3010,8 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         for (int i = 0, N = gifSearchEmojies.size(); i < N; i++) {
             final Emoji.EmojiDrawable emojiDrawable = Emoji.getEmojiDrawable(gifSearchEmojies.get(i));
             if (emojiDrawable != null) {
-                gifTabsCount++;
-                gifTabs.addIconTab(3 + i, emojiDrawable).setPadding(hPadding, vPadding, hPadding, vPadding);
+                //gifTabsCount++;
+                //gifTabs.addIconTab(3 + i, emojiDrawable).setPadding(hPadding, vPadding, hPadding, vPadding);
             }
         }
 
