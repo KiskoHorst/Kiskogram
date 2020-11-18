@@ -30,6 +30,7 @@ public class ChartHeaderView extends FrameLayout {
     private TextView datesTmp;
     public TextView back;
     private boolean showDate = true;
+    private boolean useWeekInterval;
 
     private Drawable zoomIcon;
 
@@ -99,6 +100,9 @@ public class ChartHeaderView extends FrameLayout {
             datesTmp.setVisibility(GONE);
             return;
         }
+        if (useWeekInterval) {
+            end += 86400000L * 7;
+        }
         final String newText;
         if (end - start >= 86400000L) {
             newText = formatter.format(new Date(start)) + " — " + formatter.format(new Date(end));
@@ -147,6 +151,8 @@ public class ChartHeaderView extends FrameLayout {
             back.setAlpha(1f);
             back.setTranslationX(0);
             back.setTranslationY(0);
+            back.setScaleX(1f);
+            back.setScaleY(1f);
             title.setAlpha(0f);
         }
     }
@@ -183,6 +189,10 @@ public class ChartHeaderView extends FrameLayout {
             title.setScaleY(1f);
             back.setAlpha(0);
         }
+    }
+
+    public void setUseWeekInterval(boolean useWeekInterval) {
+        this.useWeekInterval = useWeekInterval;
     }
 
     public void showDate(boolean b) {

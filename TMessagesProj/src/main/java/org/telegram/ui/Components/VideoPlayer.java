@@ -31,12 +31,14 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Renderer;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.analytics.AnalyticsListener;
 import com.google.android.exoplayer2.audio.AudioProcessor;
 import com.google.android.exoplayer2.audio.AudioRendererEventListener;
 import com.google.android.exoplayer2.audio.TeeAudioProcessor;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecSelector;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.LoopingMediaSource;
@@ -67,7 +69,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 @SuppressLint("NewApi")
-public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.VideoListener, NotificationCenter.NotificationCenterDelegate {
+public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.VideoListener, AnalyticsListener, NotificationCenter.NotificationCenterDelegate {
 
     public interface VideoPlayerDelegate {
         void onStateChanged(boolean playWhenReady, int playbackState);
@@ -76,6 +78,15 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
         void onRenderedFirstFrame();
         void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture);
         boolean onSurfaceDestroyed(SurfaceTexture surfaceTexture);
+        default void onRenderedFirstFrame(EventTime eventTime) {
+
+        }
+        default void onSeekStarted(EventTime eventTime) {
+
+        }
+        default void onSeekFinished(EventTime eventTime) {
+
+        }
     }
 
     public interface AudioVisualizerDelegate {
@@ -93,6 +104,8 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
     private boolean isStreaming;
     private boolean autoplay;
     private boolean mixedAudio;
+
+    private boolean triedReinit;
 
     private Uri currentUri;
 
@@ -113,12 +126,19 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
     private String videoType, audioType;
     private boolean loopingMediaSource;
     private boolean looping;
+    private int repeatCount;
+
+    private boolean shouldPauseOther;
 
     Handler audioUpdateHandler = new Handler(Looper.getMainLooper());
 
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
 
     public VideoPlayer() {
+        this(true);
+    }
+
+    public VideoPlayer(boolean pauseOther) {
         mediaDataSourceFactory = new ExtendedDefaultDataSourceFactory(ApplicationLoader.applicationContext, BANDWIDTH_METER, new DefaultHttpDataSourceFactory("Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)", BANDWIDTH_METER));
 
         mainHandler = new Handler();
@@ -127,7 +147,10 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
         trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
 
         lastReportedPlaybackState = ExoPlayer.STATE_IDLE;
-        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.playerDidStartPlaying);
+        shouldPauseOther = pauseOther;
+        if (pauseOther) {
+            NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.playerDidStartPlaying);
+        }
     }
 
     @Override
@@ -159,6 +182,7 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
             factory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER);
             player = ExoPlayerFactory.newSimpleInstance(ApplicationLoader.applicationContext, factory, trackSelector, loadControl, null);
 
+            player.addAnalyticsListener(this);
             player.addListener(this);
             player.setVideoListener(this);
             if (textureView != null) {
@@ -324,7 +348,30 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
             audioPlayer.release(async);
             audioPlayer = null;
         }
-        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.playerDidStartPlaying);
+        if (shouldPauseOther) {
+            NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.playerDidStartPlaying);
+        }
+    }
+
+    @Override
+    public void onSeekStarted(EventTime eventTime) {
+        if (delegate != null) {
+            delegate.onSeekStarted(eventTime);
+        }
+    }
+
+    @Override
+    public void onSeekProcessed(EventTime eventTime) {
+        if (delegate != null) {
+            delegate.onSeekFinished(eventTime);
+        }
+    }
+
+    @Override
+    public void onRenderedFirstFrame(EventTime eventTime, Surface surface) {
+        if (delegate != null) {
+            delegate.onRenderedFirstFrame(eventTime);
+        }
     }
 
     public void setTextureView(TextureView texture) {
@@ -435,7 +482,7 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
     }
 
     public boolean isMuted() {
-        return player.getVolume() == 0.0f;
+        return player != null && player.getVolume() == 0.0f;
     }
 
     public void setMute(boolean value) {
@@ -536,7 +583,7 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         maybeReportPlayerState();
-        if (playWhenReady && playbackState == Player.STATE_READY) {
+        if (playWhenReady && playbackState == Player.STATE_READY && !isMuted() && shouldPauseOther) {
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.playerDidStartPlaying, this);
         }
         if (!videoPlayerReady && playbackState == Player.STATE_READY) {
@@ -563,7 +610,9 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
 
     @Override
     public void onPositionDiscontinuity(int reason) {
-
+        if (reason == Player.DISCONTINUITY_REASON_PERIOD_TRANSITION) {
+            repeatCount++;
+        }
     }
 
     @Override
@@ -574,7 +623,8 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
     @Override
     public void onPlayerError(ExoPlaybackException error) {
         Throwable cause = error.getCause();
-        if (textureView != null && cause instanceof SurfaceNotValidException) {
+        if (textureView != null && (!triedReinit && cause instanceof MediaCodecRenderer.DecoderInitializationException || cause instanceof SurfaceNotValidException)) {
+            triedReinit = true;
             if (player != null) {
                 ViewGroup parent = (ViewGroup) textureView.getParent();
                 if (parent != null) {
@@ -639,6 +689,10 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
         }
     }
 
+    public int getRepeatCount() {
+        return repeatCount;
+    }
+
     private class AudioVisualizerRenderersFactory extends DefaultRenderersFactory {
 
         public AudioVisualizerRenderersFactory(Context context) {
@@ -668,11 +722,7 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
 
         @Override
         public void flush(int sampleRateHz, int channelCount, int encoding) {
-            if (audioVisualizerDelegate == null) {
-                return;
-            }
-            audioUpdateHandler.removeCallbacksAndMessages(null);
-            audioVisualizerDelegate.onVisualizerUpdate(false, false, null);
+            
         }
 
 
@@ -757,18 +807,13 @@ public class VideoPlayer implements ExoPlayer.EventListener, SimpleExoPlayer.Vid
                 }
 
                 int updateInterval = 64;
-//                if (partsAmplitude[6] >= 0.5f) {
-//                    updateInterval -= 8 * partsAmplitude[6] - 0.5f;
-//                }
 
                 if (System.currentTimeMillis() - lastUpdateTime < updateInterval) {
                     return;
                 }
                 lastUpdateTime = System.currentTimeMillis();
 
-                audioUpdateHandler.postDelayed(() -> {
-                    audioVisualizerDelegate.onVisualizerUpdate(true, true, partsAmplitude);
-                }, 130);
+                audioUpdateHandler.postDelayed(() -> audioVisualizerDelegate.onVisualizerUpdate(true, true, partsAmplitude), 130);
             }
         }
     }

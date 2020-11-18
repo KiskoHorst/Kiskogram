@@ -22,6 +22,8 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.SystemClock;
 import androidx.annotation.Keep;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -80,6 +82,7 @@ public class EditTextBoldCursor extends EditText {
     private float lineSpacingExtra;
     private Rect rect = new Rect();
     private StaticLayout hintLayout;
+    private CharSequence hint;
     private StaticLayout errorLayout;
     private CharSequence errorText;
     private int hintColor;
@@ -359,6 +362,7 @@ public class EditTextBoldCursor extends EditText {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         if (hintLayout != null) {
+            setHintText(hint);
             lineY = (getMeasuredHeight() - hintLayout.getHeight()) / 2.0f + hintLayout.getHeight() + AndroidUtilities.dp(6);
         }
     }
@@ -366,6 +370,13 @@ public class EditTextBoldCursor extends EditText {
     public void setHintText(CharSequence text) {
         if (text == null) {
             text = "";
+        }
+        hint = text;
+        if (getMeasuredWidth() != 0) {
+            text = TextUtils.ellipsize(text, getPaint(), getMeasuredWidth(), TextUtils.TruncateAt.END);
+            if (hintLayout != null && TextUtils.equals(hintLayout.getText(), text)) {
+                return;
+            }
         }
         hintLayout = new StaticLayout(text, getPaint(), AndroidUtilities.dp(1000), Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
     }
@@ -708,6 +719,10 @@ public class EditTextBoldCursor extends EditText {
         return FloatingToolbar.STYLE_THEME;
     }
 
+    public void hideActionMode() {
+        cleanupFloatingActionModeViews();
+    }
+
     @Override
     public void setSelection(int start, int stop) {
         try {
@@ -731,7 +746,7 @@ public class EditTextBoldCursor extends EditText {
         super.onInitializeAccessibilityNodeInfo(info);
         info.setClassName("android.widget.EditText");
         if (hintLayout != null) {
-            info.setContentDescription(hintLayout.getText());
+            AccessibilityNodeInfoCompat.wrap(info).setHintText(hintLayout.getText());
         }
     }
 }

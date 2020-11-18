@@ -729,6 +729,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
                     File file = new File(ApplicationLoader.getFilesDirFixed(), "icthumb.jpg");
                     FileOutputStream stream = new FileOutputStream(file);
                     lastBitmap.compress(Bitmap.CompressFormat.JPEG, 87, stream);
+                    stream.close();
                 } catch (Throwable ignore) {
 
                 }
@@ -974,7 +975,7 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
         invalidate();
     }
 
-    public void onPanTranslationUpdate(int y) {
+    public void onPanTranslationUpdate(float y) {
         panTranslationY = y / 2f;
         updateTranslationY();
         blurBehindDrawable.onPanTranslationUpdate(y);
@@ -1509,13 +1510,13 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
         private int scaleYHandle;
         private int alphaHandle;
         private int zeroTimeStamps;
-
         private Integer lastCameraId = 0;
 
         private AudioRecord audioRecorder;
 
         private ArrayBlockingQueue<AudioBufferInfo> buffers = new ArrayBlockingQueue<>(10);
         private ArrayList<Bitmap> keyframeThumbs = new ArrayList<>();
+        private DispatchQueue generateKeyframeThumbsQueue;
         private int frameCount;
 
         private Runnable recorderRunnable = new Runnable() {
@@ -1641,6 +1642,11 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
             }
             keyframeThumbs.clear();
             frameCount = 0;
+            if (generateKeyframeThumbsQueue != null) {
+                generateKeyframeThumbsQueue.cleanupQueue();
+                generateKeyframeThumbsQueue.recycle();
+            }
+            generateKeyframeThumbsQueue = new DispatchQueue("keyframes_thumb_queque");
             handler.sendMessage(handler.obtainMessage(MSG_START_RECORDING));
         }
 
@@ -1881,19 +1887,8 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
             EGLExt.eglPresentationTimeANDROID(eglDisplay, eglSurface, currentTimestamp);
             EGL14.eglSwapBuffers(eglDisplay, eglSurface);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && frameCount % 30 == 0) {
-                final TextureView textureViewFinal = textureView;
-                if (textureViewFinal != null) {
-                    Bitmap bitmap = textureViewFinal.getBitmap( AndroidUtilities.dp(56),  AndroidUtilities.dp(56));
-                    if ((bitmap == null || bitmap.getPixel(0,0) == 0) && keyframeThumbs.size() > 1) {
-                        keyframeThumbs.add(keyframeThumbs.get(keyframeThumbs.size() - 1));
-                    } else {
-                        keyframeThumbs.add(bitmap);
-                    }
-                }
-            }
+            createKeyframeThumb();
             frameCount++;
-
 
             if (oldCameraTexture[0] != 0 && cameraTextureAlpha < 1.0f) {
                 cameraTextureAlpha += alphaDt / 200000000.0f;
@@ -1911,6 +1906,30 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
             } else if (!cameraReady) {
                 cameraReady = true;
                 AndroidUtilities.runOnUIThread(() -> textureOverlayView.animate().setDuration(120).alpha(0.0f).setInterpolator(new DecelerateInterpolator()).start());
+            }
+        }
+
+        private void createKeyframeThumb() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && frameCount % 33 == 0) {
+                GenerateKeyframeThumbTask task = new GenerateKeyframeThumbTask();
+                generateKeyframeThumbsQueue.postRunnable(task);
+            }
+        }
+
+        private class GenerateKeyframeThumbTask implements Runnable {
+            @Override
+            public void run() {
+                final TextureView textureView = InstantCameraView.this.textureView;
+                if (textureView != null) {
+                    final Bitmap bitmap = textureView.getBitmap(AndroidUtilities.dp(56),  AndroidUtilities.dp(56));
+                    AndroidUtilities.runOnUIThread(() -> {
+                        if ((bitmap == null || bitmap.getPixel(0, 0) == 0) && keyframeThumbs.size() > 1) {
+                            keyframeThumbs.add(keyframeThumbs.get(keyframeThumbs.size() - 1));
+                        } else {
+                            keyframeThumbs.add(bitmap);
+                        }
+                    });
+                }
             }
         }
 
@@ -1949,6 +1968,11 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
                 } catch (Exception e) {
                     FileLog.e(e);
                 }
+            }
+            if (generateKeyframeThumbsQueue != null) {
+                generateKeyframeThumbsQueue.cleanupQueue();
+                generateKeyframeThumbsQueue.recycle();
+                generateKeyframeThumbsQueue = null;
             }
             if (send != 0) {
                 AndroidUtilities.runOnUIThread(() -> {

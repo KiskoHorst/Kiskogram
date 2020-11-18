@@ -131,6 +131,7 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
     private SparseArray<TLRPC.User> ignoreUsers;
     private boolean allowUsernameSearch = true;
     private ContactsActivityDelegate delegate;
+    private String initialSearchString;
 
     private AlertDialog permissionDialog;
     private boolean askAboutContacts = true;
@@ -227,7 +228,7 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
                 } else if (id == sort_button) {
                     SharedConfig.toggleSortContactsByName();
                     sortByName = SharedConfig.sortContactsByName;
-                    listViewAdapter.setSortType(sortByName ? 1 : 2);
+                    listViewAdapter.setSortType(sortByName ? 1 : 2, false);
                     sortItem.setIcon(sortByName ? R.drawable.contacts_sort_time : R.drawable.contacts_sort_name);
                 }
             }
@@ -331,7 +332,7 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
                 }
             }
         };
-        listViewAdapter.setSortType(sortItem != null ? (sortByName ? 1 : 2) : 0);
+        listViewAdapter.setSortType(sortItem != null ? (sortByName ? 1 : 2) : 0, false);
         listViewAdapter.setDisableSections(disableSections);
 
         fragmentView = new FrameLayout(context) {
@@ -409,7 +410,7 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
                     String str = (String) object;
                     if (!str.equals("section")) {
                         NewContactActivity activity = new NewContactActivity();
-                        activity.setInitialPhoneNumber(str);
+                        activity.setInitialPhoneNumber(str, true);
                         presentFragment(activity);
                     }
                 }
@@ -609,6 +610,11 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
                 });
             }
             floatingButtonContainer.addView(floatingButton, LayoutHelper.createFrame((Build.VERSION.SDK_INT >= 21 ? 56 : 60), (Build.VERSION.SDK_INT >= 21 ? 56 : 60), Gravity.LEFT | Gravity.TOP, 10, 0, 10, 0));
+        }
+
+        if (initialSearchString != null) {
+            actionBar.openSearchField(initialSearchString, false);
+            initialSearchString = null;
         }
 
         return fragmentView;
@@ -846,6 +852,9 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
     public void didReceivedNotification(int id, int account, Object... args) {
         if (id == NotificationCenter.contactsDidLoad) {
             if (listViewAdapter != null) {
+                if (!sortByName) {
+                    listViewAdapter.setSortType(2, true);
+                }
                 listViewAdapter.notifyDataSetChanged();
             }
         } else if (id == NotificationCenter.updateInterfaces) {
@@ -902,6 +911,10 @@ public class ContactsActivity extends BaseFragment implements NotificationCenter
 
     public void setIgnoreUsers(SparseArray<TLRPC.User> users) {
         ignoreUsers = users;
+    }
+
+    public void setInitialSearchString(String initialSearchString) {
+        this.initialSearchString = initialSearchString;
     }
 
     @Override

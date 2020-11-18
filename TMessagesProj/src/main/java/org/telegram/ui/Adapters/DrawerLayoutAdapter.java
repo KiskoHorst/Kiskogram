@@ -191,6 +191,23 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         return 3;
     }
 
+    public void swapElements(int fromIndex, int toIndex) {
+        int idx1 = fromIndex - 2;
+        int idx2 = toIndex - 2;
+        if (idx1 < 0 || idx2 < 0 || idx1 >= accountNumbers.size() || idx2 >= accountNumbers.size()) {
+            return;
+        }
+        final UserConfig userConfig1 = UserConfig.getInstance(accountNumbers.get(idx1));
+        final UserConfig userConfig2 = UserConfig.getInstance(accountNumbers.get(idx2));
+        final int tempLoginTime = userConfig1.loginTime;
+        userConfig1.loginTime = userConfig2.loginTime;
+        userConfig2.loginTime = tempLoginTime;
+        userConfig1.saveConfig(false);
+        userConfig2.saveConfig(false);
+        Collections.swap(accountNumbers, idx1, idx2);
+        notifyItemMoved(fromIndex, toIndex);
+    }
+
     private void resetItems() {
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
@@ -243,6 +260,16 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             settingsIcon = R.drawable.menu_settings_14;
             inviteIcon = R.drawable.menu_secret_ny;
             helpIcon = R.drawable.menu_help;
+        } else if (eventType == 2) {
+            newGroupIcon = R.drawable.menu_groups_hw;
+            newSecretIcon = R.drawable.menu_secret_hw;
+            newChannelIcon = R.drawable.menu_broadcast_hw;
+            contactsIcon = R.drawable.menu_contacts_hw;
+            callsIcon = R.drawable.menu_calls_hw;
+            savedIcon = R.drawable.menu_bookmarks_hw;
+            settingsIcon = R.drawable.menu_settings_hw;
+            inviteIcon = R.drawable.menu_invite_hw;
+            helpIcon = R.drawable.menu_help_hw;
         } else {
             newGroupIcon = R.drawable.menu_groups;
             newSecretIcon = R.drawable.menu_secret;
@@ -278,7 +305,21 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         return item != null ? item.id : -1;
     }
 
-    private class Item {
+    public int getFirstAccountPosition() {
+        if (!accountsShown) {
+            return RecyclerView.NO_POSITION;
+        }
+        return 2;
+    }
+
+    public int getLastAccountPosition() {
+        if (!accountsShown) {
+            return RecyclerView.NO_POSITION;
+        }
+        return 1 + accountNumbers.size();
+    }
+
+    private static class Item {
         public int icon;
         public String text;
         public int id;

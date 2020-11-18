@@ -42,7 +42,6 @@ public class TrendingStickersAlert extends BottomSheet {
         alertContainerView.addView(trendingStickersLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         containerView = alertContainerView;
-        useSmoothKeyboard = true;
 
         layout = trendingStickersLayout;
         layout.setParentFragment(parentFragment);
@@ -60,14 +59,16 @@ public class TrendingStickersAlert extends BottomSheet {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 scrolledY += dy;
-                if (Math.abs(scrolledY) > AndroidUtilities.dp(96)) {
+                if (recyclerView.getScrollState() == RecyclerListView.SCROLL_STATE_DRAGGING && Math.abs(scrolledY) > AndroidUtilities.dp(96)) {
                     View view = layout.findFocus();
                     if (view == null) {
                         view = layout;
                     }
                     AndroidUtilities.hideKeyboard(view);
                 }
-                updateLayout();
+                if (dy != 0) {
+                    updateLayout();
+                }
             }
         });
     }
@@ -114,6 +115,11 @@ public class TrendingStickersAlert extends BottomSheet {
         return descriptions;
     }
 
+    @Override
+    public void setAllowNestedScroll(boolean allowNestedScroll) {
+        this.allowNestedScroll = allowNestedScroll;
+    }
+
     private class AlertContainerView extends SizeNotifierFrameLayout {
 
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -126,7 +132,7 @@ public class TrendingStickersAlert extends BottomSheet {
         private float[] radii = new float[8];
 
         public AlertContainerView(@NonNull Context context) {
-            super(context, true);
+            super(context);
             setWillNotDraw(false);
             setPadding(backgroundPaddingLeft, 0, backgroundPaddingLeft, 0);
             setDelegate(new SizeNotifierFrameLayoutDelegate() {
@@ -140,11 +146,9 @@ public class TrendingStickersAlert extends BottomSheet {
                         lastKeyboardHeight = keyboardHeight;
                         lastIsWidthGreater = isWidthGreater;
                         if (keyboardHeight > AndroidUtilities.dp(20) && !gluedToTop) {
-                            layout.setContentViewPaddingTop(0);
                             TrendingStickersAlert.this.setAllowNestedScroll(false);
                             gluedToTop = true;
                         }
-                        layout.setContentViewPaddingBottom(keyboardHeight);
                     }
                 }
             });
@@ -172,32 +176,32 @@ public class TrendingStickersAlert extends BottomSheet {
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            final int statusBarHeight = Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0;
-            final int height = MeasureSpec.getSize(heightMeasureSpec) - statusBarHeight;
-            final int padding = (int) (height * 0.2f);
-            final int keyboardHeight = measureKeyboardHeight();
-            ignoreLayout = true;
-            if (keyboardHeight > AndroidUtilities.dp(20)) {
-                layout.setContentViewPaddingTop(0);
-                TrendingStickersAlert.this.setAllowNestedScroll(false);
-                gluedToTop = true;
-            } else {
-                layout.setContentViewPaddingTop(padding);
-                TrendingStickersAlert.this.setAllowNestedScroll(true);
-                gluedToTop = false;
-            }
-            layout.setContentViewPaddingBottom(keyboardHeight);
-            if (getPaddingTop() != statusBarHeight) {
-                setPadding(backgroundPaddingLeft, statusBarHeight, backgroundPaddingLeft, 0);
-            }
-            ignoreLayout = false;
             super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(heightMeasureSpec), MeasureSpec.EXACTLY));
         }
 
         @Override
-        protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-            super.onLayout(changed, left, top, right, bottom);
-            updateLayout();
+        protected void onLayout(boolean changed, int l, int t, int r, int b) {
+            final int statusBarHeight = Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0;
+            final int height = MeasureSpec.getSize(getMeasuredHeight()) - statusBarHeight;
+            final int keyboardHeight = measureKeyboardHeight();
+            final int padding = (int) ((height + keyboardHeight) * 0.2f);
+
+            ignoreLayout = true;
+            if (keyboardHeight > AndroidUtilities.dp(20)) {
+                layout.glueToTop(true);
+                TrendingStickersAlert.this.setAllowNestedScroll(false);
+                gluedToTop = true;
+            } else {
+                layout.glueToTop(false);
+                TrendingStickersAlert.this.setAllowNestedScroll(true);
+                gluedToTop = false;
+            }
+            layout.setContentViewPaddingTop(padding);
+            if (getPaddingTop() != statusBarHeight) {
+                setPadding(backgroundPaddingLeft, statusBarHeight, backgroundPaddingLeft, 0);
+            }
+            ignoreLayout = false;
+            super.onLayout(changed, l, t, r, b);
         }
 
         @Override
@@ -209,6 +213,7 @@ public class TrendingStickersAlert extends BottomSheet {
 
         @Override
         protected void onDraw(Canvas canvas) {
+            updateLayout();
             super.onDraw(canvas);
 
             final float fraction = getFraction();
@@ -257,7 +262,7 @@ public class TrendingStickersAlert extends BottomSheet {
             canvas.restore();
 
             // status bar
-            setStatusBarVisible(fraction == 0f && Build.VERSION.SDK_INT >= 21 && !isDismissed(), !gluedToTop);
+            setStatusBarVisible(fraction == 0f && Build.VERSION.SDK_INT >= 21 && !isDismissed(), true);
             if (statusBarAlpha > 0f) {
                 final int color = Theme.getColor(Theme.key_dialogBackground);
                 paint.setColor(Color.argb((int) (0xff * statusBarAlpha), (int) (Color.red(color) * 0.8f), (int) (Color.green(color) * 0.8f), (int) (Color.blue(color) * 0.8f)));

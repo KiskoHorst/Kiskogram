@@ -18,7 +18,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
 
-    <permission android:name="li.peeloi.kisko.kiskogram.permission.MAPS_RECEIVE" android:protectionLevel="signature"/>
 
     <application
         android:allowBackup="false"

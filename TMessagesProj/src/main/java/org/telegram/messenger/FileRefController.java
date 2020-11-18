@@ -74,8 +74,8 @@ public class FileRefController extends BaseController {
             return "message" + messageObject.getRealId() + "_" + channelId + "_" + messageObject.scheduled;
         } else if (parentObject instanceof TLRPC.Message) {
             TLRPC.Message message = (TLRPC.Message) parentObject;
-            int channelId = message.to_id != null ? message.to_id.channel_id : 0;
-            return "message" + message.id + "_" + channelId;
+            int channelId = message.peer_id != null ? message.peer_id.channel_id : 0;
+            return "message" + message.id + "_" + channelId + "_" + message.from_scheduled;
         } else if (parentObject instanceof TLRPC.WebPage) {
             TLRPC.WebPage webPage = (TLRPC.WebPage) parentObject;
             return "webpage" + webPage.id;
@@ -493,7 +493,7 @@ public class FileRefController extends BaseController {
                 TLRPC.TL_inputMediaPhoto mediaPhoto = (TLRPC.TL_inputMediaPhoto) req.media;
                 mediaPhoto.id.file_reference = file_reference;
             }
-            AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequest((TLObject) requester.args[0], (MessageObject) requester.args[1], (String) requester.args[2], (SendMessagesHelper.DelayedMessage) requester.args[3], (Boolean) requester.args[4], (SendMessagesHelper.DelayedMessage) requester.args[5], null, (Boolean) requester.args[6]));
+            AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequest((TLObject) requester.args[0], (MessageObject) requester.args[1], (String) requester.args[2], (SendMessagesHelper.DelayedMessage) requester.args[3], (Boolean) requester.args[4], (SendMessagesHelper.DelayedMessage) requester.args[5], null, null, (Boolean) requester.args[6]));
         } else if (requester.args[0] instanceof TLRPC.TL_messages_editMessage) {
             TLRPC.TL_messages_editMessage req = (TLRPC.TL_messages_editMessage) requester.args[0];
             if (req.media instanceof TLRPC.TL_inputMediaDocument) {
@@ -503,7 +503,7 @@ public class FileRefController extends BaseController {
                 TLRPC.TL_inputMediaPhoto mediaPhoto = (TLRPC.TL_inputMediaPhoto) req.media;
                 mediaPhoto.id.file_reference = file_reference;
             }
-            AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequest((TLObject) requester.args[0], (MessageObject) requester.args[1], (String) requester.args[2], (SendMessagesHelper.DelayedMessage) requester.args[3], (Boolean) requester.args[4], (SendMessagesHelper.DelayedMessage) requester.args[5], null, (Boolean) requester.args[6]));
+            AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequest((TLObject) requester.args[0], (MessageObject) requester.args[1], (String) requester.args[2], (SendMessagesHelper.DelayedMessage) requester.args[3], (Boolean) requester.args[4], (SendMessagesHelper.DelayedMessage) requester.args[5], null, null, (Boolean) requester.args[6]));
         } else if (requester.args[0] instanceof TLRPC.TL_messages_saveGif) {
             TLRPC.TL_messages_saveGif req = (TLRPC.TL_messages_saveGif) requester.args[0];
             req.id.file_reference = file_reference;
@@ -554,7 +554,7 @@ public class FileRefController extends BaseController {
                 AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequestMulti(req, (ArrayList<MessageObject>) objects[1], (ArrayList<String>) objects[2], null, (SendMessagesHelper.DelayedMessage) objects[4], (Boolean) objects[5]));
             }
         } else if (args[0] instanceof TLRPC.TL_messages_sendMedia || args[0] instanceof TLRPC.TL_messages_editMessage) {
-            AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequest((TLObject) args[0], (MessageObject) args[1], (String) args[2], (SendMessagesHelper.DelayedMessage) args[3], (Boolean) args[4], (SendMessagesHelper.DelayedMessage) args[5], null, (Boolean) args[6]));
+            AndroidUtilities.runOnUIThread(() -> getSendMessagesHelper().performSendMessageRequest((TLObject) args[0], (MessageObject) args[1], (String) args[2], (SendMessagesHelper.DelayedMessage) args[3], (Boolean) args[4], (SendMessagesHelper.DelayedMessage) args[5], null, null, (Boolean) args[6]));
         } else if (args[0] instanceof TLRPC.TL_messages_saveGif) {
             TLRPC.TL_messages_saveGif req = (TLRPC.TL_messages_saveGif) args[0];
             //do nothing
@@ -658,10 +658,10 @@ public class FileRefController extends BaseController {
                         }
                         if (result != null) {
                             if (cache) {
-                                if (message.to_id != null && message.to_id.channel_id != 0) {
+                                if (message.peer_id != null && message.peer_id.channel_id != 0) {
                                     for (int a = 0, N2 = res.chats.size(); a < N2; a++) {
                                         TLRPC.Chat chat = res.chats.get(a);
-                                        if (chat.id == message.to_id.channel_id) {
+                                        if (chat.id == message.peer_id.channel_id) {
                                             if (chat.megagroup) {
                                                 message.flags |= TLRPC.MESSAGE_FLAG_MEGAGROUP;
                                             }
