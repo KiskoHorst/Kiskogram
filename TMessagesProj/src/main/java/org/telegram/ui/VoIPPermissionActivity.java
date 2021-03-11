@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.voip.VoIPService;
 import org.telegram.ui.Components.voip.VoIPHelper;
 
@@ -19,7 +20,7 @@ public class VoIPPermissionActivity extends Activity {
 		super.onCreate(savedInstanceState);
 
 		VoIPService service = VoIPService.getSharedInstance();
-		boolean isVideoCall = service != null && service.call != null && service.call.video;
+		boolean isVideoCall = service != null && service.privateCall != null && service.privateCall.video;
 
 		ArrayList<String> permissions = new ArrayList<>();
 		if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -29,7 +30,11 @@ public class VoIPPermissionActivity extends Activity {
 			permissions.add(Manifest.permission.CAMERA);
 		}
 		if (permissions.isEmpty()) {
-			requestPermissions(permissions.toArray(new String[0]), isVideoCall ? 102 : 101);
+			try {
+				requestPermissions(permissions.toArray(new String[0]), isVideoCall ? 102 : 101);
+			} catch (Exception e) {
+				FileLog.e(e);
+			}
 		}
 	}
 

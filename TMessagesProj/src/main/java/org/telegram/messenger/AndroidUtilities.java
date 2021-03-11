@@ -50,6 +50,7 @@ import android.provider.Settings;
 
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import android.telephony.TelephonyManager;
@@ -68,6 +69,7 @@ import android.text.util.Linkify;
 import android.util.DisplayMetrics;
 import android.util.StateSet;
 import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Gravity;
@@ -75,6 +77,7 @@ import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -95,9 +98,6 @@ import com.android.internal.telephony.ITelephony;
 import com.google.android.gms.auth.api.phone.SmsRetriever;
 import com.google.android.gms.auth.api.phone.SmsRetrieverClient;
 import com.google.android.gms.tasks.Task;
-import com.microsoft.appcenter.AppCenter;
-import com.microsoft.appcenter.crashes.Crashes;
-import com.microsoft.appcenter.distribute.Distribute;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.browser.Browser;
@@ -135,6 +135,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.IDN;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
@@ -255,7 +256,7 @@ public class AndroidUtilities {
                 lastIndex = str.length();
             }
             StaticLayout staticLayout = new StaticLayout(str, textPaint, Integer.MAX_VALUE, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
-            float endOfTextX = staticLayout.getPrimaryHorizontal(lastIndex);
+            float endOfTextX = staticLayout.getLineWidth(0);
             if (endOfTextX + textPaint.measureText("...") < availableWidth) {
                 return str;
             }
@@ -267,6 +268,9 @@ public class AndroidUtilities {
             int endHighlightedIndex = i;
 
             float endOfHighlight = staticLayout.getPrimaryHorizontal(endHighlightedIndex);
+            if (staticLayout.isRtlCharAt(endHighlightedIndex)) {
+                endOfHighlight = endOfTextX - endOfHighlight;
+            }
             if (endOfHighlight < availableWidth) {
                 return str;
             }
@@ -342,6 +346,16 @@ public class AndroidUtilities {
             i = s.indexOf(query, i + 1);
         }
         return spannableStringBuilder;
+    }
+
+    public static Activity findActivity(Context context) {
+        if (context instanceof Activity) {
+            return (Activity) context;
+        }
+        if (context instanceof ContextThemeWrapper) {
+            return findActivity(((ContextThemeWrapper) context).getBaseContext());
+        }
+        return null;
     }
 
     private static class LinkSpec {
@@ -1436,6 +1450,62 @@ public class AndroidUtilities {
         }
     }
 
+    public static ArrayList<File> getDataDirs() {
+        ArrayList<File> result = null;
+        if (Build.VERSION.SDK_INT >= 19) {
+            File[] dirs = ApplicationLoader.applicationContext.getExternalFilesDirs(null);
+            if (dirs != null) {
+                for (int a = 0; a < dirs.length; a++) {
+                    if (dirs[a] == null) {
+                        continue;
+                    }
+                    String path = dirs[a].getAbsolutePath();
+
+                    if (result == null) {
+                        result = new ArrayList<>();
+                    }
+                    result.add(dirs[a]);
+                }
+            }
+        }
+        if (result == null) {
+            result = new ArrayList<>();
+        }
+        if (result.isEmpty()) {
+            result.add(Environment.getExternalStorageDirectory());
+        }
+        return result;
+    }
+
+    public static ArrayList<File> getRootDirs() {
+        ArrayList<File> result = null;
+        if (Build.VERSION.SDK_INT >= 19) {
+            File[] dirs = ApplicationLoader.applicationContext.getExternalFilesDirs(null);
+            if (dirs != null) {
+                for (int a = 0; a < dirs.length; a++) {
+                    if (dirs[a] == null) {
+                        continue;
+                    }
+                    String path = dirs[a].getAbsolutePath();
+                    int idx = path.indexOf("/Android");
+                    if (idx >= 0) {
+                        if (result == null) {
+                            result = new ArrayList<>();
+                        }
+                        result.add(new File(path.substring(0, idx)));
+                    }
+                }
+            }
+        }
+        if (result == null) {
+            result = new ArrayList<>();
+        }
+        if (result.isEmpty()) {
+            result.add(Environment.getExternalStorageDirectory());
+        }
+        return result;
+    }
+
     public static File getCacheDir() {
         String state = null;
         try {
@@ -1445,7 +1515,21 @@ public class AndroidUtilities {
         }
         if (state == null || state.startsWith(Environment.MEDIA_MOUNTED)) {
             try {
-                File file = ApplicationLoader.applicationContext.getExternalCacheDir();
+                File file;
+                if (Build.VERSION.SDK_INT >= 19) {
+                    File[] dirs = ApplicationLoader.applicationContext.getExternalCacheDirs();
+                    file = dirs[0];
+                    if (!TextUtils.isEmpty(SharedConfig.storageCacheDir)) {
+                        for (int a = 0; a < dirs.length; a++) {
+                            if (dirs[a] != null && dirs[a].getAbsolutePath().startsWith(SharedConfig.storageCacheDir)) {
+                                file = dirs[a];
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    file = ApplicationLoader.applicationContext.getExternalCacheDir();
+                }
                 if (file != null) {
                     return file;
                 }
@@ -1762,18 +1846,23 @@ public class AndroidUtilities {
             return 0;
         }
         try {
-            if (mAttachInfoField == null) {
-                mAttachInfoField = View.class.getDeclaredField("mAttachInfo");
-                mAttachInfoField.setAccessible(true);
-            }
-            Object mAttachInfo = mAttachInfoField.get(view);
-            if (mAttachInfo != null) {
-                if (mStableInsetsField == null) {
-                    mStableInsetsField = mAttachInfo.getClass().getDeclaredField("mStableInsets");
-                    mStableInsetsField.setAccessible(true);
+            if (Build.VERSION.SDK_INT >= 23) {
+                WindowInsets insets = view.getRootWindowInsets();
+                return insets != null ? insets.getStableInsetBottom() : 0;
+            } else {
+                if (mAttachInfoField == null) {
+                    mAttachInfoField = View.class.getDeclaredField("mAttachInfo");
+                    mAttachInfoField.setAccessible(true);
                 }
-                Rect insets = (Rect) mStableInsetsField.get(mAttachInfo);
-                return insets.bottom;
+                Object mAttachInfo = mAttachInfoField.get(view);
+                if (mAttachInfo != null) {
+                    if (mStableInsetsField == null) {
+                        mStableInsetsField = mAttachInfo.getClass().getDeclaredField("mStableInsets");
+                        mStableInsetsField.setAccessible(true);
+                    }
+                    Rect insets = (Rect) mStableInsetsField.get(mAttachInfo);
+                    return insets.bottom;
+                }
             }
         } catch (Exception e) {
             FileLog.e(e);
@@ -1852,7 +1941,9 @@ public class AndroidUtilities {
     }
 
     public static void setScrollViewEdgeEffectColor(HorizontalScrollView scrollView, int color) {
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            scrollView.setEdgeEffectColor(color);
+        } else if (Build.VERSION.SDK_INT >= 21) {
             try {
                 Field field = HorizontalScrollView.class.getDeclaredField("mEdgeGlowLeft");
                 field.setAccessible(true);
@@ -1874,7 +1965,10 @@ public class AndroidUtilities {
     }
 
     public static void setScrollViewEdgeEffectColor(ScrollView scrollView, int color) {
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= 29) {
+            scrollView.setTopEdgeEffectColor(color);
+            scrollView.setBottomEdgeEffectColor(color);
+        } else if (Build.VERSION.SDK_INT >= 21) {
             try {
                 Field field = ScrollView.class.getDeclaredField("mEdgeGlowTop");
                 field.setAccessible(true);
@@ -1889,8 +1983,8 @@ public class AndroidUtilities {
                 if (mEdgeGlowBottom != null) {
                     mEdgeGlowBottom.setColor(color);
                 }
-            } catch (Exception e) {
-                FileLog.e(e);
+            } catch (Exception ignore) {
+
             }
         }
     }
@@ -2087,35 +2181,12 @@ public class AndroidUtilities {
     }*/
 
     public static void startAppCenter(Activity context) {
-        if (BuildConfig.DEBUG) {
-            return;
-        }
-        try {
-            if (BuildVars.DEBUG_VERSION) {
-                Distribute.setEnabledForDebuggableBuild(true);
-                AppCenter.start(context.getApplication(), BuildVars.DEBUG_VERSION ? BuildVars.APPCENTER_HASH_DEBUG : BuildVars.APPCENTER_HASH, Distribute.class, Crashes.class);
-            } else {
-                AppCenter.start(context.getApplication(), BuildVars.DEBUG_VERSION ? BuildVars.APPCENTER_HASH_DEBUG : BuildVars.APPCENTER_HASH, Crashes.class);
-            }
-            AppCenter.setUserId("uid=" + UserConfig.getInstance(UserConfig.selectedAccount).clientUserId);
-        } catch (Throwable e) {
-            FileLog.e(e);
-        }
+        
     }
 
     private static long lastUpdateCheckTime;
     public static void checkForUpdates() {
-        try {
-            if (BuildVars.DEBUG_VERSION) {
-                if (SystemClock.elapsedRealtime() - lastUpdateCheckTime < 60 * 60 * 1000) {
-                    return;
-                }
-                lastUpdateCheckTime = SystemClock.elapsedRealtime();
-                Distribute.checkForUpdate();
-            }
-        } catch (Throwable e) {
-            FileLog.e(e);
-        }
+        
     }
 
     public static void addToClipboard(CharSequence str) {
@@ -2892,6 +2963,9 @@ public class AndroidUtilities {
                             if (path != null) {
                                 if (path.startsWith("/socks") || path.startsWith("/proxy")) {
                                     address = data.getQueryParameter("server");
+                                    if (AndroidUtilities.checkHostForPunycode(address)) {
+                                        address = IDN.toASCII(address, IDN.ALLOW_UNASSIGNED);
+                                    }
                                     port = data.getQueryParameter("port");
                                     user = data.getQueryParameter("user");
                                     password = data.getQueryParameter("pass");
@@ -2905,6 +2979,9 @@ public class AndroidUtilities {
                             url = url.replace("tg:proxy", "tg://telegram.org").replace("tg://proxy", "tg://telegram.org").replace("tg://socks", "tg://telegram.org").replace("tg:socks", "tg://telegram.org");
                             data = Uri.parse(url);
                             address = data.getQueryParameter("server");
+                            if (AndroidUtilities.checkHostForPunycode(address)) {
+                                address = IDN.toASCII(address, IDN.ALLOW_UNASSIGNED);
+                            }
                             port = data.getQueryParameter("port");
                             user = data.getQueryParameter("user");
                             password = data.getQueryParameter("pass");
@@ -3435,13 +3512,17 @@ public class AndroidUtilities {
                 if ((flags & View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) == 0) {
                     flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
                     decorView.setSystemUiVisibility(flags);
-                    window.setStatusBarColor(0x0f000000);
+                    if (!SharedConfig.noStatusBar) {
+                        window.setStatusBarColor(0x0f000000);
+                    }
                 }
             } else {
                 if ((flags & View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) != 0) {
                     flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
                     decorView.setSystemUiVisibility(flags);
-                    window.setStatusBarColor(0x33000000);
+                    if (!SharedConfig.noStatusBar) {
+                        window.setStatusBarColor(0x33000000);
+                    }
                 }
             }
         }
@@ -3460,13 +3541,10 @@ public class AndroidUtilities {
         }
     }
 
-    public static boolean shouldShowUrlInAlert(String url) {
+    public static boolean checkHostForPunycode(String url) {
         boolean hasLatin = false;
         boolean hasNonLatin = false;
         try {
-            Uri uri = Uri.parse(url);
-            url = uri.getHost();
-
             for (int a = 0, N = url.length(); a < N; a++) {
                 char ch = url.charAt(a);
                 if (ch == '.' || ch == '-' || ch == '/' || ch == '+' || ch >= '0' && ch <= '9') {
@@ -3481,11 +3559,21 @@ public class AndroidUtilities {
                     break;
                 }
             }
-
         } catch (Exception e) {
             FileLog.e(e);
         }
         return hasLatin && hasNonLatin;
+    }
+
+    public static boolean shouldShowUrlInAlert(String url) {
+        try {
+            Uri uri = Uri.parse(url);
+            url = uri.getHost();
+            return checkHostForPunycode(url);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return false;
     }
 
     public static void scrollToFragmentRow(ActionBarLayout parentLayout, String rowName) {
@@ -3524,5 +3612,26 @@ public class AndroidUtilities {
             return true;
         }
         return false;
+    }
+
+    public static void updateVisibleRows(RecyclerListView listView) {
+        if (listView == null) {
+            return;
+        }
+        RecyclerView.Adapter adapter = listView.getAdapter();
+        if (adapter == null) {
+            return;
+        }
+        for (int i = 0; i < listView.getChildCount(); i++) {
+            View child = listView.getChildAt(i);
+            int p = listView.getChildAdapterPosition(child);
+            if (p >= 0) {
+                RecyclerView.ViewHolder holder = listView.getChildViewHolder(child);
+                if (holder == null || holder.shouldIgnore()) {
+                    continue;
+                }
+                adapter.onBindViewHolder(holder, p);
+            }
+        }
     }
 }

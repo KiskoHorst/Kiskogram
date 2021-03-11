@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -149,6 +150,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
     private static ArrayList<Object> selectedPhotosOrder = new ArrayList<>();
     private static int lastImageId = -1;
     private boolean cancelTakingPhotos;
+    private boolean checkCameraWhenShown;
 
     private boolean mediaEnabled;
 
@@ -290,6 +292,7 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
                 object.imageReceiver = cell.getImageView().getImageReceiver();
                 object.thumb = object.imageReceiver.getBitmapSafe();
                 object.scale = cell.getScale();
+                object.clipBottomAddition = (int) parentAlert.getClipLayoutBottom();
                 cell.showCheck(false);
                 return object;
             }
@@ -439,12 +442,19 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
         cameraDrawable = context.getResources().getDrawable(R.drawable.instant_camera).mutate();
 
         ActionBarMenu menu = parentAlert.actionBar.createMenu();
-        dropDownContainer = new ActionBarMenuItem(context, menu, 0, 0);
+        dropDownContainer = new ActionBarMenuItem(context, menu, 0, 0) {
+            @Override
+            public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+                super.onInitializeAccessibilityNodeInfo(info);
+                info.setText(dropDown.getText());
+            }
+        };
         dropDownContainer.setSubMenuOpenSide(1);
         parentAlert.actionBar.addView(dropDownContainer, 0, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, Gravity.TOP | Gravity.LEFT, AndroidUtilities.isTablet() ? 64 : 56, 0, 40, 0));
         dropDownContainer.setOnClickListener(view -> dropDownContainer.toggleSubMenu());
 
         dropDown = new TextView(context);
+        dropDown.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         dropDown.setGravity(Gravity.LEFT);
         dropDown.setSingleLine(true);
         dropDown.setLines(1);
@@ -2513,6 +2523,14 @@ public class ChatAttachAlertPhotoLayout extends ChatAttachAlert.AttachAlertLayou
                 }
             }
         }
+        if (checkCameraWhenShown) {
+            checkCameraWhenShown = false;
+            checkCamera(true);
+        }
+    }
+
+    public void setCheckCameraWhenShown(boolean checkCameraWhenShown) {
+        this.checkCameraWhenShown = checkCameraWhenShown;
     }
 
     @Override

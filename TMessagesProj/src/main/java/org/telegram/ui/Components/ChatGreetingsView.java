@@ -1,18 +1,21 @@
 package org.telegram.ui.Components;
 
 import android.content.Context;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.DocumentObject;
 import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.R;
+import org.telegram.messenger.SvgHelper;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -35,12 +38,12 @@ public class ChatGreetingsView extends LinearLayout {
         setOrientation(VERTICAL);
 
         titleView = new TextView(context);
-        titleView.setTextSize(14);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         titleView.setGravity(Gravity.CENTER_HORIZONTAL);
 
         descriptionView = new TextView(context);
-        descriptionView.setTextSize(14);
+        descriptionView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         descriptionView.setGravity(Gravity.CENTER_HORIZONTAL);
 
 
@@ -52,8 +55,13 @@ public class ChatGreetingsView extends LinearLayout {
 
         updateColors();
 
-        titleView.setText(LocaleController.formatString("NearbyPeopleGreetingsMessage", R.string.NearbyPeopleGreetingsMessage, user.first_name, LocaleController.formatDistance(distance, 1)));
-        descriptionView.setText(LocaleController.getString("NearbyPeopleGreetingsDescription", R.string.NearbyPeopleGreetingsDescription));
+        if (distance <= 0) {
+            titleView.setText(LocaleController.getString("NoMessages", R.string.NoMessages));
+            descriptionView.setText(LocaleController.getString("NoMessagesGreetingsDescription", R.string.NoMessagesGreetingsDescription));
+        } else {
+            titleView.setText(LocaleController.formatString("NearbyPeopleGreetingsMessage", R.string.NearbyPeopleGreetingsMessage, user.first_name, LocaleController.formatDistance(distance, 1)));
+            descriptionView.setText(LocaleController.getString("NearbyPeopleGreetingsDescription", R.string.NearbyPeopleGreetingsDescription));
+        }
 
         if (preloadedGreetingsSticker == null) {
             TLRPC.TL_messages_getStickers req = new TLRPC.TL_messages_getStickers();
@@ -63,27 +71,23 @@ public class ChatGreetingsView extends LinearLayout {
                     ArrayList<TLRPC.Document> list = ((TLRPC.TL_messages_stickers) response).stickers;
                     if (!list.isEmpty()) {
                         TLRPC.Document sticker = list.get(Math.abs(new Random().nextInt() % list.size()));
-                        AndroidUtilities.runOnUIThread(() -> {
-                            setSticker(sticker);
-                        });
+                        AndroidUtilities.runOnUIThread(() -> setSticker(sticker));
                     }
                 }
             });
-
         } else {
             setSticker(preloadedGreetingsSticker);
         }
     }
 
     private void setSticker(TLRPC.Document sticker) {
-        TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(sticker.thumbs, 90);
-
-
-        stickerToSendView.setImage(
-                ImageLocation.getForDocument(sticker), createFilter(sticker),
-                ImageLocation.getForDocument(thumb, sticker), null,
-                0, sticker
-        );
+        SvgHelper.SvgDrawable svgThumb = DocumentObject.getSvgThumb(sticker, Theme.key_chat_serviceBackground, 1.0f);
+        if (svgThumb != null) {
+            stickerToSendView.setImage(ImageLocation.getForDocument(sticker), createFilter(sticker), svgThumb, 0, sticker);
+        } else {
+            TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(sticker.thumbs, 90);
+            stickerToSendView.setImage(ImageLocation.getForDocument(sticker), createFilter(sticker), ImageLocation.getForDocument(thumb, sticker), null, 0, sticker);
+        }
         stickerToSendView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onGreetings(sticker);

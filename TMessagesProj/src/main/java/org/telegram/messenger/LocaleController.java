@@ -235,8 +235,8 @@ public class LocaleController {
                 "tk", "ur", "zu", "mn", "gsw", "chr", "rm", "pt", "an", "ast"}, new PluralRules_One());
         addRules(new String[]{"cs", "sk"}, new PluralRules_Czech());
         addRules(new String[]{"ff", "fr", "kab"}, new PluralRules_French());
-        addRules(new String[]{"ru", "uk", "be", "sh"}, new PluralRules_Balkan());
-        addRules(new String[]{"sr", "hr", "bs"}, new PluralRules_Serbian());
+        addRules(new String[]{"ru", "uk", "be"}, new PluralRules_Balkan());
+        addRules(new String[]{"sr", "hr", "bs", "sh"}, new PluralRules_Serbian());
         addRules(new String[]{"lv"}, new PluralRules_Latvian());
         addRules(new String[]{"lt"}, new PluralRules_Lithuanian());
         addRules(new String[]{"pl"}, new PluralRules_Polish());
@@ -1701,6 +1701,17 @@ public class LocaleController {
                 format = LocaleController.formatString("formatDateAtTime", R.string.formatDateAtTime, getInstance().formatterYear.format(new Date(date)), getInstance().formatterDay.format(new Date(date)));
             }
             return formatString("ChannelOtherSubscriberJoined", R.string.ChannelOtherSubscriberJoined, format);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "LOC_ERR";
+    }
+
+    public static String formatImportedDate(long date) {
+        try {
+            date *= 1000;
+            Date dt = new Date(date);
+            return String.format("%1$s, %2$s", getInstance().formatterYear.format(dt), getInstance().formatterDay.format(dt));
         } catch (Exception e) {
             FileLog.e(e);
         }

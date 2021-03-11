@@ -286,7 +286,7 @@ public class PeopleNearbyActivity extends BaseFragment implements NotificationCe
                         args1.putBoolean("expandPhoto", true);
                     }
                     args1.putInt("nearby_distance", peerLocated.distance);
-                    MessagesController.getInstance(currentAccount).ensureMessagesLoaded(peerLocated.peer.user_id, false, 0, null, null);
+                    MessagesController.getInstance(currentAccount).ensureMessagesLoaded(peerLocated.peer.user_id, 0, null);
                     presentFragment(new ProfileActivity(args1));
                 }
             } else if (position >= chatsStartRow && position < chatsEndRow) {
@@ -691,7 +691,7 @@ public class PeopleNearbyActivity extends BaseFragment implements NotificationCe
                     if (ChatObject.isNotInChat(chat)) {
                         getMessagesController().deleteDialog(dialogId, 0, revoke);
                     } else {
-                        getMessagesController().deleteUserFromChat((int) -dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, false, revoke);
+                        getMessagesController().deleteUserFromChat((int) -dialogId, getMessagesController().getUser(getUserConfig().getClientUserId()), null, revoke, revoke);
                     }
                 } else {
                     getMessagesController().deleteDialog(dialogId, 0, revoke);

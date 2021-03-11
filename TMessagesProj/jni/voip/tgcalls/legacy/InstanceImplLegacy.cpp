@@ -138,7 +138,7 @@ onSignalBarsUpdated_(std::move(descriptor.signalBarsUpdated)) {
 		descriptor.config.enableCallUpgrade
 	);
 	mappedConfig.enableVolumeControl = descriptor.config.enableVolumeControl;
-	mappedConfig.logFilePath = descriptor.config.logPath;
+	mappedConfig.logFilePath = descriptor.config.logPath.data;
 	mappedConfig.statsDumpFilePath = {};
 
 	controller_->SetConfig(mappedConfig);
@@ -240,9 +240,9 @@ void InstanceImplLegacy::setOutputVolume(float level) {
 }
 
 void InstanceImplLegacy::setAudioOutputDuckingEnabled(bool enabled) {
-#if defined(__APPLE__) && defined(TARGET_OS_OSX)
+#if defined(__APPLE__) && TARGET_OS_OSX
 	controller_->SetAudioOutputDuckingEnabled(enabled);
-#endif
+#endif // TARGET_OS_OSX
 }
 
 void InstanceImplLegacy::setIsLowBatteryLevel(bool isLowBatteryLevel) {

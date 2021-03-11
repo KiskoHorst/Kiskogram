@@ -1286,7 +1286,7 @@ public class ChatAttachAlertLocationLayout extends ChatAttachAlert.AttachAlertLa
             if (loadingMapView.getTag() == null) {
                 loadingMapView.animate().alpha(0.0f).setDuration(180).start();
             }
-        }, 2000);
+        }, 200);
         positionMarker(myLocation = getLastLocation());
 
         if (checkGpsEnabled && getParentActivity() != null) {
@@ -1578,15 +1578,19 @@ public class ChatAttachAlertLocationLayout extends ChatAttachAlert.AttachAlertLa
             }
         }
         fixLayoutInternal(true);
-        if (checkPermission && Build.VERSION.SDK_INT >= 23) {
-            Activity activity = getParentActivity();
-            if (activity != null) {
-                checkPermission = false;
-                if (activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 2);
+        boolean keyboardVisible = parentAlert.delegate.needEnterComment();
+        AndroidUtilities.runOnUIThread(() -> {
+            if (checkPermission && Build.VERSION.SDK_INT >= 23) {
+                Activity activity = getParentActivity();
+                if (activity != null) {
+                    checkPermission = false;
+                    if (activity.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        activity.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 2);
+                    }
                 }
             }
-        }
+        }, keyboardVisible ? 200 : 0);
+
         layoutManager.scrollToPositionWithOffset(0, 0);
 
         updateClipView();
@@ -1687,7 +1691,7 @@ public class ChatAttachAlertLocationLayout extends ChatAttachAlert.AttachAlertLa
         themeDescriptions.add(new ThemeDescription(searchListView, 0, new Class[]{LocationCell.class}, new String[]{"addressTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SharingLiveLocationCell.class}, new String[]{"nameTextView"}, null, null, null, Theme.key_windowBackgroundWhiteBlackText));
-        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SharingLiveLocationCell.class}, new String[]{"distanceTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText2));
+        themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{SharingLiveLocationCell.class}, new String[]{"distanceTextView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));
 
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{LocationLoadingCell.class}, new String[]{"progressBar"}, null, null, null, Theme.key_progressCircle));
         themeDescriptions.add(new ThemeDescription(listView, 0, new Class[]{LocationLoadingCell.class}, new String[]{"textView"}, null, null, null, Theme.key_windowBackgroundWhiteGrayText3));

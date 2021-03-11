@@ -16,6 +16,7 @@ import android.os.SystemClock;
 import android.view.View;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.SvgHelper;
 import org.telegram.ui.ActionBar.Theme;
 
 public class LoadingStickerDrawable extends Drawable {
@@ -29,19 +30,28 @@ public class LoadingStickerDrawable extends Drawable {
     private float gradientWidth;
     private View parentView;
 
+    int currentColor0;
+    int currentColor1;
+
     public LoadingStickerDrawable(View parent, String svg, int w, int h) {
         bitmap = SvgHelper.getBitmapByPathOnly(svg,512,512, w, h);
         parentView = parent;
-        int color0 = Theme.getColor(Theme.key_dialogBackground);
-        int color1 = Theme.getColor(Theme.key_dialogBackgroundGray);
-        color0 = AndroidUtilities.getAverageColor(color1, color0);
-        placeholderPaint.setColor(color1);
-        placeholderGradient = new LinearGradient(0, 0, gradientWidth = AndroidUtilities.dp(500), 0, new int[]{color1, color0, color1}, new float[]{0.0f, 0.18f, 0.36f}, Shader.TileMode.REPEAT);
         placeholderMatrix = new Matrix();
-        placeholderGradient.setLocalMatrix(placeholderMatrix);
+    }
 
-        Shader shaderB = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-        placeholderPaint.setShader(new ComposeShader(placeholderGradient, shaderB, PorterDuff.Mode.MULTIPLY));
+    public void setColors(String key1, String key2) {
+        int color0 = Theme.getColor(key1);
+        int color1 = Theme.getColor(key2);
+        if (currentColor0 != color0 || currentColor1 != color1) {
+            currentColor0 = color0;
+            currentColor1 = color1;
+            color0 = AndroidUtilities.getAverageColor(color1, color0);
+            placeholderPaint.setColor(color1);
+            placeholderGradient = new LinearGradient(0, 0, gradientWidth = AndroidUtilities.dp(500), 0, new int[]{color1, color0, color1}, new float[]{0.0f, 0.18f, 0.36f}, Shader.TileMode.REPEAT);
+            placeholderGradient.setLocalMatrix(placeholderMatrix);
+            Shader shaderB = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            placeholderPaint.setShader(new ComposeShader(placeholderGradient, shaderB, PorterDuff.Mode.MULTIPLY));
+        }
     }
 
     @Override
@@ -49,6 +59,7 @@ public class LoadingStickerDrawable extends Drawable {
         if (bitmap == null) {
             return;
         }
+        setColors(Theme.key_dialogBackground, Theme.key_dialogBackgroundGray);
         android.graphics.Rect bounds = getBounds();
         canvas.drawRect(bounds.left, bounds.top, bounds.right, bounds.bottom, placeholderPaint);
 

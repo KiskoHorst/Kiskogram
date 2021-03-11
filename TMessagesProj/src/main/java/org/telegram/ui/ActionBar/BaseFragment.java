@@ -31,10 +31,10 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DownloadController;
 import org.telegram.messenger.FileLoader;
-import org.telegram.messenger.MediaController;
-import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocationController;
+import org.telegram.messenger.MediaController;
+import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
@@ -596,5 +596,9 @@ public class BaseFragment {
         if (parentLayout != null) {
             parentLayout.setFragmentPanTranslationOffset(offset);
         }
+    }
+
+    public void saveKeyboardPositionBeforeTransition() {
+
     }
 }

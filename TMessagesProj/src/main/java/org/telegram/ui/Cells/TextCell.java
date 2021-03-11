@@ -36,6 +36,7 @@ public class TextCell extends FrameLayout {
     private boolean needDivider;
     private int offsetFromImage = 71;
     private int imageLeft = 21;
+    private boolean inDialogs;
 
     public TextCell(Context context) {
         this(context, 23, false);
@@ -72,8 +73,16 @@ public class TextCell extends FrameLayout {
         setFocusable(true);
     }
 
+    public void setIsInDialogs() {
+        inDialogs = true;
+    }
+
     public SimpleTextView getTextView() {
         return textView;
+    }
+
+    public ImageView getImageView() {
+        return imageView;
     }
 
     public SimpleTextView getValueTextView() {
@@ -221,7 +230,7 @@ public class TextCell extends FrameLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         if (needDivider) {
-            canvas.drawLine(LocaleController.isRTL ? 0 : AndroidUtilities.dp(imageView.getVisibility() == VISIBLE ? 68 : 20), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? AndroidUtilities.dp(imageView.getVisibility() == VISIBLE ? 68 : 20) : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
+            canvas.drawLine(LocaleController.isRTL ? 0 : AndroidUtilities.dp(imageView.getVisibility() == VISIBLE ? (inDialogs ? 72 : 68) : 20), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? AndroidUtilities.dp(imageView.getVisibility() == VISIBLE ? (inDialogs ? 72 : 68) : 20) : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
         }
     }
 

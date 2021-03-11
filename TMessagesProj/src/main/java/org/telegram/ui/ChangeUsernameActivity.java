@@ -28,7 +28,6 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
@@ -48,6 +47,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Components.AlertsCreator;
+import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
 
@@ -89,7 +89,9 @@ public class ChangeUsernameActivity extends BaseFragment {
                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
                 android.content.ClipData clip = android.content.ClipData.newPlainText("label", url);
                 clipboard.setPrimaryClip(clip);
-                Toast.makeText(getParentActivity(), LocaleController.getString("LinkCopied", R.string.LinkCopied), Toast.LENGTH_SHORT).show();
+                if (BulletinFactory.canShowBulletin(ChangeUsernameActivity.this)) {
+                    BulletinFactory.createCopyLinkBulletin(ChangeUsernameActivity.this).show();
+                }
             } catch (Exception e) {
                 FileLog.e(e);
             }
@@ -129,7 +131,7 @@ public class ChangeUsernameActivity extends BaseFragment {
         });
 
         ActionBarMenu menu = actionBar.createMenu();
-        doneButton = menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56));
+        doneButton = menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56), LocaleController.getString("Done", R.string.Done));
 
         TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(UserConfig.getInstance(currentAccount).getClientUserId());
         if (user == null) {
@@ -180,8 +182,12 @@ public class ChangeUsernameActivity extends BaseFragment {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if (firstNameField.length() > 0) {
-                    String url = "https://" + MessagesController.getInstance(currentAccount).linkPrefix + "/" + firstNameField.getText();
+                String name = firstNameField.getText().toString();
+                if (name.startsWith("@")) {
+                    name = name.substring(1);
+                }
+                if (name.length() > 0) {
+                    String url = "https://" + MessagesController.getInstance(currentAccount).linkPrefix + "/" + name;
                     String text = LocaleController.formatString("UsernameHelpLink", R.string.UsernameHelpLink, url);
                     int index = text.indexOf(url);
                     SpannableStringBuilder textSpan = new SpannableStringBuilder(text);
@@ -235,8 +241,11 @@ public class ChangeUsernameActivity extends BaseFragment {
         }
     }
 
-    private boolean checkUserName(final String name, boolean alert) {
-        if (name != null && name.length() > 0) {
+    private boolean checkUserName(String name, boolean alert) {
+        if (name != null && name.startsWith("@")) {
+            name = name.substring(1);
+        }
+        if (!TextUtils.isEmpty(name)) {
             checkTextView.setVisibility(View.VISIBLE);
         } else {
             checkTextView.setVisibility(View.GONE);
@@ -321,14 +330,15 @@ public class ChangeUsernameActivity extends BaseFragment {
             checkTextView.setTag(Theme.key_windowBackgroundWhiteGrayText8);
             checkTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText8));
             lastCheckName = name;
+            final String nameFinal = name;
             checkRunnable = () -> {
                 TLRPC.TL_account_checkUsername req = new TLRPC.TL_account_checkUsername();
-                req.username = name;
+                req.username = nameFinal;
                 checkReqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     checkReqId = 0;
-                    if (lastCheckName != null && lastCheckName.equals(name)) {
+                    if (lastCheckName != null && lastCheckName.equals(nameFinal)) {
                         if (error == null && response instanceof TLRPC.TL_boolTrue) {
-                            checkTextView.setText(LocaleController.formatString("UsernameAvailable", R.string.UsernameAvailable, name));
+                            checkTextView.setText(LocaleController.formatString("UsernameAvailable", R.string.UsernameAvailable, nameFinal));
                             checkTextView.setTag(Theme.key_windowBackgroundWhiteGreenText);
                             checkTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGreenText));
                             lastNameAvailable = true;
@@ -347,7 +357,11 @@ public class ChangeUsernameActivity extends BaseFragment {
     }
 
     private void saveName() {
-        if (!checkUserName(firstNameField.getText().toString(), true)) {
+        String newName = firstNameField.getText().toString();
+        if (newName.startsWith("@")) {
+            newName = newName.substring(1);
+        }
+        if (!checkUserName(newName, true)) {
             return;
         }
         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
@@ -358,7 +372,6 @@ public class ChangeUsernameActivity extends BaseFragment {
         if (currentName == null) {
             currentName = "";
         }
-        String newName = firstNameField.getText().toString();
         if (currentName.equals(newName)) {
             finishFragment();
             return;
@@ -372,7 +385,7 @@ public class ChangeUsernameActivity extends BaseFragment {
         NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
         final int reqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
             if (error == null) {
-                final TLRPC.User user1 = (TLRPC.User)response;
+                final TLRPC.User user1 = (TLRPC.User) response;
                 AndroidUtilities.runOnUIThread(() -> {
                     try {
                         progressDialog.dismiss();

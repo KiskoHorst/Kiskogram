@@ -8,14 +8,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.SystemClock;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.SparseArray;
@@ -258,7 +253,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
     public final LinearLayoutManager layoutManager;
     private final FlickerLoadingView loadingView;
     private boolean firstLoading = true;
-    int animationIndex = -1;
+    private int animationIndex = -1;
     public int keyboardHeight;
     private final ChatActionCell floatingDateView;
 
@@ -272,7 +267,34 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
         parentFragment = fragment;
         Context context = parentActivity = fragment.getParentActivity();
         setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        recyclerListView = new RecyclerListView(context);
+        recyclerListView = new RecyclerListView(context) {
+
+            @Override
+            protected void dispatchDraw(Canvas canvas) {
+                if (getAdapter() == sharedPhotoVideoAdapter) {
+                    for (int i = 0; i < getChildCount(); i++) {
+                        if (getChildViewHolder(getChildAt(i)).getItemViewType() == 1) {
+                            canvas.save();
+                            canvas.translate(getChildAt(i).getX(), getChildAt(i).getY() - getChildAt(i).getMeasuredHeight() + AndroidUtilities.dp(2));
+                            getChildAt(i).draw(canvas);
+                            canvas.restore();
+                            invalidate();
+                        }
+                    }
+                }
+                super.dispatchDraw(canvas);
+            }
+
+            @Override
+            public boolean drawChild(Canvas canvas, View child, long drawingTime) {
+                if (getAdapter() == sharedPhotoVideoAdapter) {
+                    if (getChildViewHolder(child).getItemViewType() == 1) {
+                        return true;
+                    }
+                }
+                return super.drawChild(canvas, child, drawingTime);
+            }
+        };
         recyclerListView.setOnItemClickListener((view, position) -> {
             if (view instanceof SharedDocumentCell) {
                 FilteredSearchView.this.onItemClick(position, view, ((SharedDocumentCell) view).getMessage(), 0);
@@ -386,7 +408,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
         sharedAudioAdapter = new SharedDocumentsAdapter(getContext(), 4);
         sharedVoiceAdapter = new SharedDocumentsAdapter(getContext(), 2);
 
-        emptyView = new StickerEmptyView(context, loadingView);
+        emptyView = new StickerEmptyView(context, loadingView, StickerEmptyView.STICKER_TYPE_SEARCH);
         addView(emptyView);
         recyclerListView.setEmptyView(emptyView);
         emptyView.setVisibility(View.GONE);
@@ -719,7 +741,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                     if (progressView != null) {
                         recyclerListView.removeView(progressView);
                     }
-                    if (loadingView.getVisibility() == View.VISIBLE && recyclerListView.getChildCount() == 0 || progressView != null) {
+                    if ((loadingView.getVisibility() == View.VISIBLE && recyclerListView.getChildCount() == 0) || (recyclerListView.getAdapter() != sharedPhotoVideoAdapter && progressView != null)) {
                         int finalProgressViewPosition = progressViewPosition;
                         getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                             @Override
@@ -746,7 +768,6 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                                     @Override
                                     public void onAnimationEnd(Animator animation) {
                                         NotificationCenter.getInstance(currentAccount).onAnimationFinish(animationIndex);
-                                        super.onAnimationEnd(animation);
                                     }
                                 });
                                 animationIndex = NotificationCenter.getInstance(currentAccount).setAnimationInProgress(animationIndex, null);
@@ -848,7 +869,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
             if (messages.isEmpty()) {
                 return 0;
             }
-            return (int) Math.ceil(messages.size() / (float) columnsCount);
+            return (int) Math.ceil(messages.size() / (float) columnsCount) +  (endReached ? 0 : 1);
         }
 
         @Override
@@ -885,7 +906,15 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                     break;
                 case 1:
                 default:
-                    view = new LoadingCell(mContext, AndroidUtilities.dp(32), AndroidUtilities.dp(74));
+                    FlickerLoadingView flickerLoadingView = new FlickerLoadingView(mContext) {
+                        @Override
+                        public int getColumnsCount() {
+                            return columnsCount;
+                        }
+                    };
+                    flickerLoadingView.setIsSingleCell(true);
+                    flickerLoadingView.setViewType(FlickerLoadingView.PHOTOS_TYPE);
+                    view = flickerLoadingView;
                     break;
             }
             view.setLayoutParams(new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -927,12 +956,18 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                 } else {
                     cell.setChecked(false, animated);
                 }
+            } else if (holder.getItemViewType() == 1) {
+                FlickerLoadingView flickerLoadingView = (FlickerLoadingView) holder.itemView;
+                int count = (int) Math.ceil(messages.size() / (float) columnsCount);
+                flickerLoadingView.skipDrawItemsCount(columnsCount - (columnsCount * count - messages.size()));
+
             }
         }
 
         @Override
         public int getItemViewType(int position) {
-            if (position < messages.size()) {
+            int count = (int) Math.ceil(messages.size() / (float) columnsCount);
+            if (position < count) {
                 return 0;
             }
             return 1;
@@ -990,10 +1025,10 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
                 } else if (!cell.isLoading()) {
                     MessageObject messageObject = cell.getMessage();
                     AccountInstance.getInstance(UserConfig.selectedAccount).getFileLoader().loadFile(document, messageObject, 0, 0);
-                    cell.updateFileExistIcon();
+                    cell.updateFileExistIcon(true);
                 } else {
                     AccountInstance.getInstance(UserConfig.selectedAccount).getFileLoader().cancelLoadFile(document);
-                    cell.updateFileExistIcon();
+                    cell.updateFileExistIcon(true);
                 }
             }
         } else if (currentSearchFilter.filterType == FiltersView.FILTER_TYPE_LINKS) {
@@ -1483,7 +1518,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
             View view;
             switch (viewType) {
                 case 0:
-                    view = new DialogCell(parent.getContext(), true, false);
+                    view = new DialogCell(null, parent.getContext(), true, false);
                     break;
                 case 3:
                     FlickerLoadingView flickerLoadingView = new FlickerLoadingView(parent.getContext());
@@ -1703,7 +1738,7 @@ public class FilteredSearchView extends FrameLayout implements NotificationCente
         arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class}, Theme.dialogs_countTextPaint, null, null, Theme.key_chats_unreadCounterText));
         arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_lockDrawable}, null, Theme.key_chats_secretIcon));
         arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_groupDrawable, Theme.dialogs_broadcastDrawable, Theme.dialogs_botDrawable}, null, Theme.key_chats_nameIcon));
-        arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_scamDrawable}, null, Theme.key_chats_draft));
+        arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class, ProfileSearchCell.class}, null, new Drawable[]{Theme.dialogs_scamDrawable, Theme.dialogs_fakeDrawable}, null, Theme.key_chats_draft));
         arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class}, null, new Drawable[]{Theme.dialogs_pinnedDrawable, Theme.dialogs_reorderDrawable}, null, Theme.key_chats_pinnedIcon));
         arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class, ProfileSearchCell.class}, null, new Paint[]{Theme.dialogs_namePaint[0], Theme.dialogs_namePaint[1], Theme.dialogs_searchNamePaint}, null, null, Theme.key_chats_name));
         arrayList.add(new ThemeDescription(recyclerListView, 0, new Class[]{DialogCell.class, ProfileSearchCell.class}, null, new Paint[]{Theme.dialogs_nameEncryptedPaint[0], Theme.dialogs_nameEncryptedPaint[1], Theme.dialogs_searchNameEncryptedPaint}, null, null, Theme.key_chats_secretName));
