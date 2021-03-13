@@ -202,7 +202,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private boolean sharedMediaLayoutAttached;
     private SharedMediaLayout.SharedMediaPreloader sharedMediaPreloader;
 
-    private RLottieDrawable cameraDrawable;
+    private Drawable cameraDrawable;
 
     private FrameLayout avatarContainer;
     private AvatarImageView avatarImage;
@@ -3036,11 +3036,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         writeButton.setBackgroundDrawable(drawable);
         if (user_id != 0) {
             if (imageUpdater != null) {
-                cameraDrawable = new RLottieDrawable(R.raw.camera_outline, "" + R.raw.camera_outline, AndroidUtilities.dp(56), AndroidUtilities.dp(56), false, null);
-
-                writeButton.setAnimation(cameraDrawable);
+                writeButton.setImageResource(R.drawable.menu_camera2);
                 writeButton.setContentDescription(LocaleController.getString("AccDescrChangeProfilePicture", R.string.AccDescrChangeProfilePicture));
-                writeButton.setPadding(AndroidUtilities.dp(2), 0, 0, AndroidUtilities.dp(2));
             } else {
                 writeButton.setImageResource(R.drawable.profile_newmsg);
                 writeButton.setContentDescription(LocaleController.getString("AccDescrOpenChat", R.string.AccDescrOpenChat));
@@ -3268,14 +3265,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 imageUpdater.openMenu(user.photo != null && user.photo.photo_big != null && !(user.photo instanceof TLRPC.TL_userProfilePhotoEmpty), () -> {
                     MessagesController.getInstance(currentAccount).deleteUserPhoto(null);
-                    cameraDrawable.setCurrentFrame(0);
+                    //cameraDrawable.setCurrentFrame(0);
                 }, dialog -> {
-                    cameraDrawable.setCustomEndFrame(86);
-                    writeButton.playAnimation();
+                    writeButton.setImageResource(R.drawable.menu_camera2);
                 });
-                cameraDrawable.setCurrentFrame(0);
-                cameraDrawable.setCustomEndFrame(43);
-                writeButton.playAnimation();
+                //cameraDrawable.setCurrentFrame(0);
+                //cameraDrawable.setCustomEndFrame(43);
+                writeButton.setImageResource(R.drawable.profile_photos);
             } else {
                 if (playProfileAnimation != 0 && parentLayout.fragmentsStack.get(parentLayout.fragmentsStack.size() - 2) instanceof ChatActivity) {
                     finishFragment();
@@ -6547,7 +6543,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 abi = "universal " + Build.CPU_ABI + " " + Build.CPU_ABI2;
                                 break;
                         }
-                        cell.setText(LocaleController.formatString("TelegramVersion", R.string.TelegramVersion, String.format(Locale.US, "v%s (%d) %s", pInfo.versionName, code, abi)));
+                        cell.setText(String.format(Locale.US, "Kiskogram v%s\nBased on Telegram for Android v%s (%d)", pInfo.versionName, pInfo.versionName.split("-")[0], code/10));
                     } catch (Exception e) {
                         FileLog.e(e);
                     }

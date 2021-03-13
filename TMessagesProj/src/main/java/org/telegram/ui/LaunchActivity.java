@@ -3593,7 +3593,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                         SendMessagesHelper.prepareSendingDocuments(accountInstance, documentsPathsArray, documentsOriginalPathsArray, documentsUrisArray, captionToSend, documentsMimeType, did, null, null, null, null, true, 0);
                     }
                     if (sendingText != null) {
-                        SendMessagesHelper.prepareSendingText(accountInstance, sendingText, did, true, 0);
+                        fragment.setReplyText(sendingText);
                     }
                     if (contactsToSend != null && !contactsToSend.isEmpty()) {
                         for (int a = 0; a < contactsToSend.size(); a++) {
@@ -3602,15 +3602,6 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                         }
                     }
                     SendMessagesHelper.prepareSendingDocuments(accountInstance, documentsPathsArray, documentsOriginalPathsArray, documentsUrisArray, captionToSend, documentsMimeType, did, null, null, null, null, true, 0);
-                }
-                if (sendingText != null) {
-                    fragment.setReplyText(sendingText);
-                }
-                if (contactsToSend != null && !contactsToSend.isEmpty()) {
-                    for (int a = 0; a < contactsToSend.size(); a++) {
-                        TLRPC.User user = contactsToSend.get(a);
-                        SendMessagesHelper.getInstance(account).sendMessage(user, did, null, null, null, null, true, 0);
-                    }
                 }
             }
             if (dialogsFragment != null && fragment == null) {

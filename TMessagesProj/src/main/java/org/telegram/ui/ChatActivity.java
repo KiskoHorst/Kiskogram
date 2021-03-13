@@ -13502,6 +13502,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                 //if (showDialog(closeChatDialog = builder.create()) == null) {
                 //    showCloseChatDialogLater = true;
                 //}
+                Toast.makeText(ApplicationLoader.applicationContext, toastText, Toast.LENGTH_LONG).show();
 
                 loading = false;
                 showProgressView(false);
