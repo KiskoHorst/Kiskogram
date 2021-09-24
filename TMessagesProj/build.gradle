@@ -3,7 +3,6 @@ apply plugin: 'com.android.application'
 repositories {
     mavenCentral()
     google()
-    jcenter()
 }
 
 configurations {
@@ -16,36 +15,36 @@ configurations.all {
 }
 
 dependencies {
-    implementation 'androidx.core:core:1.3.2'
+    implementation 'androidx.core:core:1.6.0'
     implementation 'androidx.palette:palette:1.0.0'
-    implementation 'androidx.exifinterface:exifinterface:1.3.2'
+    implementation 'androidx.exifinterface:exifinterface:1.3.3'
     implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation "androidx.sharetarget:sharetarget:1.1.0"
 
     compileOnly 'org.checkerframework:checker-qual:2.5.2'
     compileOnly 'org.checkerframework:checker-compat-qual:2.5.0'
-    implementation 'com.google.firebase:firebase-messaging:21.0.1'
-    implementation 'com.google.firebase:firebase-config:20.0.3'
-    implementation 'com.google.firebase:firebase-datatransport:17.0.11'
-    implementation 'com.google.firebase:firebase-appindexing:19.2.0'
-    implementation 'com.google.android.gms:play-services-maps:17.0.0'
-    implementation 'com.google.android.gms:play-services-auth:19.0.0'
+    implementation 'com.google.firebase:firebase-messaging:22.0.0'
+    implementation 'com.google.firebase:firebase-config:21.0.1'
+    implementation 'com.google.firebase:firebase-datatransport:18.0.1'
+    implementation 'com.google.firebase:firebase-appindexing:20.0.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.1'
+    implementation 'com.google.android.gms:play-services-auth:19.2.0'
     implementation 'com.google.android.gms:play-services-vision:16.2.0'
-    implementation 'com.google.android.gms:play-services-wearable:17.0.0'
-    implementation 'com.google.android.gms:play-services-location:17.1.0'
-    implementation 'com.google.android.gms:play-services-wallet:18.1.2'
+    implementation 'com.google.android.gms:play-services-wearable:17.1.0'
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
+    implementation 'com.google.android.gms:play-services-wallet:18.1.3'
     implementation 'com.googlecode.mp4parser:isoparser:1.0.6'
     implementation 'com.stripe:stripe-android:2.0.2'
     implementation files('libs/libgsaverification-client.aar')
 
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.3'
-    //ndkVersion "21.1.6352462"
+    compileSdkVersion 31
+    buildToolsVersion '31.0.0'
+    //ndkVersion "21.4.7075529"
 
     defaultConfig.applicationId = "li.peeloi.kisko.kiskogram"
 
@@ -140,6 +139,17 @@ android {
             ndk.debugSymbolLevel = 'FULL'
         }
 
+        standalone {
+            debuggable false
+            jniDebuggable false
+            signingConfig signingConfigs.release
+            applicationIdSuffix ".web"
+            minifyEnabled true
+            multiDexEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            ndk.debugSymbolLevel = 'FULL'
+        }
+
         release {
             debuggable false
             jniDebuggable false
@@ -162,6 +172,10 @@ android {
 
     sourceSets.HA {
         manifest.srcFile 'config/debug/AndroidManifest.xml'
+    }
+
+    sourceSets.standalone {
+        manifest.srcFile 'config/release/AndroidManifest.xml'
     }
 
     sourceSets.release {
@@ -240,9 +254,6 @@ android {
             sourceSets.debug {
                 manifest.srcFile 'config/debug/AndroidManifest_SDK23.xml'
             }
-            /*sourceSets.debugAsan {
-                manifest.srcFile 'config/debug/AndroidManifest_SDK23.xml'
-            }*/
             sourceSets.release {
                 manifest.srcFile 'config/release/AndroidManifest_SDK23.xml'
             }
@@ -273,11 +284,11 @@ android {
             sourceSets.debug {
                 manifest.srcFile 'config/debug/AndroidManifest_SDK23.xml'
             }
-            /*sourceSets.debugAsan {
-                manifest.srcFile 'config/debug/AndroidManifest_SDK23.xml'
-            }*/
             sourceSets.release {
                 manifest.srcFile 'config/release/AndroidManifest_SDK23.xml'
+            }
+            sourceSets.standalone {
+                manifest.srcFile 'config/release/AndroidManifest_standalone.xml'
             }
             ext {
                 abiVersionCode = 9
@@ -285,7 +296,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 224601
+    defaultConfig.versionCode = 242801
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
@@ -304,7 +315,7 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 29
-        versionName "7.5.0-r1"
+        versionName "8.0.1-r1"
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
 

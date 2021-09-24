@@ -32,6 +32,7 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -63,6 +64,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
     private HeaderCell headerCell2;
     private TextInfoPrivacyCell checkTextView;
     private LinearLayout linearLayout;
+    private ActionBarMenuItem doneButton;
 
     private LinearLayout linearLayoutTypeContainer;
     private RadioButtonCell radioButtonCell1;
@@ -83,7 +85,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
 
     private TLRPC.Chat currentChat;
     private TLRPC.ChatFull info;
-    private int chatId;
+    private long chatId;
     private boolean isChannel;
 
     private boolean canCreatePublic = true;
@@ -102,12 +104,12 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
     private boolean ignoreTextChanges;
 
     private boolean isForcePublic;
-    HashMap<Integer, TLRPC.User> usersMap = new HashMap<>();
+    HashMap<Long, TLRPC.User> usersMap = new HashMap<>();
 
     private final static int done_button = 1;
     private InviteLinkBottomSheet inviteLinkBottomSheet;
 
-    public ChatEditTypeActivity(int id, boolean forcePublic) {
+    public ChatEditTypeActivity(long id, boolean forcePublic) {
         chatId = id;
         isForcePublic = forcePublic;
     }
@@ -200,7 +202,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
         });
 
         ActionBarMenu menu = actionBar.createMenu();
-        menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56), LocaleController.getString("Done", R.string.Done));
+        doneButton = menu.addItemWithWidth(done_button, R.drawable.ic_done, AndroidUtilities.dp(56), LocaleController.getString("Done", R.string.Done));
 
         fragmentView = new ScrollView(context) {
             @Override
@@ -340,7 +342,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
 
             @Override
             public void afterTextChanged(Editable editable) {
-
+                checkDoneButton();
             }
         });
 
@@ -386,11 +388,6 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
 
         manageLinksTextView = new TextCell(context);
         manageLinksTextView.setBackgroundDrawable(Theme.getSelectorDrawable(true));
-        manageLinksTextView.setOnClickListener(v -> {
-            if (invite == null) {
-                return;
-            }
-        });
         manageLinksTextView.setTextAndIcon(LocaleController.getString("ManageInviteLinks", R.string.ManageInviteLinks), R.drawable.actions_link, false);
         manageLinksTextView.setOnClickListener(v -> {
             ManageLinksActivity fragment = new ManageLinksActivity(chatId, 0, 0);
@@ -597,6 +594,17 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
         radioButtonCell1.setChecked(!isPrivate, true);
         radioButtonCell2.setChecked(isPrivate, true);
         usernameTextView.clearFocus();
+        checkDoneButton();
+    }
+
+    private void checkDoneButton() {
+        if (isPrivate || usernameTextView.length() > 0) {
+            doneButton.setEnabled(true);
+            doneButton.setAlpha(1.0f);
+        } else {
+            doneButton.setEnabled(false);
+            doneButton.setAlpha(0.5f);
+        }
     }
 
     private boolean checkUserName(final String name) {
