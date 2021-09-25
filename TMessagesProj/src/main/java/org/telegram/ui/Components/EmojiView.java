@@ -865,6 +865,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
             super.setImageDrawable(drawable);
             isRecent = recent;
         }
+
         @Override
         public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             setMeasuredDimension(View.MeasureSpec.getSize(widthMeasureSpec), View.MeasureSpec.getSize(widthMeasureSpec));
@@ -1920,7 +1921,10 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         pager = new ViewPager(context) {
             @Override
             public boolean onInterceptTouchEvent(MotionEvent ev) {
-                return false;
+                if (getParent() != null) {
+                    getParent().requestDisallowInterceptTouchEvent(canScrollHorizontally(-1));
+                }
+                return super.onInterceptTouchEvent(ev);
             }
 
             @Override
@@ -2033,6 +2037,8 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                     SearchField currentField;
                     int p = pager.getCurrentItem();
                     if (p == 0) {
+                        currentField = emojiSearchField;
+                    } else if (p == 1) {
                         currentField = gifSearchField;
                     } else {
                         currentField = stickersSearchField;
@@ -2053,22 +2059,17 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                         field.searchEditText.setText(currentFieldText);
                         field.searchEditText.setSelection(currentFieldText.length());
                     }
-                    startStopVisibleGifs((position == 0 && positionOffset > 0) || position == 1);
+                    startStopVisibleGifs(position == 0);
                     updateStickerTabsPosition();
                 }
 
                 @Override
                 public void onPageSelected(int position) {
                     saveNewPage();
-                    position++;
-                    showBackspaceButton(position == 0, true);
-                    showStickerSettingsButton(position == 2, true);
+                    showBackspaceButton(false, true);
+                    showStickerSettingsButton(position == 1, true);
                     if (delegate.isSearchOpened()) {
                         if (position == 0) {
-                            if (emojiSearchField != null) {
-                                emojiSearchField.searchEditText.requestFocus();
-                            }
-                        } else if (position == 1) {
                             if (gifSearchField != null) {
                                 gifSearchField.searchEditText.requestFocus();
                             }
@@ -2102,8 +2103,6 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                     SearchField currentField;
                     int currentItem = pager.getCurrentItem();
                     if (currentItem == 0) {
-                        currentField = emojiSearchField;
-                    } else if (currentItem == 1) {
                         currentField = gifSearchField;
                     } else {
                         currentField = stickersSearchField;
@@ -2206,18 +2205,12 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
             return;
         }
         if (position == 0) {
-            emojiGridView.setVisibility(View.VISIBLE);
-            gifGridView.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
-            gifTabs.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
-            stickersGridView.setVisibility(View.GONE);
-            stickersTab.setVisibility(View.GONE);
-        } else if (position == 1) {
             emojiGridView.setVisibility(View.GONE);
             gifGridView.setVisibility(View.VISIBLE);
             gifTabs.setVisibility(View.VISIBLE);
             stickersGridView.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
             stickersTab.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
-        } else if (position == 2) {
+        } else if (position == 1) {
             emojiGridView.setVisibility(View.GONE);
             gifGridView.setVisibility(View.GONE);
             gifTabs.setVisibility(View.GONE);
@@ -3122,12 +3115,12 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         }
         int newPage;
         int currentItem = pager.getCurrentItem();
-        if (currentItem == 2) {
+        if (currentItem == 1) {
             newPage = 1;
-        } else if (currentItem == 1) {
+        } else if (currentItem == 0) {
             newPage = 2;
         } else {
-            newPage = 0;
+            newPage = 1;
         }
         if (currentPage != newPage) {
             currentPage = newPage;
@@ -3144,9 +3137,9 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         if (delegate == null) {
             return;
         }
-        if (position == 0) {
+        if (position == 1) {
             delegate.onTabOpened(positionOffsetPixels != 0 ? 2 : 0);
-        } else if (position == 1) {
+        } else if (position == 2) {
             delegate.onTabOpened(3);
         } else {
             delegate.onTabOpened(0);
@@ -3169,7 +3162,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
     public void switchToGifRecent() {
         showBackspaceButton(false, false);
         showStickerSettingsButton(false, false);
-        pager.setCurrentItem(1, false);
+        pager.setCurrentItem(0, false);
     }
 
     private void updateEmojiTabs() {
@@ -3390,18 +3383,18 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         gifFirstEmojiTabNum = gifTabsCount;
         final int hPadding = AndroidUtilities.dp(13);
         final int vPadding = AndroidUtilities.dp(11);
-        final List<String> gifSearchEmojies = MessagesController.getInstance(currentAccount).gifSearchEmojies;
-        for (int i = 0, N = gifSearchEmojies.size(); i < N; i++) {
-            final String emoji = gifSearchEmojies.get(i);
-            final Emoji.EmojiDrawable emojiDrawable = Emoji.getEmojiDrawable(emoji);
-            if (emojiDrawable != null) {
-                gifTabsCount++;
-                TLRPC.Document document = MediaDataController.getInstance(currentAccount).getEmojiAnimatedSticker(emoji);
-                final View iconTab = gifTabs.addEmojiTab(3 + i, emojiDrawable, document);
-               // iconTab.setPadding(hPadding, vPadding, hPadding, vPadding);
-                iconTab.setContentDescription(emoji);
-            }
-        }
+        //final List<String> gifSearchEmojies = MessagesController.getInstance(currentAccount).gifSearchEmojies;
+        //for (int i = 0, N = gifSearchEmojies.size(); i < N; i++) {
+        //    final String emoji = gifSearchEmojies.get(i);
+        //    final Emoji.EmojiDrawable emojiDrawable = Emoji.getEmojiDrawable(emoji);
+        //    if (emojiDrawable != null) {
+        //        gifTabsCount++;
+        //        TLRPC.Document document = MediaDataController.getInstance(currentAccount).getEmojiAnimatedSticker(emoji);
+        //        final View iconTab = gifTabs.addEmojiTab(3 + i, emojiDrawable, document);
+        //       // iconTab.setPadding(hPadding, vPadding, hPadding, vPadding);
+        //        iconTab.setContentDescription(emoji);
+        //    }
+        //}
 
         gifTabs.commitUpdate();
         gifTabs.updateTabStyles();
@@ -3669,10 +3662,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
     }
 
     public void onOpen(boolean forceEmoji) {
-        if (currentPage > 2) {
-            currentPage = 2;
-        }
-        if (currentPage == 2) {
+        if (currentPage != 2) {
             showBackspaceButton(false, false);
             showStickerSettingsButton(true, false);
             if (pager.getCurrentItem() != 1) {
@@ -3690,7 +3680,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
                 firstTabUpdate = false;
                 stickersLayoutManager.scrollToPositionWithOffset(1, 0);
             }
-        } else if (currentPage == 0) {
+        } else {
             showBackspaceButton(false, false);
             showStickerSettingsButton(false, false);
             if (pager.getCurrentItem() != 0) {
@@ -4833,10 +4823,8 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return LocaleController.getString("Emoji", R.string.Emoji);
-                case 1:
                     return LocaleController.getString("AccDescrGIFs", R.string.AccDescrGIFs);
-                case 2:
+                case 1:
                     return LocaleController.getString("AccDescrStickers", R.string.AccDescrStickers);
             }
             return null;

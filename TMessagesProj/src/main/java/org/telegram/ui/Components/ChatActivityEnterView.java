@@ -7091,9 +7091,9 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             } else {
                 emojiButton[0].setVisibility(VISIBLE);
                 if (currentPage == 2) {
-                    nextIcon = 2;
-                } else {
                     nextIcon = 3;
+                } else {
+                    nextIcon = 2;
                 }
             }
         }

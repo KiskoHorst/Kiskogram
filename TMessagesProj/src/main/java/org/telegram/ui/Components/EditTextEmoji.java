@@ -247,10 +247,6 @@ public class EditTextEmoji extends FrameLayout implements NotificationCenter.Not
             editText.setHintTextColor(getThemedColor(Theme.key_dialogTextHint));
             editText.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
         }
-        emojiIconDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
-        if (emojiView != null) {
-            emojiView.updateColors();
-        }
     }
 
     public void setMaxLines(int value) {

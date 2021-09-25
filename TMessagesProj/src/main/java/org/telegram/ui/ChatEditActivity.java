@@ -589,20 +589,19 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                     MessagesController.getInstance(currentAccount).changeChatAvatar(chatId, null, null, null, 0, null, null, null, null);
                     showAvatarProgress(false, true);
                     avatarImage.setImage(null, null, avatarDrawable, currentChat);
-                    cameraDrawable.setCurrentFrame(0);
-                    setAvatarCell.imageView.playAnimation();
+                    //cameraDrawable.setCurrentFrame(0);
                 }, dialogInterface -> {
                     if (!imageUpdater.isUploadingImage()) {
-                        cameraDrawable.setCustomEndFrame(86);
-                        setAvatarCell.imageView.playAnimation();
+                        //cameraDrawable.setCustomEndFrame(86);
+                        //setAvatarCell.imageView.playAnimation();
                     } else {
-                        cameraDrawable.setCurrentFrame(0, false);
+                        //cameraDrawable.setCurrentFrame(0, false);
                     }
 
                 });
-                cameraDrawable.setCurrentFrame(0);
-                cameraDrawable.setCustomEndFrame(43);
-                setAvatarCell.imageView.playAnimation();
+                //cameraDrawable.setCurrentFrame(0);
+                //cameraDrawable.setCustomEndFrame(43);
+                //setAvatarCell.imageView.playAnimation();
             });
             settingsContainer.addView(setAvatarCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         }
@@ -964,16 +963,16 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
         }
         if (setAvatarCell != null) {
             if (hasPhoto || imageUpdater.isUploadingImage()) {
-                setAvatarCell.setTextAndIcon(LocaleController.getString("ChatSetNewPhoto", R.string.ChatSetNewPhoto), R.drawable.menu_camera2, true);
+                setAvatarCell.setTextAndIcon(LocaleController.getString("ChatSetNewPhoto", R.string.ChatSetNewPhoto), R.drawable.image_plus, true);
             } else {
-                setAvatarCell.setTextAndIcon(LocaleController.getString("ChatSetPhotoOrVideo", R.string.ChatSetPhotoOrVideo), R.drawable.menu_camera2, true);
+                setAvatarCell.setTextAndIcon(LocaleController.getString("ChatSetPhotoOrVideo", R.string.ChatSetPhotoOrVideo), R.drawable.image_plus, true);
             }
-            if (cameraDrawable == null) {
-                cameraDrawable = new RLottieDrawable(R.raw.camera_outline, "" + R.raw.camera_outline, AndroidUtilities.dp(50), AndroidUtilities.dp(50), false, null);
-            }
-            setAvatarCell.imageView.setTranslationY(-AndroidUtilities.dp(9));
-            setAvatarCell.imageView.setTranslationX(-AndroidUtilities.dp(8));
-            setAvatarCell.imageView.setAnimation(cameraDrawable);
+            //if (cameraDrawable == null) {
+            //    cameraDrawable = new RLottieDrawable(R.raw.camera_outline, "" + R.raw.camera_outline, AndroidUtilities.dp(50), AndroidUtilities.dp(50), false, null);
+            //}
+            //setAvatarCell.imageView.setTranslationY(-AndroidUtilities.dp(9));
+            //setAvatarCell.imageView.setTranslationX(-AndroidUtilities.dp(8));
+            //setAvatarCell.imageView.setAnimation(cameraDrawable);
         }
         if (PhotoViewer.hasInstance() && PhotoViewer.getInstance().isVisible()) {
             PhotoViewer.getInstance().checkCurrentImageVisibility();
@@ -1041,13 +1040,13 @@ public class ChatEditActivity extends BaseFragment implements ImageUpdater.Image
                 showAvatarProgress(false, true);
             } else {
                 avatarImage.setImage(ImageLocation.getForLocal(avatar), "50_50", avatarDrawable, currentChat);
-                setAvatarCell.setTextAndIcon(LocaleController.getString("ChatSetNewPhoto", R.string.ChatSetNewPhoto), R.drawable.menu_camera2, true);
-                if (cameraDrawable == null) {
-                    cameraDrawable = new RLottieDrawable(R.raw.camera_outline, "" + R.raw.camera_outline, AndroidUtilities.dp(50), AndroidUtilities.dp(50), false, null);
-                }
+                setAvatarCell.setTextAndIcon(LocaleController.getString("ChatSetNewPhoto", R.string.ChatSetNewPhoto), R.drawable.image_plus, true);
+                //if (cameraDrawable == null) {
+                //    cameraDrawable = new RLottieDrawable(R.raw.camera_outline, "" + R.raw.camera_outline, AndroidUtilities.dp(50), AndroidUtilities.dp(50), false, null);
+                //}
                 setAvatarCell.imageView.setTranslationY(-AndroidUtilities.dp(9));
                 setAvatarCell.imageView.setTranslationX(-AndroidUtilities.dp(8));
-                setAvatarCell.imageView.setAnimation(cameraDrawable);
+                //setAvatarCell.imageView.setAnimation(cameraDrawable);
                 showAvatarProgress(true, false);
             }
         });
