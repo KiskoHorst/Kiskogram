@@ -12,6 +12,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.google.android.exoplayer2.util.Log;
+
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageLoader;
 import org.telegram.messenger.Utilities;
@@ -64,7 +66,7 @@ public class TLRPC {
 	public static final int MESSAGE_FLAG_HAS_BOT_ID         = 0x00000800;
 	public static final int MESSAGE_FLAG_EDITED             = 0x00008000;
 
-    public static final int LAYER = 133;
+    public static final int LAYER = 135;
 
     public static class TL_stats_megagroupStats extends TLObject {
         public static int constructor = 0xef7ff916;
@@ -2267,7 +2269,7 @@ public class TLRPC {
                 case 0x44747e9a:
                     result = new TL_auth_authorizationSignUpRequired();
                     break;
-                case 0xcd050916:
+                case 0x33fb7bb8:
                     result = new TL_auth_authorization();
                     break;
             }
@@ -2304,14 +2306,20 @@ public class TLRPC {
     }
 
     public static class TL_auth_authorization extends auth_Authorization {
-        public static int constructor = 0xcd050916;
+        public static int constructor = 0x33fb7bb8;
 
         public int flags;
+        public boolean setup_password_required;
+        public int otherwise_relogin_days;
         public int tmp_sessions;
         public User user;
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
+            setup_password_required = (flags & 2) != 0;
+            if ((flags & 2) != 0) {
+                otherwise_relogin_days = stream.readInt32(exception);
+            }
             if ((flags & 1) != 0) {
                 tmp_sessions = stream.readInt32(exception);
             }
@@ -2320,7 +2328,11 @@ public class TLRPC {
 
         public void serializeToStream(AbstractSerializedData stream) {
             stream.writeInt32(constructor);
+            flags = setup_password_required ? (flags | 2) : (flags &~ 2);
             stream.writeInt32(flags);
+            if ((flags & 2) != 0) {
+                stream.writeInt32(otherwise_relogin_days);
+            }
             if ((flags & 1) != 0) {
                 stream.writeInt32(tmp_sessions);
             }
@@ -4395,6 +4407,8 @@ public class TLRPC {
         public boolean current;
         public boolean official_app;
         public boolean password_pending;
+        public boolean encrypted_requests_disabled;
+        public boolean call_requests_disabled;
         public long hash;
         public String device_model;
         public String platform;
@@ -4426,6 +4440,8 @@ public class TLRPC {
             current = (flags & 1) != 0;
             official_app = (flags & 2) != 0;
             password_pending = (flags & 4) != 0;
+            encrypted_requests_disabled = (flags & 8) != 0;
+            call_requests_disabled = (flags & 16) != 0;
             hash = stream.readInt64(exception);
             device_model = stream.readString(exception);
             platform = stream.readString(exception);
@@ -4445,6 +4461,8 @@ public class TLRPC {
             flags = current ? (flags | 1) : (flags &~ 1);
             flags = official_app ? (flags | 2) : (flags &~ 2);
             flags = password_pending ? (flags | 4) : (flags &~ 4);
+            flags = encrypted_requests_disabled ? (flags | 8) : (flags &~ 8);
+            flags = call_requests_disabled ? (flags | 16) : (flags &~ 16);
             stream.writeInt32(flags);
             stream.writeInt64(hash);
             stream.writeString(device_model);
@@ -5193,7 +5211,9 @@ public class TLRPC {
         public boolean broadcast;
         public boolean isPublic;
         public boolean megagroup;
+        public boolean request_needed;
         public String title;
+        public String about;
         public Photo photo;
         public int participants_count;
         public ArrayList<User> participants = new ArrayList<>();
@@ -5203,7 +5223,7 @@ public class TLRPC {
         public static ChatInvite TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
             ChatInvite result = null;
             switch (constructor) {
-                case 0xdfc2f58e:
+                case 0x300c44c1:
                     result = new TL_chatInvite();
                     break;
                 case 0x61695cb0:
@@ -5224,8 +5244,7 @@ public class TLRPC {
     }
 
     public static class TL_chatInvite extends ChatInvite {
-        public static int constructor = 0xdfc2f58e;
-
+        public static int constructor = 0x300c44c1;
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -5233,7 +5252,12 @@ public class TLRPC {
             broadcast = (flags & 2) != 0;
             isPublic = (flags & 4) != 0;
             megagroup = (flags & 8) != 0;
+            request_needed = (flags & 64) != 0;
             title = stream.readString(exception);
+            boolean hasAbout = (flags & 32) != 0;
+            if (hasAbout) {
+                about = stream.readString(exception);
+            }
             photo = Photo.TLdeserialize(stream, stream.readInt32(exception), exception);
             participants_count = stream.readInt32(exception);
             if ((flags & 16) != 0) {
@@ -5261,8 +5285,13 @@ public class TLRPC {
             flags = broadcast ? (flags | 2) : (flags &~ 2);
             flags = isPublic ? (flags | 4) : (flags &~ 4);
             flags = megagroup ? (flags | 8) : (flags &~ 8);
+            flags = about != null ? (flags | 32) : (flags &~ 32);
+            flags = request_needed ? (flags | 64) : (flags &~ 64);
             stream.writeInt32(flags);
             stream.writeString(title);
+            if (about != null) {
+                stream.writeString(about);
+            }
             photo.serializeToStream(stream);
             stream.writeInt32(participants_count);
             if ((flags & 16) != 0) {
@@ -5680,10 +5709,14 @@ public class TLRPC {
     }
 
     public static class TL_chatInviteImporter extends TLObject {
-        public static int constructor = 0xb5cd5f4;
+        public static int constructor = 0x8c5adfd9;
 
+        public int flags;
+        public boolean requested;
         public long user_id;
         public int date;
+        public String about;
+        public long approved_by;
 
         public static TL_chatInviteImporter TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
             if (TL_chatInviteImporter.constructor != constructor) {
@@ -5699,14 +5732,30 @@ public class TLRPC {
         }
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            requested = (flags & 1) != 0;
             user_id = stream.readInt64(exception);
             date = stream.readInt32(exception);
+            if ((flags & 4) != 0) {
+                about = stream.readString(exception);
+            }
+            if ((flags & 2) != 0) {
+                approved_by = stream.readInt64(exception);
+            }
         }
 
         public void serializeToStream(AbstractSerializedData stream) {
             stream.writeInt32(constructor);
+            flags = requested ? (flags | 1) : (flags &~ 1);
+            stream.writeInt32(flags);
             stream.writeInt64(user_id);
             stream.writeInt32(date);
+            if ((flags & 4) != 0) {
+                stream.writeString(about);
+            }
+            if ((flags & 2) != 0) {
+                stream.writeInt64(approved_by);
+            }
         }
     }
 
@@ -6055,6 +6104,7 @@ public class TLRPC {
 	public static abstract class auth_SentCodeType extends TLObject {
 		public int length;
 		public String pattern;
+        public String prefix;
 
 		public static auth_SentCodeType TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
 			auth_SentCodeType result = null;
@@ -6068,6 +6118,9 @@ public class TLRPC {
 				case 0xab03c6d9:
 					result = new TL_auth_sentCodeTypeFlashCall();
 					break;
+                case 0x82006484:
+                    result = new TL_auth_sentCodeTypeMissedCall();
+                    break;
 				case 0xc000bba2:
 					result = new TL_auth_sentCodeTypeSms();
 					break;
@@ -6123,6 +6176,21 @@ public class TLRPC {
 			stream.writeString(pattern);
 		}
 	}
+
+    public static class TL_auth_sentCodeTypeMissedCall extends auth_SentCodeType {
+        public static int constructor = 0x82006484;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            prefix = stream.readString(exception);
+            length = stream.readInt32(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeString(prefix);
+            stream.writeInt32(length);
+        }
+    }
 
 	public static class TL_auth_sentCodeTypeSms extends auth_SentCodeType {
 		public static int constructor = 0xc000bba2;
@@ -6204,7 +6272,7 @@ public class TLRPC {
 	}
 
     public static class TL_peerSettings extends TLObject {
-        public static int constructor = 0x733f2961;
+        public static int constructor = 0xa518110d;
 
         public int flags;
         public boolean report_spam;
@@ -6215,7 +6283,10 @@ public class TLRPC {
         public boolean report_geo;
         public boolean autoarchived;
         public boolean invite_members;
+        public boolean request_chat_broadcast;
         public int geo_distance;
+        public String request_chat_title;
+        public int request_chat_date;
 
         public static TL_peerSettings TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
             if (TL_peerSettings.constructor != constructor) {
@@ -6240,8 +6311,15 @@ public class TLRPC {
             report_geo = (flags & 32) != 0;
             autoarchived = (flags & 128) != 0;
             invite_members = (flags & 256) != 0;
+            request_chat_broadcast = (flags & 1024) != 0;
             if ((flags & 64) != 0) {
                 geo_distance = stream.readInt32(exception);
+            }
+            if ((flags & 512) != 0) {
+                request_chat_title = stream.readString(exception);
+            }
+            if ((flags & 512) != 0) {
+                request_chat_date = stream.readInt32(exception);
             }
         }
 
@@ -6255,9 +6333,16 @@ public class TLRPC {
             flags = report_geo ? (flags | 32) : (flags &~ 32);
             flags = autoarchived ? (flags | 128) : (flags &~ 128);
             flags = invite_members ? (flags | 256) : (flags &~ 256);
+            flags = request_chat_broadcast ? (flags | 1024) : (flags &~ 1024);
             stream.writeInt32(flags);
             if ((flags & 64) != 0) {
                 stream.writeInt32(geo_distance);
+            }
+            if ((flags & 512) != 0) {
+                stream.writeString(request_chat_title);
+            }
+            if ((flags & 512) != 0) {
+                stream.writeInt32(request_chat_date);
             }
         }
     }
@@ -8252,40 +8337,6 @@ public class TLRPC {
 		}
 	}
 
-    public static class TL_chatTheme extends TLObject {
-        public static int constructor = 0xed0b5c33;
-
-        public String emoticon;
-        public Theme theme;
-        public Theme dark_theme;
-
-        public static TL_chatTheme TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-            if (TL_chatTheme.constructor != constructor) {
-                if (exception) {
-                    throw new RuntimeException(String.format("can't parse magic %x in TL_chatTheme", constructor));
-                } else {
-                    return null;
-                }
-            }
-            TL_chatTheme result = new TL_chatTheme();
-            result.readParams(stream, exception);
-            return result;
-        }
-
-        public void readParams(AbstractSerializedData stream, boolean exception) {
-            emoticon = stream.readString(exception);
-            theme = Theme.TLdeserialize(stream, stream.readInt32(exception), exception);
-            dark_theme = Theme.TLdeserialize(stream, stream.readInt32(exception), exception);
-        }
-
-        public void serializeToStream(AbstractSerializedData stream) {
-            stream.writeInt32(constructor);
-            stream.writeString(emoticon);
-            theme.serializeToStream(stream);
-            dark_theme.serializeToStream(stream);
-        }
-    }
-
 	public static abstract class messages_DhConfig extends TLObject {
 		public byte[] random;
 		public int g;
@@ -8568,77 +8619,94 @@ public class TLRPC {
         }
     }
 
-	public static class TL_messages_stickerSet extends TLObject {
-		public static int constructor = 0xb60a24a6;
+    public static abstract class messages_StickerSet extends TLObject {
 
-		public StickerSet set;
-		public ArrayList<TL_stickerPack> packs = new ArrayList<>();
-		public ArrayList<Document> documents = new ArrayList<>();
+        public StickerSet set;
+        public ArrayList<TL_stickerPack> packs = new ArrayList<>();
+        public ArrayList<Document> documents = new ArrayList<>();
 
-		public static TL_messages_stickerSet TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-			if (TL_messages_stickerSet.constructor != constructor) {
-				if (exception) {
-                    throw new RuntimeException(String.format("can't parse magic %x in TL_messages_stickerSet", constructor));
-				} else {
-					return null;
-				}
-			}
-			TL_messages_stickerSet result = new TL_messages_stickerSet();
-			result.readParams(stream, exception);
-			return result;
-		}
+        public static TL_messages_stickerSet TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            TL_messages_stickerSet result = null;
+            switch (constructor) {
+                case 0xb60a24a6:
+                    result = new TL_messages_stickerSet();
+                    break;
+                case 0xd3f924eb:
+                    result = new TL_messages_stickerSetNotModified();
+                    break;
+            }
+            if (result == null && exception) {
+                throw new RuntimeException(String.format("can't parse magic %x in messages_StickerSet", constructor));
+            }
+            if (result != null) {
+                result.readParams(stream, exception);
+            }
+            return result;
+        }
+    }
 
-		public void readParams(AbstractSerializedData stream, boolean exception) {
-			set = StickerSet.TLdeserialize(stream, stream.readInt32(exception), exception);
-			int magic = stream.readInt32(exception);
-			if (magic != 0x1cb5c415) {
-				if (exception) {
-					throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
-				}
-				return;
-			}
-			int count = stream.readInt32(exception);
-			for (int a = 0; a < count; a++) {
-				TL_stickerPack object = TL_stickerPack.TLdeserialize(stream, stream.readInt32(exception), exception);
-				if (object == null) {
-					return;
-				}
-				packs.add(object);
-			}
-			magic = stream.readInt32(exception);
-			if (magic != 0x1cb5c415) {
-				if (exception) {
-					throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
-				}
-				return;
-			}
-			count = stream.readInt32(exception);
-			for (int a = 0; a < count; a++) {
-				Document object = Document.TLdeserialize(stream, stream.readInt32(exception), exception);
-				if (object == null) {
-					return;
-				}
-				documents.add(object);
-			}
-		}
+    public static class TL_messages_stickerSet extends messages_StickerSet {
+        public static int constructor = 0xb60a24a6;
 
-		public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-			set.serializeToStream(stream);
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            set = StickerSet.TLdeserialize(stream, stream.readInt32(exception), exception);
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                TL_stickerPack object = TL_stickerPack.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                packs.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Document object = Document.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                documents.add(object);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            set.serializeToStream(stream);
             stream.writeInt32(0x1cb5c415);
-			int count = packs.size();
-			stream.writeInt32(count);
-			for (int a = 0; a < count; a++) {
-				packs.get(a).serializeToStream(stream);
-			}
-			stream.writeInt32(0x1cb5c415);
-			count = documents.size();
-			stream.writeInt32(count);
-			for (int a = 0; a < count; a++) {
-				documents.get(a).serializeToStream(stream);
-			}
-		}
-	}
+            int count = packs.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                packs.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = documents.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                documents.get(a).serializeToStream(stream);
+            }
+        }
+    }
+
+    public static class TL_messages_stickerSetNotModified extends TL_messages_stickerSet {
+        public static int constructor = 0xd3f924eb;
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+        }
+    }
 
 	public static abstract class InputGeoPoint extends TLObject {
 
@@ -10459,13 +10527,25 @@ public class TLRPC {
         public int ttl_period;
         public ArrayList<String> pending_suggestions = new ArrayList<>();
         public Peer groupcall_default_join_as;
+        public ArrayList<Long> recent_requesters = new ArrayList<>();
         public String theme_emoticon;
+        public int requests_pending;
+        public Peer default_send_as;
         public long inviterId; //custom
         public int invitesCount; //custom
 
         public static ChatFull TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
             ChatFull result = null;
             switch (constructor) {
+                case 0x46a6ffb4:
+                    result = new TL_chatFull();
+                    break;
+                case 0x56662e2e:
+                    result = new TL_channelFull();
+                    break;
+                case 0x59cff963:
+                    result = new TL_channelFull_layer134();
+                    break;
                 case 0x1c87a71a:
                     result = new TL_channelFull_layer98();
                     break;
@@ -10533,10 +10613,10 @@ public class TLRPC {
                     result = new TL_channelFull_layer132();
                     break;
                 case 0x4dbdc099:
-                    result = new TL_chatFull();
+                    result = new TL_chatFull_layer133();
                     break;
                 case 0xe9b27a17:
-                    result = new TL_channelFull();
+                    result = new TL_channelFull_layer133();
                     break;
                 case 0x1b7c9db3:
                     result = new TL_chatFull_layer121();
@@ -11678,7 +11758,7 @@ public class TLRPC {
         }
     }
 
-    public static class TL_chatFull extends ChatFull {
+    public static class TL_chatFull_layer133 extends ChatFull {
         public static int constructor = 0x4dbdc099;
 
 
@@ -11777,7 +11857,618 @@ public class TLRPC {
         }
     }
 
+    public static class TL_chatFull extends ChatFull {
+        public static int constructor = 0x46a6ffb4;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            can_set_username = (flags & 128) != 0;
+            has_scheduled = (flags & 256) != 0;
+            id = stream.readInt64(exception);
+            about = stream.readString(exception);
+            participants = ChatParticipants.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 4) != 0) {
+                chat_photo = Photo.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            notify_settings = PeerNotifySettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 8192) != 0) {
+                exported_invite = ExportedChatInvite.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 8) != 0) {
+                int magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                int count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    BotInfo object = BotInfo.TLdeserialize(stream, stream.readInt32(exception), exception);
+                    if (object == null) {
+                        return;
+                    }
+                    bot_info.add(object);
+                }
+            }
+            if ((flags & 64) != 0) {
+                pinned_msg_id = stream.readInt32(exception);
+            }
+            if ((flags & 2048) != 0) {
+                folder_id = stream.readInt32(exception);
+            }
+            if ((flags & 4096) != 0) {
+                call = TL_inputGroupCall.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 16384) != 0) {
+                ttl_period = stream.readInt32(exception);
+            }
+            if ((flags & 32768) != 0) {
+                groupcall_default_join_as = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 65536) != 0) {
+                theme_emoticon = stream.readString(exception);
+            }
+            if ((flags & 131072) != 0) {
+                requests_pending = stream.readInt32(exception);
+            }
+            if ((flags & 131072) != 0) {
+                int magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                int count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    recent_requesters.add(stream.readInt64(exception));
+                }
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = can_set_username ? (flags | 128) : (flags &~ 128);
+            flags = has_scheduled ? (flags | 256) : (flags &~ 256);
+            stream.writeInt32(flags);
+            stream.writeInt64(id);
+            stream.writeString(about);
+            participants.serializeToStream(stream);
+            if ((flags & 4) != 0) {
+                chat_photo.serializeToStream(stream);
+            }
+            notify_settings.serializeToStream(stream);
+            if ((flags & 8192) != 0) {
+                exported_invite.serializeToStream(stream);
+            }
+            if ((flags & 8) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                int count = bot_info.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    bot_info.get(a).serializeToStream(stream);
+                }
+            }
+            if ((flags & 64) != 0) {
+                stream.writeInt32(pinned_msg_id);
+            }
+            if ((flags & 2048) != 0) {
+                stream.writeInt32(folder_id);
+            }
+            if ((flags & 4096) != 0) {
+                call.serializeToStream(stream);
+            }
+            if ((flags & 16384) != 0) {
+                stream.writeInt32(ttl_period);
+            }
+            if ((flags & 32768) != 0) {
+                groupcall_default_join_as.serializeToStream(stream);
+            }
+            if ((flags & 65536) != 0) {
+                stream.writeString(theme_emoticon);
+            }
+            if ((flags & 131072) != 0) {
+                stream.writeInt32(requests_pending);
+            }
+            if ((flags & 131072) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                int count = recent_requesters.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    stream.writeInt64(recent_requesters.get(a));
+                }
+            }
+        }
+    }
+
     public static class TL_channelFull extends ChatFull {
+        public static int constructor = 0x56662e2e;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            can_view_participants = (flags & 8) != 0;
+            can_set_username = (flags & 64) != 0;
+            can_set_stickers = (flags & 128) != 0;
+            hidden_prehistory = (flags & 1024) != 0;
+            can_set_location = (flags & 65536) != 0;
+            has_scheduled = (flags & 524288) != 0;
+            can_view_stats = (flags & 1048576) != 0;
+            blocked = (flags & 4194304) != 0;
+            id = stream.readInt64(exception);
+            about = stream.readString(exception);
+            if ((flags & 1) != 0) {
+                participants_count = stream.readInt32(exception);
+            }
+            if ((flags & 2) != 0) {
+                admins_count = stream.readInt32(exception);
+            }
+            if ((flags & 4) != 0) {
+                kicked_count = stream.readInt32(exception);
+            }
+            if ((flags & 4) != 0) {
+                banned_count = stream.readInt32(exception);
+            }
+            if ((flags & 8192) != 0) {
+                online_count = stream.readInt32(exception);
+            }
+            read_inbox_max_id = stream.readInt32(exception);
+            read_outbox_max_id = stream.readInt32(exception);
+            unread_count = stream.readInt32(exception);
+            chat_photo = Photo.TLdeserialize(stream, stream.readInt32(exception), exception);
+            notify_settings = PeerNotifySettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 8388608) != 0) {
+                exported_invite = ExportedChatInvite.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                BotInfo object = BotInfo.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                bot_info.add(object);
+            }
+            if ((flags & 16) != 0) {
+                migrated_from_chat_id = stream.readInt64(exception);
+            }
+            if ((flags & 16) != 0) {
+                migrated_from_max_id = stream.readInt32(exception);
+            }
+            if ((flags & 32) != 0) {
+                pinned_msg_id = stream.readInt32(exception);
+            }
+            if ((flags & 256) != 0) {
+                stickerset = StickerSet.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 512) != 0) {
+                available_min_id = stream.readInt32(exception);
+            }
+            if ((flags & 2048) != 0) {
+                folder_id = stream.readInt32(exception);
+            }
+            if ((flags & 16384) != 0) {
+                linked_chat_id = stream.readInt64(exception);
+            }
+            if ((flags & 32768) != 0) {
+                location = ChannelLocation.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 131072) != 0) {
+                slowmode_seconds = stream.readInt32(exception);
+            }
+            if ((flags & 262144) != 0) {
+                slowmode_next_send_date = stream.readInt32(exception);
+            }
+            if ((flags & 4096) != 0) {
+                stats_dc = stream.readInt32(exception);
+            }
+            pts = stream.readInt32(exception);
+            if ((flags & 2097152) != 0) {
+                call = TL_inputGroupCall.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 16777216) != 0) {
+                ttl_period = stream.readInt32(exception);
+            }
+            if ((flags & 33554432) != 0) {
+                magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    pending_suggestions.add(stream.readString(exception));
+                }
+            }
+            if ((flags & 67108864) != 0) {
+                groupcall_default_join_as = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 134217728) != 0) {
+                theme_emoticon = stream.readString(exception);
+            }
+            if ((flags & 268435456) != 0) {
+                requests_pending = stream.readInt32(exception);
+            }
+            if ((flags & 268435456) != 0) {
+                magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    recent_requesters.add(stream.readInt64(exception));
+                }
+            }
+            if ((flags & 536870912) != 0) {
+                default_send_as = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = can_view_participants ? (flags | 8) : (flags &~ 8);
+            flags = can_set_username ? (flags | 64) : (flags &~ 64);
+            flags = can_set_stickers ? (flags | 128) : (flags &~ 128);
+            flags = hidden_prehistory ? (flags | 1024) : (flags &~ 1024);
+            flags = can_set_location ? (flags | 65536) : (flags &~ 65536);
+            flags = has_scheduled ? (flags | 524288) : (flags &~ 524288);
+            flags = can_view_stats ? (flags | 1048576) : (flags &~ 1048576);
+            flags = blocked ? (flags | 4194304) : (flags &~ 4194304);
+            stream.writeInt32(flags);
+            stream.writeInt64(id);
+            stream.writeString(about);
+            if ((flags & 1) != 0) {
+                stream.writeInt32(participants_count);
+            }
+            if ((flags & 2) != 0) {
+                stream.writeInt32(admins_count);
+            }
+            if ((flags & 4) != 0) {
+                stream.writeInt32(kicked_count);
+            }
+            if ((flags & 4) != 0) {
+                stream.writeInt32(banned_count);
+            }
+            if ((flags & 8192) != 0) {
+                stream.writeInt32(online_count);
+            }
+            stream.writeInt32(read_inbox_max_id);
+            stream.writeInt32(read_outbox_max_id);
+            stream.writeInt32(unread_count);
+            chat_photo.serializeToStream(stream);
+            notify_settings.serializeToStream(stream);
+            if ((flags & 8388608) != 0) {
+                exported_invite.serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            int count = bot_info.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                bot_info.get(a).serializeToStream(stream);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeInt64(migrated_from_chat_id);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeInt32(migrated_from_max_id);
+            }
+            if ((flags & 32) != 0) {
+                stream.writeInt32(pinned_msg_id);
+            }
+            if ((flags & 256) != 0) {
+                stickerset.serializeToStream(stream);
+            }
+            if ((flags & 512) != 0) {
+                stream.writeInt32(available_min_id);
+            }
+            if ((flags & 2048) != 0) {
+                stream.writeInt32(folder_id);
+            }
+            if ((flags & 16384) != 0) {
+                stream.writeInt64(linked_chat_id);
+            }
+            if ((flags & 32768) != 0) {
+                location.serializeToStream(stream);
+            }
+            if ((flags & 131072) != 0) {
+                stream.writeInt32(slowmode_seconds);
+            }
+            if ((flags & 262144) != 0) {
+                stream.writeInt32(slowmode_next_send_date);
+            }
+            if ((flags & 4096) != 0) {
+                stream.writeInt32(stats_dc);
+            }
+            stream.writeInt32(pts);
+            if ((flags & 2097152) != 0) {
+                call.serializeToStream(stream);
+            }
+            if ((flags & 16777216) != 0) {
+                stream.writeInt32(ttl_period);
+            }
+            if ((flags & 33554432) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                count = pending_suggestions.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    stream.writeString(pending_suggestions.get(a));
+                }
+            }
+            if ((flags & 67108864) != 0) {
+                groupcall_default_join_as.serializeToStream(stream);
+            }
+            if ((flags & 134217728) != 0) {
+                stream.writeString(theme_emoticon);
+            }
+            if ((flags & 268435456) != 0) {
+                stream.writeInt32(requests_pending);
+            }
+            if ((flags & 268435456) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                count = recent_requesters.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    stream.writeInt64(recent_requesters.get(a));
+                }
+            }
+            if ((flags & 536870912) != 0) {
+                default_send_as.serializeToStream(stream);
+            }
+        }
+    }
+
+    public static class TL_channelFull_layer134 extends ChatFull {
+        public static int constructor = 0x59cff963;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            can_view_participants = (flags & 8) != 0;
+            can_set_username = (flags & 64) != 0;
+            can_set_stickers = (flags & 128) != 0;
+            hidden_prehistory = (flags & 1024) != 0;
+            can_set_location = (flags & 65536) != 0;
+            has_scheduled = (flags & 524288) != 0;
+            can_view_stats = (flags & 1048576) != 0;
+            blocked = (flags & 4194304) != 0;
+            id = stream.readInt64(exception);
+            about = stream.readString(exception);
+            if ((flags & 1) != 0) {
+                participants_count = stream.readInt32(exception);
+            }
+            if ((flags & 2) != 0) {
+                admins_count = stream.readInt32(exception);
+            }
+            if ((flags & 4) != 0) {
+                kicked_count = stream.readInt32(exception);
+            }
+            if ((flags & 4) != 0) {
+                banned_count = stream.readInt32(exception);
+            }
+            if ((flags & 8192) != 0) {
+                online_count = stream.readInt32(exception);
+            }
+            read_inbox_max_id = stream.readInt32(exception);
+            read_outbox_max_id = stream.readInt32(exception);
+            unread_count = stream.readInt32(exception);
+            chat_photo = Photo.TLdeserialize(stream, stream.readInt32(exception), exception);
+            notify_settings = PeerNotifySettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 8388608) != 0) {
+                exported_invite = ExportedChatInvite.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                BotInfo object = BotInfo.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                bot_info.add(object);
+            }
+            if ((flags & 16) != 0) {
+                migrated_from_chat_id = stream.readInt64(exception);
+            }
+            if ((flags & 16) != 0) {
+                migrated_from_max_id = stream.readInt32(exception);
+            }
+            if ((flags & 32) != 0) {
+                pinned_msg_id = stream.readInt32(exception);
+            }
+            if ((flags & 256) != 0) {
+                stickerset = StickerSet.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 512) != 0) {
+                available_min_id = stream.readInt32(exception);
+            }
+            if ((flags & 2048) != 0) {
+                folder_id = stream.readInt32(exception);
+            }
+            if ((flags & 16384) != 0) {
+                linked_chat_id = stream.readInt64(exception);
+            }
+            if ((flags & 32768) != 0) {
+                location = ChannelLocation.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 131072) != 0) {
+                slowmode_seconds = stream.readInt32(exception);
+            }
+            if ((flags & 262144) != 0) {
+                slowmode_next_send_date = stream.readInt32(exception);
+            }
+            if ((flags & 4096) != 0) {
+                stats_dc = stream.readInt32(exception);
+            }
+            pts = stream.readInt32(exception);
+            if ((flags & 2097152) != 0) {
+                call = TL_inputGroupCall.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 16777216) != 0) {
+                ttl_period = stream.readInt32(exception);
+            }
+            if ((flags & 33554432) != 0) {
+                magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    pending_suggestions.add(stream.readString(exception));
+                }
+            }
+            if ((flags & 67108864) != 0) {
+                groupcall_default_join_as = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 134217728) != 0) {
+                theme_emoticon = stream.readString(exception);
+            }
+            if ((flags & 268435456) != 0) {
+                requests_pending = stream.readInt32(exception);
+            }
+            if ((flags & 268435456) != 0) {
+                magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    recent_requesters.add(stream.readInt64(exception));
+                }
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = can_view_participants ? (flags | 8) : (flags &~ 8);
+            flags = can_set_username ? (flags | 64) : (flags &~ 64);
+            flags = can_set_stickers ? (flags | 128) : (flags &~ 128);
+            flags = hidden_prehistory ? (flags | 1024) : (flags &~ 1024);
+            flags = can_set_location ? (flags | 65536) : (flags &~ 65536);
+            flags = has_scheduled ? (flags | 524288) : (flags &~ 524288);
+            flags = can_view_stats ? (flags | 1048576) : (flags &~ 1048576);
+            flags = blocked ? (flags | 4194304) : (flags &~ 4194304);
+            stream.writeInt32(flags);
+            stream.writeInt64(id);
+            stream.writeString(about);
+            if ((flags & 1) != 0) {
+                stream.writeInt32(participants_count);
+            }
+            if ((flags & 2) != 0) {
+                stream.writeInt32(admins_count);
+            }
+            if ((flags & 4) != 0) {
+                stream.writeInt32(kicked_count);
+            }
+            if ((flags & 4) != 0) {
+                stream.writeInt32(banned_count);
+            }
+            if ((flags & 8192) != 0) {
+                stream.writeInt32(online_count);
+            }
+            stream.writeInt32(read_inbox_max_id);
+            stream.writeInt32(read_outbox_max_id);
+            stream.writeInt32(unread_count);
+            chat_photo.serializeToStream(stream);
+            notify_settings.serializeToStream(stream);
+            if ((flags & 8388608) != 0) {
+                exported_invite.serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            int count = bot_info.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                bot_info.get(a).serializeToStream(stream);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeInt64(migrated_from_chat_id);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeInt32(migrated_from_max_id);
+            }
+            if ((flags & 32) != 0) {
+                stream.writeInt32(pinned_msg_id);
+            }
+            if ((flags & 256) != 0) {
+                stickerset.serializeToStream(stream);
+            }
+            if ((flags & 512) != 0) {
+                stream.writeInt32(available_min_id);
+            }
+            if ((flags & 2048) != 0) {
+                stream.writeInt32(folder_id);
+            }
+            if ((flags & 16384) != 0) {
+                stream.writeInt64(linked_chat_id);
+            }
+            if ((flags & 32768) != 0) {
+                location.serializeToStream(stream);
+            }
+            if ((flags & 131072) != 0) {
+                stream.writeInt32(slowmode_seconds);
+            }
+            if ((flags & 262144) != 0) {
+                stream.writeInt32(slowmode_next_send_date);
+            }
+            if ((flags & 4096) != 0) {
+                stream.writeInt32(stats_dc);
+            }
+            stream.writeInt32(pts);
+            if ((flags & 2097152) != 0) {
+                call.serializeToStream(stream);
+            }
+            if ((flags & 16777216) != 0) {
+                stream.writeInt32(ttl_period);
+            }
+            if ((flags & 33554432) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                count = pending_suggestions.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    stream.writeString(pending_suggestions.get(a));
+                }
+            }
+            if ((flags & 67108864) != 0) {
+                groupcall_default_join_as.serializeToStream(stream);
+            }
+            if ((flags & 134217728) != 0) {
+                stream.writeString(theme_emoticon);
+            }
+            if ((flags & 268435456) != 0) {
+                stream.writeInt32(requests_pending);
+            }
+            if ((flags & 268435456) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                count = recent_requesters.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    stream.writeInt64(recent_requesters.get(a));
+                }
+            }
+        }
+    }
+
+    public static class TL_channelFull_layer133 extends ChatFull {
         public static int constructor = 0xe9b27a17;
 
 
@@ -14319,12 +15010,14 @@ public class TLRPC {
     }
 
     public static class TL_codeSettings extends TLObject {
-        public static int constructor = 0xdebebe83;
+        public static int constructor = 0x8a6469c2;
 
         public int flags;
         public boolean allow_flashcall;
         public boolean current_number;
         public boolean allow_app_hash;
+        public boolean allow_missed_call;
+        public ArrayList<byte[]> logout_tokens = new ArrayList<>();
 
         public static TL_codeSettings TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
             if (TL_codeSettings.constructor != constructor) {
@@ -14344,6 +15037,20 @@ public class TLRPC {
             allow_flashcall = (flags & 1) != 0;
             current_number = (flags & 2) != 0;
             allow_app_hash = (flags & 16) != 0;
+            allow_missed_call = (flags & 32) != 0;
+            if ((flags & 64) != 0) {
+                int magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                int count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    logout_tokens.add(stream.readByteArray(exception));
+                }
+            }
         }
 
         public void serializeToStream(AbstractSerializedData stream) {
@@ -14351,7 +15058,16 @@ public class TLRPC {
             flags = allow_flashcall ? (flags | 1) : (flags &~ 1);
             flags = current_number ? (flags | 2) : (flags &~ 2);
             flags = allow_app_hash ? (flags | 16) : (flags &~ 16);
+            flags = allow_missed_call ? (flags | 32) : (flags &~ 32);
             stream.writeInt32(flags);
+            if ((flags & 64) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                int count = logout_tokens.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    stream.writeByteArray(logout_tokens.get(a));
+                }
+            }
         }
     }
 
@@ -15150,56 +15866,64 @@ public class TLRPC {
         public String fwd_text;
         public boolean quiz;
         public boolean requires_password;
+        public long user_id;
+        public InputUser inputUser;
 
-		public static KeyboardButton TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-			KeyboardButton result = null;
-			switch (constructor) {
-				case 0xb16a6c29:
-					result = new TL_keyboardButtonRequestPhone();
-					break;
-				case 0x50f41ccf:
-					result = new TL_keyboardButtonGame();
-					break;
-				case 0x258aff05:
-					result = new TL_keyboardButtonUrl();
-					break;
-				case 0x568a748:
-					result = new TL_keyboardButtonSwitchInline();
-					break;
-				case 0xfc796b3f:
-					result = new TL_keyboardButtonRequestGeoLocation();
-					break;
-                case 0x10b78d29:
-                    result = new TL_keyboardButtonUrlAuth();
-                    break;
+        public static KeyboardButton TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            KeyboardButton result = null;
+            switch (constructor) {
                 case 0xd02e7fd4:
                     result = new TL_inputKeyboardButtonUrlAuth();
+                    break;
+                case 0xa2fa4880:
+                    result = new TL_keyboardButton();
+                    break;
+                case 0xfc796b3f:
+                    result = new TL_keyboardButtonRequestGeoLocation();
+                    break;
+                case 0x258aff05:
+                    result = new TL_keyboardButtonUrl();
+                    break;
+                case 0x50f41ccf:
+                    result = new TL_keyboardButtonGame();
+                    break;
+                case 0x683a5e46:
+                    result = new TL_keyboardButtonCallback_layer117();
+                    break;
+                case 0x568a748:
+                    result = new TL_keyboardButtonSwitchInline();
+                    break;
+                case 0xb16a6c29:
+                    result = new TL_keyboardButtonRequestPhone();
+                    break;
+                case 0x10b78d29:
+                    result = new TL_keyboardButtonUrlAuth();
                     break;
                 case 0xbbc7515d:
                     result = new TL_keyboardButtonRequestPoll();
                     break;
-				case 0xafd93fbb:
-					result = new TL_keyboardButtonBuy();
-					break;
-				case 0x683a5e46:
-					result = new TL_keyboardButtonCallback_layer117();
-					break;
-				case 0xa2fa4880:
-					result = new TL_keyboardButton();
-					break;
+                case 0xafd93fbb:
+                    result = new TL_keyboardButtonBuy();
+                    break;
+                case 0xe988037b:
+                    result = new TL_inputKeyboardButtonUserProfile();
+                    break;
+                case 0x308660c1:
+                    result = new TL_keyboardButtonUserProfile();
+                    break;
                 case 0x35bbdb6b:
                     result = new TL_keyboardButtonCallback();
                     break;
-			}
-			if (result == null && exception) {
-				throw new RuntimeException(String.format("can't parse magic %x in KeyboardButton", constructor));
-			}
-			if (result != null) {
-				result.readParams(stream, exception);
-			}
-			return result;
-		}
-	}
+            }
+            if (result == null && exception) {
+                throw new RuntimeException(String.format("can't parse magic %x in KeyboardButton", constructor));
+            }
+            if (result != null) {
+                result.readParams(stream, exception);
+            }
+            return result;
+        }
+    }
 
 	public static class TL_keyboardButtonRequestPhone extends KeyboardButton {
 		public static int constructor = 0xb16a6c29;
@@ -15352,6 +16076,36 @@ public class TLRPC {
                 stream.writeBool(quiz);
             }
             stream.writeString(text);
+        }
+    }
+
+    public static class TL_inputKeyboardButtonUserProfile extends KeyboardButton {
+        public static int constructor = 0xe988037b;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            text = stream.readString(exception);
+            inputUser = InputUser.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeString(text);
+            inputUser.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_keyboardButtonUserProfile extends KeyboardButton {
+        public static int constructor = 0x308660c1;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            text = stream.readString(exception);
+            user_id = stream.readInt64(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeString(text);
+            stream.writeInt64(user_id);
         }
     }
 
@@ -17624,74 +18378,6 @@ public class TLRPC {
             stream.writeInt32(count);
             for (int a = 0; a < count; a++) {
                 exclude_peers.get(a).serializeToStream(stream);
-            }
-        }
-    }
-
-    public static abstract class account_ChatThemes extends TLObject {
-
-        public static account_ChatThemes TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-            account_ChatThemes result = null;
-            switch (constructor) {
-                case 0xe011e1c4:
-                    result = new TL_account_chatThemesNotModified();
-                    break;
-                case 0xfe4cbebd:
-                    result = new TL_account_chatThemes();
-                    break;
-            }
-            if (result == null && exception) {
-                throw new RuntimeException(String.format("can't parse magic %x in account_ChatThemes", constructor));
-            }
-            if (result != null) {
-                result.readParams(stream, exception);
-            }
-            return result;
-        }
-    }
-
-    public static class TL_account_chatThemesNotModified extends account_ChatThemes {
-        public static int constructor = 0xe011e1c4;
-
-
-        public void serializeToStream(AbstractSerializedData stream) {
-            stream.writeInt32(constructor);
-        }
-    }
-
-    public static class TL_account_chatThemes extends account_ChatThemes {
-        public static int constructor = 0xfe4cbebd;
-
-        public int hash;
-        public ArrayList<TL_chatTheme> themes = new ArrayList<>();
-
-        public void readParams(AbstractSerializedData stream, boolean exception) {
-            hash = stream.readInt32(exception);
-            int magic = stream.readInt32(exception);
-            if (magic != 0x1cb5c415) {
-                if (exception) {
-                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
-                }
-                return;
-            }
-            int count = stream.readInt32(exception);
-            for (int a = 0; a < count; a++) {
-                TL_chatTheme object = TL_chatTheme.TLdeserialize(stream, stream.readInt32(exception), exception);
-                if (object == null) {
-                    return;
-                }
-                themes.add(object);
-            }
-        }
-
-        public void serializeToStream(AbstractSerializedData stream) {
-            stream.writeInt32(constructor);
-            stream.writeInt32(hash);
-            stream.writeInt32(0x1cb5c415);
-            int count = themes.size();
-            stream.writeInt32(count);
-            for (int a = 0; a < count; a++) {
-                themes.get(a).serializeToStream(stream);
             }
         }
     }
@@ -20163,6 +20849,12 @@ public class TLRPC {
 				case 0x4792929b:
 					result = new TL_messageActionScreenshotTaken();
 					break;
+                case 0x1baa035:
+                    result = new TL_messageActionPhoneNumberRequest();
+                    break;
+                case 0xebbca3cb:
+                    result = new TL_messageActionChatJoinedByRequest();
+                    break;
 				case 0x9fbab604:
 					result = new TL_messageActionHistoryClear();
 					break;
@@ -20555,6 +21247,24 @@ public class TLRPC {
 			stream.writeInt32(constructor);
 		}
 	}
+
+    public static class TL_messageActionPhoneNumberRequest extends MessageAction {
+        public static int constructor = 0x1baa035;
+
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+        }
+    }
+
+    public static class TL_messageActionChatJoinedByRequest extends MessageAction {
+        public static int constructor = 0xebbca3cb;
+
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+        }
+    }
 
     public static class TL_messageActionChatMigrateTo extends MessageAction {
         public static int constructor = 0xe1037f92;
@@ -21418,7 +22128,7 @@ public class TLRPC {
         public static int constructor = 0x9a3d8c6d;
 
         public long hash;
-        public ArrayList<Theme> themes = new ArrayList<>();
+        public ArrayList<TL_theme> themes = new ArrayList<>();
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
             hash = stream.readInt64(exception);
@@ -21431,7 +22141,7 @@ public class TLRPC {
             }
             int count = stream.readInt32(exception);
             for (int a = 0; a < count; a++) {
-                Theme object = Theme.TLdeserialize(stream, stream.readInt32(exception), exception);
+                TL_theme object = Theme.TLdeserialize(stream, stream.readInt32(exception), exception);
                 if (object == null) {
                     return;
                 }
@@ -22398,6 +23108,78 @@ public class TLRPC {
             stream.writeInt32(constructor);
             stream.writeString(key);
             value.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_users_userFull extends TLObject {
+        public static int constructor = 0x3b6d152e;
+
+        public UserFull full_user;
+        public ArrayList<Chat> chats = new ArrayList<>();
+        public ArrayList<User> users = new ArrayList<>();
+
+        public static TL_users_userFull TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_users_userFull.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_users_userFull", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_users_userFull result = new TL_users_userFull();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            full_user = UserFull.TLdeserialize(stream, stream.readInt32(exception), exception);
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Chat object = Chat.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                chats.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                User object = User.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                users.add(object);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            full_user.serializeToStream(stream);
+            stream.writeInt32(0x1cb5c415);
+            int count = chats.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                chats.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = users.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                users.get(a).serializeToStream(stream);
+            }
         }
     }
 
@@ -25622,6 +26404,78 @@ public class TLRPC {
 		}
 	}
 
+    public static class TL_messages_peerSettings extends TLObject {
+        public static int constructor = 0x6880b94d;
+
+        public TL_peerSettings settings;
+        public ArrayList<Chat> chats = new ArrayList<>();
+        public ArrayList<User> users = new ArrayList<>();
+
+        public static TL_messages_peerSettings TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_messages_peerSettings.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_messages_peerSettings", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_messages_peerSettings result = new TL_messages_peerSettings();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            settings = TL_peerSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Chat object = Chat.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                chats.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                User object = User.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                users.add(object);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            settings.serializeToStream(stream);
+            stream.writeInt32(0x1cb5c415);
+            int count = chats.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                chats.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = users.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                users.get(a).serializeToStream(stream);
+            }
+        }
+    }
+
     public static class TL_messages_checkedHistoryImportPeer extends TLObject {
         public static int constructor = 0xa24de717;
 
@@ -26166,6 +27020,9 @@ public class TLRPC {
                     break;
                 case 0x3504914f:
                     result = new TL_updateDialogFilters();
+                    break;
+                case 0x7063c3db:
+                    result = new TL_updatePendingJoinRequests();
                     break;
                 case 0x8e5e9873:
                     result = new TL_updateDcOptions();
@@ -27895,6 +28752,42 @@ public class TLRPC {
         }
     }
 
+    public static class TL_updatePendingJoinRequests extends Update {
+        public static int constructor = 0x7063c3db;
+
+        public Peer peer;
+        public int requests_pending;
+        public ArrayList<Long> recent_requesters = new ArrayList<>();
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            peer = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+            requests_pending = stream.readInt32(exception);
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                recent_requesters.add(stream.readInt64(exception));
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            stream.writeInt32(requests_pending);
+            stream.writeInt32(0x1cb5c415);
+            int count = recent_requesters.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                stream.writeInt64(recent_requesters.get(a));
+            }
+        }
+    }
+
     public static class TL_updateDcOptions extends Update {
         public static int constructor = 0x8e5e9873;
 
@@ -27956,7 +28849,7 @@ public class TLRPC {
         public TL_messages_stickerSet stickerset;
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
-            stickerset = TL_messages_stickerSet.TLdeserialize(stream, stream.readInt32(exception), exception);
+            stickerset = messages_StickerSet.TLdeserialize(stream, stream.readInt32(exception), exception);
         }
 
         public void serializeToStream(AbstractSerializedData stream) {
@@ -28910,6 +29803,41 @@ public class TLRPC {
             stream.writeInt64(admin_id);
             stream.writeInt32(invites_count);
             stream.writeInt32(revoked_invites_count);
+        }
+    }
+
+    public static class TL_auth_loggedOut extends TLObject {
+        public static int constructor = 0xc3a2835f;
+
+        public int flags;
+        public byte[] future_auth_token;
+
+        public static TL_auth_loggedOut TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_auth_loggedOut.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_auth_loggedOut", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_auth_loggedOut result = new TL_auth_loggedOut();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            if ((flags & 1) != 0) {
+                future_auth_token = stream.readByteArray(exception);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(flags);
+            if ((flags & 1) != 0) {
+                stream.writeByteArray(future_auth_token);
+            }
         }
     }
 
@@ -31787,8 +32715,8 @@ public class TLRPC {
 
     public static abstract class Theme extends TLObject {
 
-        public static Theme TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-            Theme result = null;
+        public static TL_theme TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            TL_theme result = null;
             switch (constructor) {
                 case 0x28f1114:
                     result = new TL_theme_layer131();
@@ -31799,8 +32727,11 @@ public class TLRPC {
                 case 0x483d270c:
                     result = new TL_themeDocumentNotModified_layer106();
                     break;
-                case 0xe802b8dc:
+                case 0xa00e67d6:
                     result = new TL_theme();
+                    break;
+                case 0xe802b8dc:
+                    result = new TL_theme_layer133();
                     break;
             }
             if (result == null && exception) {
@@ -31813,20 +32744,8 @@ public class TLRPC {
         }
     }
 
-    public static class TL_theme extends Theme {
+    public static class TL_theme_layer133 extends TL_theme {
         public static int constructor = 0xe802b8dc;
-
-        public int flags;
-        public boolean creator;
-        public boolean isDefault;
-        public boolean for_chat;
-        public long id;
-        public long access_hash;
-        public String slug;
-        public String title;
-        public Document document;
-        public ThemeSettings settings;
-        public int installs_count;
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -31841,7 +32760,8 @@ public class TLRPC {
                 document = Document.TLdeserialize(stream, stream.readInt32(exception), exception);
             }
             if ((flags & 8) != 0) {
-                settings = ThemeSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+                ThemeSettings settings = ThemeSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+                this.settings.add(settings);
             }
             if ((flags & 16) != 0) {
                 installs_count = stream.readInt32(exception);
@@ -31862,7 +32782,90 @@ public class TLRPC {
                 document.serializeToStream(stream);
             }
             if ((flags & 8) != 0) {
-                settings.serializeToStream(stream);
+                settings.get(0).serializeToStream(stream);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeInt32(installs_count);
+            }
+        }
+    }
+
+    public static class TL_theme extends Theme {
+        public static int constructor = 0xa00e67d6;
+
+        public int flags;
+        public boolean creator;
+        public boolean isDefault;
+        public boolean for_chat;
+        public long id;
+        public long access_hash;
+        public String slug;
+        public String title;
+        public Document document;
+        public ArrayList<ThemeSettings> settings = new ArrayList<>();
+        public String emoticon;
+        public int installs_count;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            creator = (flags & 1) != 0;
+            isDefault = (flags & 2) != 0;
+            for_chat = (flags & 32) != 0;
+            id = stream.readInt64(exception);
+            access_hash = stream.readInt64(exception);
+            slug = stream.readString(exception);
+            title = stream.readString(exception);
+            if ((flags & 4) != 0) {
+                document = Document.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 8) != 0) {
+                int magic = stream.readInt32(exception);
+                if (magic != 0x1cb5c415) {
+                    if (exception) {
+                        throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                    }
+                    return;
+                }
+                int count = stream.readInt32(exception);
+                for (int a = 0; a < count; a++) {
+                    TL_themeSettings object = TL_themeSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+                    if (object == null) {
+                        return;
+                    }
+                    settings.add(object);
+                }
+            }
+            if ((flags & 64) != 0) {
+                emoticon = stream.readString(exception);
+            }
+            if ((flags & 16) != 0) {
+                installs_count = stream.readInt32(exception);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = creator ? (flags | 1) : (flags &~ 1);
+            flags = isDefault ? (flags | 2) : (flags &~ 2);
+            flags = for_chat ? (flags | 32) : (flags &~ 32);
+            stream.writeInt32(flags);
+            stream.writeInt64(id);
+            stream.writeInt64(access_hash);
+            stream.writeString(slug);
+            stream.writeString(title);
+            if ((flags & 4) != 0) {
+                document.serializeToStream(stream);
+            }
+            if ((flags & 8) != 0) {
+                stream.writeInt32(0x1cb5c415);
+                int count = settings.size();
+                stream.writeInt32(count);
+                for (int a = 0; a < count; a++) {
+                    settings.get(a).serializeToStream(stream);
+                }
+            }
+            if ((flags & 64) != 0) {
+                stream.writeString(emoticon);
             }
             if ((flags & 16) != 0) {
                 stream.writeInt32(installs_count);
@@ -31886,7 +32889,7 @@ public class TLRPC {
                 document = Document.TLdeserialize(stream, stream.readInt32(exception), exception);
             }
             if ((flags & 8) != 0) {
-                settings = ThemeSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+                settings.add(ThemeSettings.TLdeserialize(stream, stream.readInt32(exception), exception));
             }
             installs_count = stream.readInt32(exception);
         }
@@ -31904,7 +32907,7 @@ public class TLRPC {
                 document.serializeToStream(stream);
             }
             if ((flags & 8) != 0) {
-                settings.serializeToStream(stream);
+                settings.get(0).serializeToStream(stream);
             }
             stream.writeInt32(installs_count);
         }
@@ -31944,7 +32947,7 @@ public class TLRPC {
         }
     }
 
-    public static class TL_themeDocumentNotModified_layer106 extends Theme {
+    public static class TL_themeDocumentNotModified_layer106 extends TL_theme {
         public static int constructor = 0x483d270c;
 
 
@@ -32234,11 +33237,12 @@ public class TLRPC {
 	}
 
     public static class TL_sponsoredMessage extends TLObject {
-        public static int constructor = 0x2a3c381f;
+        public static int constructor = 0xd151e19a;
 
         public int flags;
         public byte[] random_id;
         public Peer from_id;
+        public int channel_post;
         public String start_param;
         public String message;
         public ArrayList<MessageEntity> entities = new ArrayList<>();
@@ -32260,6 +33264,9 @@ public class TLRPC {
             flags = stream.readInt32(exception);
             random_id = stream.readByteArray(exception);
             from_id = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 4) != 0) {
+                channel_post = stream.readInt32(exception);
+            }
             if ((flags & 1) != 0) {
                 start_param = stream.readString(exception);
             }
@@ -32288,6 +33295,9 @@ public class TLRPC {
             stream.writeInt32(flags);
             stream.writeByteArray(random_id);
             from_id.serializeToStream(stream);
+            if ((flags & 4) != 0) {
+                stream.writeInt32(channel_post);
+            }
             if ((flags & 1) != 0) {
                 stream.writeString(start_param);
             }
@@ -32663,6 +33673,127 @@ public class TLRPC {
             for (int a = 0; a < count; a++) {
                 users.get(a).serializeToStream(stream);
             }
+        }
+    }
+
+    public static class TL_searchResultPosition extends TLObject {
+        public static int constructor = 0x7f648b67;
+
+        public int msg_id;
+        public int date;
+        public int offset;
+
+        public static TL_searchResultPosition TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_searchResultPosition.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_searchResultPosition", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_searchResultPosition result = new TL_searchResultPosition();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            msg_id = stream.readInt32(exception);
+            date = stream.readInt32(exception);
+            offset = stream.readInt32(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(msg_id);
+            stream.writeInt32(date);
+            stream.writeInt32(offset);
+        }
+    }
+
+    public static class TL_messages_searchResultsPositions extends TLObject {
+        public static int constructor = 0x53b22baf;
+
+        public int count;
+        public ArrayList<TL_searchResultPosition> positions = new ArrayList<>();
+
+        public static TL_messages_searchResultsPositions TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_messages_searchResultsPositions.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_messages_searchResultsPositions", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_messages_searchResultsPositions result = new TL_messages_searchResultsPositions();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            count = stream.readInt32(exception);
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                TL_searchResultPosition object = TL_searchResultPosition.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                positions.add(object);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(count);
+            stream.writeInt32(0x1cb5c415);
+            int count = positions.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                positions.get(a).serializeToStream(stream);
+            }
+        }
+    }
+
+    public static class TL_searchResultsCalendarPeriod extends TLObject {
+        public static int constructor = 0xc9b0539f;
+
+        public int date;
+        public int min_msg_id;
+        public int max_msg_id;
+        public int count;
+
+        public static TL_searchResultsCalendarPeriod TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_searchResultsCalendarPeriod.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_searchResultsCalendarPeriod", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_searchResultsCalendarPeriod result = new TL_searchResultsCalendarPeriod();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            date = stream.readInt32(exception);
+            min_msg_id = stream.readInt32(exception);
+            max_msg_id = stream.readInt32(exception);
+            count = stream.readInt32(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(date);
+            stream.writeInt32(min_msg_id);
+            stream.writeInt32(max_msg_id);
+            stream.writeInt32(count);
         }
     }
 
@@ -33047,6 +34178,8 @@ public class TLRPC {
         public TL_chatAdminRights admin_rights;
         public TL_chatBannedRights banned_rights;
         public String rank;
+        public boolean via_invite;
+        public long user_id;
 
 		public static ChannelParticipant TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
 			ChannelParticipant result = null;
@@ -33087,8 +34220,11 @@ public class TLRPC {
                 case 0xa82fa898:
                     result = new TL_channelParticipantAdmin_layer92();
                     break;
-                case 0x28a8bc67:
+                case 0x35a8bfa7:
                     result = new TL_channelParticipantSelf();
+                    break;
+                case 0x28a8bc67:
+                    result = new TL_channelParticipantSelf_layer133();
                     break;
                 case 0x50a1dfd6:
                     result = new TL_channelParticipantBanned_layer131();
@@ -33143,6 +34279,27 @@ public class TLRPC {
     }
 
     public static class TL_channelParticipantSelf extends ChannelParticipant {
+        public static int constructor = 0x35a8bfa7;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            via_invite = (flags & 1) != 0;
+            user_id = stream.readInt64(exception);
+            inviter_id = stream.readInt64(exception);
+            date = stream.readInt32(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = via_invite ? (flags | 1) : (flags &~ 1);
+            stream.writeInt32(flags);
+            stream.writeInt64(user_id);
+            stream.writeInt64(inviter_id);
+            stream.writeInt32(date);
+        }
+    }
+
+    public static class TL_channelParticipantSelf_layer133 extends ChannelParticipant {
         public static int constructor = 0x28a8bc67;
 
 
@@ -35280,6 +36437,9 @@ public class TLRPC {
                 case 0x5f5c95f1:
                     result = new TL_channelAdminLogEventActionTogglePreHistoryHidden();
                     break;
+                case 0xafb6144a:
+                    result = new TL_channelAdminLogEventActionParticipantJoinByRequest();
+                    break;
                 case 0xe9e82c18:
                     result = new TL_channelAdminLogEventActionUpdatePinned();
                     break;
@@ -35298,6 +36458,9 @@ public class TLRPC {
                 case 0x50c7ac8:
                     result = new TL_channelAdminLogEventActionChangeLinkedChat();
                     break;
+                case 0x278f2868:
+                    result = new TL_channelAdminLogEventActionSendMessage();
+                    break;
                 case 0x1b7907ae:
                     result = new TL_channelAdminLogEventActionToggleInvites();
                     break;
@@ -35312,6 +36475,9 @@ public class TLRPC {
                     break;
                 case 0x6e941a38:
                     result = new TL_channelAdminLogEventActionChangeHistoryTTL();
+                    break;
+                case 0xcb2ac766:
+                    result = new TL_channelAdminLogEventActionToggleNoForwards();
                     break;
             }
             if (result == null && exception) {
@@ -35675,6 +36841,24 @@ public class TLRPC {
         }
     }
 
+    public static class TL_channelAdminLogEventActionParticipantJoinByRequest extends ChannelAdminLogEventAction {
+        public static int constructor = 0xafb6144a;
+
+        public ExportedChatInvite invite;
+        public long approved_by;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            invite = ExportedChatInvite.TLdeserialize(stream, stream.readInt32(exception), exception);
+            approved_by = stream.readInt64(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            invite.serializeToStream(stream);
+            stream.writeInt64(approved_by);
+        }
+    }
+
     public static class TL_channelAdminLogEventActionUpdatePinned extends ChannelAdminLogEventAction {
         public static int constructor = 0xe9e82c18;
 
@@ -35771,6 +36955,21 @@ public class TLRPC {
         }
     }
 
+    public static class TL_channelAdminLogEventActionSendMessage extends ChannelAdminLogEventAction {
+        public static int constructor = 0x278f2868;
+
+        public Message message;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            message = Message.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            message.serializeToStream(stream);
+        }
+    }
+
     public static class TL_channelAdminLogEventActionToggleInvites extends ChannelAdminLogEventAction {
         public static int constructor = 0x1b7907ae;
 
@@ -35849,6 +37048,21 @@ public class TLRPC {
             stream.writeInt32(constructor);
             stream.writeInt32(prev_value);
             stream.writeInt32(new_value);
+        }
+    }
+
+    public static class TL_channelAdminLogEventActionToggleNoForwards extends ChannelAdminLogEventAction {
+        public static int constructor = 0xcb2ac766;
+
+        public boolean new_value;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            new_value = stream.readBool(exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeBool(new_value);
         }
     }
 
@@ -36267,6 +37481,7 @@ public class TLRPC {
         public boolean call_not_empty;
         public boolean fake;
         public boolean gigagroup;
+        public boolean noforwards;
         public ArrayList<TL_restrictionReason> restriction_reason = new ArrayList<>();
         public TL_channelAdminRights_layer92 admin_rights_layer92;
         public TL_channelBannedRights_layer92 banned_rights_layer92;
@@ -36458,6 +37673,7 @@ public class TLRPC {
             deactivated = (flags & 32) != 0;
             call_active = (flags & 8388608) != 0;
             call_not_empty = (flags & 16777216) != 0;
+            noforwards = (flags & 33554432) != 0;
             id = stream.readInt64(exception);
             title = stream.readString(exception);
             photo = ChatPhoto.TLdeserialize(stream, stream.readInt32(exception), exception);
@@ -36483,6 +37699,7 @@ public class TLRPC {
             flags = deactivated ? (flags | 32) : (flags &~ 32);
             flags = call_active ? (flags | 8388608) : (flags &~ 8388608);
             flags = call_not_empty ? (flags | 16777216) : (flags &~ 16777216);
+            flags = noforwards ? (flags | 33554432) : (flags &~ 33554432);
             stream.writeInt32(flags);
             stream.writeInt64(id);
             stream.writeString(title);
@@ -36737,6 +37954,7 @@ public class TLRPC {
             call_not_empty = (flags & 16777216) != 0;
             fake = (flags & 33554432) != 0;
             gigagroup = (flags & 67108864) != 0;
+            noforwards = (flags & 134217728) != 0;
             id = stream.readInt64(exception);
             if ((flags & 8192) != 0) {
                 access_hash = stream.readInt64(exception);
@@ -36796,6 +38014,7 @@ public class TLRPC {
             flags = call_not_empty ? (flags | 16777216) : (flags &~ 16777216);
             flags = fake ? (flags | 33554432) : (flags &~ 33554432);
             flags = gigagroup ? (flags | 67108864) : (flags &~ 67108864);
+            flags = noforwards ? (flags | 134217728) : (flags &~ 134217728);
             stream.writeInt32(flags);
             stream.writeInt64(id);
             if ((flags & 8192) != 0) {
@@ -38073,6 +39292,9 @@ public class TLRPC {
 				case 0x226ccefb:
 					result = new TL_auth_codeTypeFlashCall();
 					break;
+                case 0xd61ad6ee:
+                    result = new TL_auth_codeTypeMissedCall();
+                    break;
 			}
 			if (result == null && exception) {
 				throw new RuntimeException(String.format("can't parse magic %x in auth_CodeType", constructor));
@@ -38110,6 +39332,15 @@ public class TLRPC {
 			stream.writeInt32(constructor);
 		}
 	}
+
+    public static class TL_auth_codeTypeMissedCall extends auth_CodeType {
+        public static int constructor = 0xd61ad6ee;
+
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+        }
+    }
 
 	public static abstract class MessagesFilter extends TLObject {
 		public int flags;
@@ -39418,11 +40649,14 @@ public class TLRPC {
 
     public static abstract class ExportedChatInvite extends TLObject {
 
-        public static ExportedChatInvite TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-            ExportedChatInvite result = null;
+        public static TL_chatInviteExported TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            TL_chatInviteExported result = null;
             switch (constructor) {
-                case 0xb18105e8:
+                case 0xab4a819:
                     result = new TL_chatInviteExported();
+                    break;
+                case 0xb18105e8:
+                    result = new TL_chatInviteExported_layer133();
                     break;
                 case 0x69df3769:
                     result = new TL_chatInviteEmpty_layer122();
@@ -39445,11 +40679,12 @@ public class TLRPC {
     }
 
     public static class TL_chatInviteExported extends ExportedChatInvite {
-        public static int constructor = 0xb18105e8;
+        public static int constructor = 0xab4a819;
 
         public int flags;
         public boolean revoked;
         public boolean permanent;
+        public boolean request_needed;
         public String link;
         public long admin_id;
         public int date;
@@ -39457,8 +40692,71 @@ public class TLRPC {
         public int expire_date;
         public int usage_limit;
         public int usage;
+        public int requested;
+        public String title;
         public ArrayList<User> importers; //custom
         public boolean expired; //custom
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            revoked = (flags & 1) != 0;
+            permanent = (flags & 32) != 0;
+            request_needed = (flags & 64) != 0;
+            link = stream.readString(exception);
+            admin_id = stream.readInt64(exception);
+            date = stream.readInt32(exception);
+            if ((flags & 16) != 0) {
+                start_date = stream.readInt32(exception);
+            }
+            if ((flags & 2) != 0) {
+                expire_date = stream.readInt32(exception);
+            }
+            if ((flags & 4) != 0) {
+                usage_limit = stream.readInt32(exception);
+            }
+            if ((flags & 8) != 0) {
+                usage = stream.readInt32(exception);
+            }
+            if ((flags & 128) != 0) {
+                requested = stream.readInt32(exception);
+            }
+            if ((flags & 256) != 0) {
+                title = stream.readString(exception);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = revoked ? (flags | 1) : (flags &~ 1);
+            flags = permanent ? (flags | 32) : (flags &~ 32);
+            flags = request_needed ? (flags | 64) : (flags &~ 64);
+            stream.writeInt32(flags);
+            stream.writeString(link);
+            stream.writeInt64(admin_id);
+            stream.writeInt32(date);
+            if ((flags & 16) != 0) {
+                stream.writeInt32(start_date);
+            }
+            if ((flags & 2) != 0) {
+                stream.writeInt32(expire_date);
+            }
+            if ((flags & 4) != 0) {
+                stream.writeInt32(usage_limit);
+            }
+            if ((flags & 8) != 0) {
+                stream.writeInt32(usage);
+            }
+            if ((flags & 128) != 0) {
+                stream.writeInt32(requested);
+            }
+            if ((flags & 256) != 0) {
+                stream.writeString(title);
+            }
+        }
+    }
+
+    public static class TL_chatInviteExported_layer133 extends TL_chatInviteExported {
+        public static int constructor = 0xb18105e8;
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -39504,7 +40802,7 @@ public class TLRPC {
         }
     }
 
-    public static class TL_chatInviteEmpty_layer122 extends ExportedChatInvite {
+    public static class TL_chatInviteEmpty_layer122 extends TL_chatInviteExported {
         public static int constructor = 0x69df3769;
 
 
@@ -39806,12 +41104,17 @@ public class TLRPC {
         public int ttl_period;
         public TL_peerSettings settings;
         public String theme_emoticon;
+        public long id;
+        public String private_forward_name;
 
         public static UserFull TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
             UserFull result = null;
             switch (constructor) {
-                case 0xd697ff05:
+                case 0xcf366521:
                     result = new TL_userFull();
+                    break;
+                case 0xd697ff05:
+                    result = new TL_userFull_layer134();
                     break;
                 case 0x139a9a77:
                     result = new TL_userFull_layer131();
@@ -39837,6 +41140,87 @@ public class TLRPC {
     }
 
     public static class TL_userFull extends UserFull {
+        public static int constructor = 0xcf366521;
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            blocked = (flags & 1) != 0;
+            phone_calls_available = (flags & 16) != 0;
+            phone_calls_private = (flags & 32) != 0;
+            can_pin_message = (flags & 128) != 0;
+            has_scheduled = (flags & 4096) != 0;
+            video_calls_available = (flags & 8192) != 0;
+            id = stream.readInt64(exception);
+            if ((flags & 2) != 0) {
+                about = stream.readString(exception);
+            }
+            settings = TL_peerSettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 4) != 0) {
+                profile_photo = Photo.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            notify_settings = PeerNotifySettings.TLdeserialize(stream, stream.readInt32(exception), exception);
+            if ((flags & 8) != 0) {
+                bot_info = BotInfo.TLdeserialize(stream, stream.readInt32(exception), exception);
+            }
+            if ((flags & 64) != 0) {
+                pinned_msg_id = stream.readInt32(exception);
+            }
+            common_chats_count = stream.readInt32(exception);
+            if ((flags & 2048) != 0) {
+                folder_id = stream.readInt32(exception);
+            }
+            if ((flags & 16384) != 0) {
+                ttl_period = stream.readInt32(exception);
+            }
+            if ((flags & 32768) != 0) {
+                theme_emoticon = stream.readString(exception);
+            }
+            if ((flags & 65536) != 0) {
+                private_forward_name = stream.readString(exception);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = blocked ? (flags | 1) : (flags &~ 1);
+            flags = phone_calls_available ? (flags | 16) : (flags &~ 16);
+            flags = phone_calls_private ? (flags | 32) : (flags &~ 32);
+            flags = can_pin_message ? (flags | 128) : (flags &~ 128);
+            flags = has_scheduled ? (flags | 4096) : (flags &~ 4096);
+            flags = video_calls_available ? (flags | 8192) : (flags &~ 8192);
+            stream.writeInt32(flags);
+            stream.writeInt64(id);
+            if ((flags & 2) != 0) {
+                stream.writeString(about);
+            }
+            settings.serializeToStream(stream);
+            if ((flags & 4) != 0) {
+                profile_photo.serializeToStream(stream);
+            }
+            notify_settings.serializeToStream(stream);
+            if ((flags & 8) != 0) {
+                bot_info.serializeToStream(stream);
+            }
+            if ((flags & 64) != 0) {
+                stream.writeInt32(pinned_msg_id);
+            }
+            stream.writeInt32(common_chats_count);
+            if ((flags & 2048) != 0) {
+                stream.writeInt32(folder_id);
+            }
+            if ((flags & 16384) != 0) {
+                stream.writeInt32(ttl_period);
+            }
+            if ((flags & 32768) != 0) {
+                stream.writeString(theme_emoticon);
+            }
+            if ((flags & 65536) != 0) {
+                stream.writeString(private_forward_name);
+            }
+        }
+    }
+
+    public static class TL_userFull_layer134 extends TL_userFull {
         public static int constructor = 0xd697ff05;
 
 
@@ -42510,52 +43894,55 @@ public class TLRPC {
         }
     }
 
-	public static class TL_account_authorizations extends TLObject {
-		public static int constructor = 0x1250abde;
+    public static class TL_account_authorizations extends TLObject {
+        public static int constructor = 0x4bff8ea0;
 
-		public ArrayList<TL_authorization> authorizations = new ArrayList<>();
+        public int authorization_ttl_days;
+        public ArrayList<TL_authorization> authorizations = new ArrayList<>();
 
-		public static TL_account_authorizations TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
-			if (TL_account_authorizations.constructor != constructor) {
-				if (exception) {
-					throw new RuntimeException(String.format("can't parse magic %x in TL_account_authorizations", constructor));
-				} else {
-					return null;
-				}
+        public static TL_account_authorizations TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_account_authorizations.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_account_authorizations", constructor));
+                } else {
+                    return null;
+                }
             }
             TL_account_authorizations result = new TL_account_authorizations();
-			result.readParams(stream, exception);
-			return result;
-		}
+            result.readParams(stream, exception);
+            return result;
+        }
 
-		public void readParams(AbstractSerializedData stream, boolean exception) {
-			int magic = stream.readInt32(exception);
-			if (magic != 0x1cb5c415) {
-				if (exception) {
-					throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
-				}
-				return;
-			}
-			int count = stream.readInt32(exception);
-			for (int a = 0; a < count; a++) {
-				TL_authorization object = TL_authorization.TLdeserialize(stream, stream.readInt32(exception), exception);
-				if (object == null) {
-					return;
-				}
-				authorizations.add(object);
-			}
-		}
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            authorization_ttl_days = stream.readInt32(exception);
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                TL_authorization object = TL_authorization.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                authorizations.add(object);
+            }
+        }
 
-		public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-			stream.writeInt32(0x1cb5c415);
-			int count = authorizations.size();
-			stream.writeInt32(count);
-			for (int a = 0; a < count; a++) {
-				authorizations.get(a).serializeToStream(stream);
-			}
-		}
-	}
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(authorization_ttl_days);
+            stream.writeInt32(0x1cb5c415);
+            int count = authorizations.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                authorizations.get(a).serializeToStream(stream);
+            }
+        }
+    }
 
 	public static class TL_paymentRequestedInfo extends TLObject {
 		public static int constructor = 0x909c3f94;
@@ -42674,18 +44061,18 @@ public class TLRPC {
 		}
 	}
 
-	public static class TL_auth_logOut extends TLObject {
-		public static int constructor = 0x5717da40;
+    public static class TL_auth_logOut extends TLObject {
+        public static int constructor = 0x3e72ba19;
 
 
-		public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
-			return Bool.TLdeserialize(stream, constructor, exception);
-		}
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_auth_loggedOut.TLdeserialize(stream, constructor, exception);
+        }
 
         public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-		}
-	}
+            stream.writeInt32(constructor);
+        }
+    }
 
 	public static class TL_auth_resetAuthorizations extends TLObject {
 		public static int constructor = 0x9fab0d1a;
@@ -43034,34 +44421,74 @@ public class TLRPC {
     }
 
     public static class TL_account_getChatThemes extends TLObject {
-        public static int constructor = 0xd6d71d7b;
+        public static int constructor = 0xd638de89;
 
-        public int hash;
+        public long hash;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
-            return account_ChatThemes.TLdeserialize(stream, constructor, exception);
+            return account_Themes.TLdeserialize(stream, constructor, exception);
         }
 
         public void serializeToStream(AbstractSerializedData stream) {
             stream.writeInt32(constructor);
-            stream.writeInt32(hash);
+            stream.writeInt64(hash);
         }
     }
 
-	public static class TL_users_getFullUser extends TLObject {
-		public static int constructor = 0xca30a5b1;
+    public static class TL_account_setAuthorizationTTL extends TLObject {
+        public static int constructor = 0xbf899aa0;
 
-		public InputUser id;
+        public int authorization_ttl_days;
 
-		public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
-			return UserFull.TLdeserialize(stream, constructor, exception);
-		}
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Bool.TLdeserialize(stream, constructor, exception);
+        }
 
-		public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-			id.serializeToStream(stream);
-		}
-	}
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(authorization_ttl_days);
+        }
+    }
+
+    public static class TL_account_changeAuthorizationSettings extends TLObject {
+        public static int constructor = 0x40f48462;
+
+        public int flags;
+        public long hash;
+        public boolean encrypted_requests_disabled;
+        public boolean call_requests_disabled;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Bool.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(flags);
+            stream.writeInt64(hash);
+            if ((flags & 1) != 0) {
+                stream.writeBool(encrypted_requests_disabled);
+            }
+            if ((flags & 2) != 0) {
+                stream.writeBool(call_requests_disabled);
+            }
+        }
+    }
+
+    public static class TL_users_getFullUser extends TLObject {
+        public static int constructor = 0xb60f5918;
+
+        public InputUser id;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_users_userFull.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            id.serializeToStream(stream);
+        }
+    }
 
 	public static class TL_contacts_getStatuses extends TLObject {
 		public static int constructor = 0xc4a353ee;
@@ -43659,13 +45086,15 @@ public class TLRPC {
 	}
 
     public static class TL_messages_deleteHistory extends TLObject {
-        public static int constructor = 0x1c015b09;
+        public static int constructor = 0xb08f922a;
 
         public int flags;
         public boolean just_clear;
         public boolean revoke;
         public InputPeer peer;
         public int max_id;
+        public int min_date;
+        public int max_date;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return TL_messages_affectedHistory.TLdeserialize(stream, constructor, exception);
@@ -43678,6 +45107,12 @@ public class TLRPC {
             stream.writeInt32(flags);
             peer.serializeToStream(stream);
             stream.writeInt32(max_id);
+            if ((flags & 4) != 0) {
+                stream.writeInt32(min_date);
+            }
+            if ((flags & 8) != 0) {
+                stream.writeInt32(max_date);
+            }
         }
     }
 
@@ -43938,7 +45373,7 @@ public class TLRPC {
     }
 
     public static class TL_messages_sendMessage extends TLObject {
-        public static int constructor = 0x520c3870;
+        public static int constructor = 0xd9d75a4;
 
         public int flags;
         public boolean no_webpage;
@@ -43952,6 +45387,7 @@ public class TLRPC {
         public ReplyMarkup reply_markup;
         public ArrayList<MessageEntity> entities = new ArrayList<>();
         public int schedule_date;
+        public InputPeer send_as;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return Updates.TLdeserialize(stream, constructor, exception);
@@ -43984,11 +45420,14 @@ public class TLRPC {
             if ((flags & 1024) != 0) {
                 stream.writeInt32(schedule_date);
             }
+            if ((flags & 8192) != 0) {
+                send_as.serializeToStream(stream);
+            }
         }
     }
 
     public static class TL_messages_sendMedia extends TLObject {
-        public static int constructor = 0x3491eba9;
+        public static int constructor = 0xe25ff8e0;
 
         public int flags;
         public boolean silent;
@@ -44002,6 +45441,7 @@ public class TLRPC {
         public ReplyMarkup reply_markup;
         public ArrayList<MessageEntity> entities = new ArrayList<>();
         public int schedule_date;
+        public InputPeer send_as;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return Updates.TLdeserialize(stream, constructor, exception);
@@ -44034,11 +45474,14 @@ public class TLRPC {
             if ((flags & 1024) != 0) {
                 stream.writeInt32(schedule_date);
             }
+            if ((flags & 8192) != 0) {
+                send_as.serializeToStream(stream);
+            }
         }
     }
 
     public static class TL_messages_forwardMessages extends TLObject {
-        public static int constructor = 0xd9fee60e;
+        public static int constructor = 0xcc30290b;
 
         public int flags;
         public boolean silent;
@@ -44051,6 +45494,7 @@ public class TLRPC {
         public ArrayList<Long> random_id = new ArrayList<>();
         public InputPeer to_peer;
         public int schedule_date;
+        public InputPeer send_as;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return Updates.TLdeserialize(stream, constructor, exception);
@@ -44081,6 +45525,9 @@ public class TLRPC {
             if ((flags & 1024) != 0) {
                 stream.writeInt32(schedule_date);
             }
+            if ((flags & 8192) != 0) {
+                send_as.serializeToStream(stream);
+            }
         }
     }
 
@@ -44099,20 +45546,20 @@ public class TLRPC {
 		}
 	}
 
-	public static class TL_messages_getPeerSettings extends TLObject {
-		public static int constructor = 0x3672e09c;
+    public static class TL_messages_getPeerSettings extends TLObject {
+        public static int constructor = 0xefd9a6a2;
 
-		public InputPeer peer;
+        public InputPeer peer;
 
-		public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
-			return TL_peerSettings.TLdeserialize(stream, constructor, exception);
-		}
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_messages_peerSettings.TLdeserialize(stream, constructor, exception);
+        }
 
-		public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-			peer.serializeToStream(stream);
-		}
-	}
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+        }
+    }
 
     public static class TL_messages_report extends TLObject {
         public static int constructor = 0x8953ab4e;
@@ -44270,6 +45717,27 @@ public class TLRPC {
 			stream.writeString(title);
 		}
 	}
+
+    public static class TL_messages_getSearchResultsCalendar extends TLObject {
+        public static int constructor = 0x49f0bde9;
+
+        public InputPeer peer;
+        public MessagesFilter filter;
+        public int offset_id;
+        public int offset_date;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_messages_searchResultsCalendar.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            filter.serializeToStream(stream);
+            stream.writeInt32(offset_id);
+            stream.writeInt32(offset_date);
+        }
+    }
 
 	public static class TL_updates_getState extends TLObject {
 		public static int constructor = 0xedd4882a;
@@ -45904,13 +47372,15 @@ public class TLRPC {
 	}
 
     public static class TL_messages_exportChatInvite extends TLObject {
-        public static int constructor = 0x14b9bcd7;
+        public static int constructor = 0xa02ce5d5;
 
         public int flags;
         public boolean legacy_revoke_permanent;
+        public boolean request_needed;
         public InputPeer peer;
         public int expire_date;
         public int usage_limit;
+        public String title;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return ExportedChatInvite.TLdeserialize(stream, constructor, exception);
@@ -45919,6 +47389,7 @@ public class TLRPC {
         public void serializeToStream(AbstractSerializedData stream) {
             stream.writeInt32(constructor);
             flags = legacy_revoke_permanent ? (flags | 4) : (flags &~ 4);
+            flags = request_needed ? (flags | 8) : (flags &~ 8);
             stream.writeInt32(flags);
             peer.serializeToStream(stream);
             if ((flags & 1) != 0) {
@@ -45926,6 +47397,9 @@ public class TLRPC {
             }
             if ((flags & 2) != 0) {
                 stream.writeInt32(usage_limit);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeString(title);
             }
         }
     }
@@ -46112,7 +47586,7 @@ public class TLRPC {
 	}
 
     public static class TL_messages_sendInlineBotResult extends TLObject {
-        public static int constructor = 0x220815b0;
+        public static int constructor = 0x7aa11297;
 
         public int flags;
         public boolean silent;
@@ -46125,6 +47599,7 @@ public class TLRPC {
         public long query_id;
         public String id;
         public int schedule_date;
+        public InputPeer send_as;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return Updates.TLdeserialize(stream, constructor, exception);
@@ -46146,6 +47621,9 @@ public class TLRPC {
             stream.writeString(id);
             if ((flags & 1024) != 0) {
                 stream.writeInt32(schedule_date);
+            }
+            if ((flags & 8192) != 0) {
+                send_as.serializeToStream(stream);
             }
         }
     }
@@ -46822,7 +48300,7 @@ public class TLRPC {
     }
 
     public static class TL_messages_sendMultiMedia extends TLObject {
-        public static int constructor = 0xcc0110cb;
+        public static int constructor = 0xf803138f;
 
         public int flags;
         public boolean silent;
@@ -46832,6 +48310,7 @@ public class TLRPC {
         public int reply_to_msg_id;
         public ArrayList<TL_inputSingleMedia> multi_media = new ArrayList<>();
         public int schedule_date;
+        public InputPeer send_as;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return Updates.TLdeserialize(stream, constructor, exception);
@@ -46855,6 +48334,9 @@ public class TLRPC {
             }
             if ((flags & 1024) != 0) {
                 stream.writeInt32(schedule_date);
+            }
+            if ((flags & 8192) != 0) {
+                send_as.serializeToStream(stream);
             }
         }
     }
@@ -47350,6 +48832,141 @@ public class TLRPC {
         }
     }
 
+    public static class TL_messages_searchResultsCalendar extends TLObject {
+        public static int constructor = 0x147ee23c;
+
+        public int flags;
+        public boolean inexact;
+        public int count;
+        public int min_date;
+        public int min_msg_id;
+        public int offset_id_offset;
+        public ArrayList<TL_searchResultsCalendarPeriod> periods = new ArrayList<>();
+        public ArrayList<Message> messages = new ArrayList<>();
+        public ArrayList<Chat> chats = new ArrayList<>();
+        public ArrayList<User> users = new ArrayList<>();
+
+        public static TL_messages_searchResultsCalendar TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_messages_searchResultsCalendar.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_messages_searchResultsCalendar", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_messages_searchResultsCalendar result = new TL_messages_searchResultsCalendar();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            inexact = (flags & 1) != 0;
+            count = stream.readInt32(exception);
+            min_date = stream.readInt32(exception);
+            min_msg_id = stream.readInt32(exception);
+            if ((flags & 2) != 0) {
+                offset_id_offset = stream.readInt32(exception);
+            }
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                TL_searchResultsCalendarPeriod object = TL_searchResultsCalendarPeriod.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                periods.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Message object = Message.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                messages.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Chat object = Chat.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                chats.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                User object = User.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                users.add(object);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = inexact ? (flags | 1) : (flags &~ 1);
+            stream.writeInt32(flags);
+            stream.writeInt32(count);
+            stream.writeInt32(min_date);
+            stream.writeInt32(min_msg_id);
+            if ((flags & 2) != 0) {
+                stream.writeInt32(offset_id_offset);
+            }
+            stream.writeInt32(0x1cb5c415);
+            int count = periods.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                periods.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = messages.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                messages.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = chats.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                chats.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = users.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                users.get(a).serializeToStream(stream);
+            }
+        }
+    }
+
     public static class TL_messages_getMessageReactionsList extends TLObject {
         public static int constructor = 0x15b1376a;
 
@@ -47643,7 +49260,7 @@ public class TLRPC {
     }
 
     public static class TL_messages_editExportedChatInvite extends TLObject {
-        public static int constructor = 0x2e4ffbe;
+        public static int constructor = 0xbdca2f75;
 
         public int flags;
         public boolean revoked;
@@ -47651,6 +49268,8 @@ public class TLRPC {
         public String link;
         public int expire_date;
         public int usage_limit;
+        public boolean request_needed;
+        public String title;
 
         public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
             return messages_ExportedChatInvite.TLdeserialize(stream, constructor, exception);
@@ -47667,6 +49286,12 @@ public class TLRPC {
             }
             if ((flags & 2) != 0) {
                 stream.writeInt32(usage_limit);
+            }
+            if ((flags & 8) != 0) {
+                stream.writeBool(request_needed);
+            }
+            if ((flags & 16) != 0) {
+                stream.writeString(title);
             }
         }
     }
@@ -47721,10 +49346,13 @@ public class TLRPC {
     }
 
     public static class TL_messages_getChatInviteImporters extends TLObject {
-        public static int constructor = 0x26fb7289;
+        public static int constructor = 0xdf04dd4e;
 
+        public int flags;
+        public boolean requested;
         public InputPeer peer;
         public String link;
+        public String q;
         public int offset_date;
         public InputUser offset_user;
         public int limit;
@@ -47735,11 +49363,96 @@ public class TLRPC {
 
         public void serializeToStream(AbstractSerializedData stream) {
             stream.writeInt32(constructor);
+            flags = requested ? (flags | 1) : (flags &~ 1);
+            stream.writeInt32(flags);
             peer.serializeToStream(stream);
-            stream.writeString(link);
+            if ((flags & 2) != 0) {
+                stream.writeString(link);
+            }
+            if ((flags & 4) != 0) {
+                stream.writeString(q);
+            }
             stream.writeInt32(offset_date);
             offset_user.serializeToStream(stream);
             stream.writeInt32(limit);
+        }
+    }
+
+    public static class TL_messages_hideChatJoinRequest extends TLObject {
+        public static int constructor = 0x7fe7e815;
+
+        public int flags;
+        public boolean approved;
+        public InputPeer peer;
+        public InputUser user_id;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Updates.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = approved ? (flags | 1) : (flags &~ 1);
+            stream.writeInt32(flags);
+            peer.serializeToStream(stream);
+            user_id.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_messages_hideAllChatJoinRequests extends TLObject {
+        public static int constructor = 0xe085f4ea;
+
+        public int flags;
+        public boolean approved;
+        public InputPeer peer;
+        public String link;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Updates.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = approved ? (flags | 1) : (flags &~ 1);
+            stream.writeInt32(flags);
+            peer.serializeToStream(stream);
+            if ((flags & 2) != 0) {
+                stream.writeString(link);
+            }
+        }
+    }
+
+    public static class TL_messages_toggleNoForwards extends TLObject {
+        public static int constructor = 0xb11eafa2;
+
+        public InputPeer peer;
+        public boolean enabled;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Updates.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            stream.writeBool(enabled);
+        }
+    }
+
+    public static class TL_messages_saveDefaultSendAs extends TLObject {
+        public static int constructor = 0xccfddf96;
+
+        public InputPeer peer;
+        public InputPeer send_as;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Bool.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            send_as.serializeToStream(stream);
         }
     }
 
@@ -48175,46 +49888,46 @@ public class TLRPC {
 		}
 	}
 
-	public static class TL_channels_deleteUserHistory extends TLObject {
-		public static int constructor = 0xd10dd71b;
+    public static class TL_channels_deleteParticipantHistory extends TLObject {
+        public static int constructor = 0x367544db;
 
-		public InputChannel channel;
-		public InputUser user_id;
+        public InputChannel channel;
+        public InputPeer participant;
 
-		public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
-			return TL_messages_affectedHistory.TLdeserialize(stream, constructor, exception);
-		}
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_messages_affectedHistory.TLdeserialize(stream, constructor, exception);
+        }
 
-		public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-			channel.serializeToStream(stream);
-			user_id.serializeToStream(stream);
-		}
-	}
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            channel.serializeToStream(stream);
+            participant.serializeToStream(stream);
+        }
+    }
 
-	public static class TL_channels_reportSpam extends TLObject {
-		public static int constructor = 0xfe087810;
+    public static class TL_channels_reportSpam extends TLObject {
+        public static int constructor = 0xf44a8315;
 
-		public InputChannel channel;
-		public InputUser user_id;
-		public ArrayList<Integer> id = new ArrayList<>();
+        public InputChannel channel;
+        public InputPeer participant;
+        public ArrayList<Integer> id = new ArrayList<>();
 
-		public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
-			return Bool.TLdeserialize(stream, constructor, exception);
-		}
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return Bool.TLdeserialize(stream, constructor, exception);
+        }
 
-		public void serializeToStream(AbstractSerializedData stream) {
-			stream.writeInt32(constructor);
-			channel.serializeToStream(stream);
-			user_id.serializeToStream(stream);
-			stream.writeInt32(0x1cb5c415);
-			int count = id.size();
-			stream.writeInt32(count);
-			for (int a = 0; a < count; a++) {
-				stream.writeInt32(id.get(a));
-			}
-		}
-	}
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            channel.serializeToStream(stream);
+            participant.serializeToStream(stream);
+            stream.writeInt32(0x1cb5c415);
+            int count = id.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                stream.writeInt32(id.get(a));
+            }
+        }
+    }
 
     public static class TL_channels_getMessages extends TLObject {
         public static int constructor = 0x93d7b347;
@@ -48771,6 +50484,21 @@ public class TLRPC {
         public void serializeToStream(AbstractSerializedData stream) {
             stream.writeInt32(constructor);
             channel.serializeToStream(stream);
+        }
+    }
+
+    public static class TL_channels_getSendAs extends TLObject {
+        public static int constructor = 0xdc770ee;
+
+        public InputPeer peer;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_channels_sendAsPeers.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
         }
     }
 
@@ -50058,6 +51786,97 @@ public class TLRPC {
     }
 	//RichText end
 
+    public static class TL_channels_sendAsPeers extends TLObject {
+        public static int constructor = 0x8356cda9;
+
+        public ArrayList<Peer> peers = new ArrayList<>();
+        public ArrayList<Chat> chats = new ArrayList<>();
+        public ArrayList<User> users = new ArrayList<>();
+
+        public static TL_channels_sendAsPeers TLdeserialize(AbstractSerializedData stream, int constructor, boolean exception) {
+            if (TL_channels_sendAsPeers.constructor != constructor) {
+                if (exception) {
+                    throw new RuntimeException(String.format("can't parse magic %x in TL_channels_sendAsPeers", constructor));
+                } else {
+                    return null;
+                }
+            }
+            TL_channels_sendAsPeers result = new TL_channels_sendAsPeers();
+            result.readParams(stream, exception);
+            return result;
+        }
+
+        public void readParams(AbstractSerializedData stream, boolean exception) {
+            int magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            int count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Peer object = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                peers.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                Chat object = Chat.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                chats.add(object);
+            }
+            magic = stream.readInt32(exception);
+            if (magic != 0x1cb5c415) {
+                if (exception) {
+                    throw new RuntimeException(String.format("wrong Vector magic, got %x", magic));
+                }
+                return;
+            }
+            count = stream.readInt32(exception);
+            for (int a = 0; a < count; a++) {
+                User object = User.TLdeserialize(stream, stream.readInt32(exception), exception);
+                if (object == null) {
+                    return;
+                }
+                users.add(object);
+            }
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(0x1cb5c415);
+            int count = peers.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                peers.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = chats.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                chats.get(a).serializeToStream(stream);
+            }
+            stream.writeInt32(0x1cb5c415);
+            count = users.size();
+            stream.writeInt32(count);
+            for (int a = 0; a < count; a++) {
+                users.get(a).serializeToStream(stream);
+            }
+        }
+    }
+
 	//MessageMedia start
 	public static abstract class MessageMedia extends TLObject {
 		public byte[] bytes;
@@ -50620,6 +52439,7 @@ public class TLRPC {
         public TL_messageReactions reactions;
         public ArrayList<TL_restrictionReason> restriction_reason = new ArrayList<>();
         public int ttl_period;
+        public boolean noforwards;
         public int send_state = 0; //custom
         public int fwd_msg_id = 0; //custom
         public String attachPath = ""; //custom
@@ -50849,7 +52669,6 @@ public class TLRPC {
 
     public static class TL_messageEmpty extends Message {
         public static int constructor = 0x90a6ca84;
-
 
         public void readParams(AbstractSerializedData stream, boolean exception) {
             flags = stream.readInt32(exception);
@@ -51430,6 +53249,7 @@ public class TLRPC {
             legacy = (flags & 524288) != 0;
             edit_hide = (flags & 2097152) != 0;
             pinned = (flags & 16777216) != 0;
+            noforwards = (flags & 67108864) != 0;
             id = stream.readInt32(exception);
             if ((flags & 256) != 0) {
                 from_id = Peer.TLdeserialize(stream, stream.readInt32(exception), exception);
@@ -51526,6 +53346,7 @@ public class TLRPC {
             flags = legacy ? (flags | 524288) : (flags &~ 524288);
             flags = edit_hide ? (flags | 2097152) : (flags &~ 2097152);
             flags = pinned ? (flags | 16777216) : (flags &~ 16777216);
+            flags = noforwards ? (flags | 67108864) : (flags &~ 67108864);
             stream.writeInt32(flags);
             stream.writeInt32(id);
             if ((flags & 256) != 0) {
@@ -54310,6 +56131,27 @@ public class TLRPC {
                 data.reuse();
                 data = null;
             }
+        }
+    }
+
+    public static class TL_messages_getSearchResultsPositions extends TLObject {
+        public static int constructor = 0x6e9583a3;
+
+        public InputPeer peer;
+        public MessagesFilter filter;
+        public int offset_id;
+        public int limit;
+
+        public TLObject deserializeResponse(AbstractSerializedData stream, int constructor, boolean exception) {
+            return TL_messages_searchResultsPositions.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(AbstractSerializedData stream) {
+            stream.writeInt32(constructor);
+            peer.serializeToStream(stream);
+            filter.serializeToStream(stream);
+            stream.writeInt32(offset_id);
+            stream.writeInt32(limit);
         }
     }
 

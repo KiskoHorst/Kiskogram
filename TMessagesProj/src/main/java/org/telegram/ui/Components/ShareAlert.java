@@ -963,18 +963,6 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
         searchGridView = new RecyclerListView(context, resourcesProvider) {
 
             @Override
-            protected void dispatchDraw(Canvas canvas) {
-                recyclerItemsEnterAnimator.dispatchDraw();
-                super.dispatchDraw(canvas);
-            }
-
-            @Override
-            protected void onDetachedFromWindow() {
-                super.onDetachedFromWindow();
-                recyclerItemsEnterAnimator.onDetached();
-            }
-
-            @Override
             protected boolean allowSelectChildAtPosition(float x, float y) {
                 return y >= AndroidUtilities.dp(darkTheme && linkToCopy[1] != null ? 111 : 58) + (Build.VERSION.SDK_INT >= 21 ? AndroidUtilities.statusBarHeight : 0);
             }
@@ -2145,14 +2133,14 @@ public class ShareAlert extends BottomSheet implements NotificationCenter.Notifi
                     itemsCount += recentSearchObjects.size();
                 }
                 lastFilledItem = itemsCount++;
-                return itemsCount;
+                return lastItemCont = itemsCount;
             } else {
                 firstEmptyViewCell = itemsCount++;
                 searchResultsStartRow = itemsCount;
                 itemsCount += (searchResult.size() + searchAdapterHelper.getLocalServerSearch().size());
                 if (itemsCount == 1) {
                     firstEmptyViewCell = -1;
-                    return 0;
+                    return lastItemCont = itemsCount = 0;
                 }
                 lastFilledItem = itemsCount++;
             }

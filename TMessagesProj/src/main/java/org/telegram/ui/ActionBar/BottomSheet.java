@@ -165,6 +165,7 @@ public class BottomSheet extends Dialog {
 
     private ValueAnimator keyboardContentAnimator;
     protected boolean smoothKeyboardAnimationEnabled;
+    private boolean openNoDelay;
 
     protected class ContainerView extends FrameLayout implements NestedScrollingParent {
 
@@ -1024,7 +1025,7 @@ public class BottomSheet extends Dialog {
                     startAnimationRunnable = null;
                     startOpenAnimation();
                 }
-            }, 150);
+            }, openNoDelay ? 0 : 150);
         } else {
             startOpenAnimation();
         }
@@ -1109,6 +1110,10 @@ public class BottomSheet extends Dialog {
 
     public void setOnHideListener(OnDismissListener listener) {
         onHideListener = listener;
+    }
+
+    protected int getTargetOpenTranslationY() {
+        return 0;
     }
 
     private void startOpenAnimation() {
@@ -1535,5 +1540,9 @@ public class BottomSheet extends Dialog {
     protected int getThemedColor(String key) {
         Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
         return color != null ? color : Theme.getColor(key);
+    }
+
+    public void setOpenNoDelay(boolean openNoDelay) {
+        this.openNoDelay = openNoDelay;
     }
 }

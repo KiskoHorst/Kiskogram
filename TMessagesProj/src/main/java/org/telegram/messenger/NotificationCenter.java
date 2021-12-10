@@ -13,6 +13,8 @@ import androidx.annotation.UiThread;
 import android.os.SystemClock;
 import android.util.SparseArray;
 
+import com.google.android.exoplayer2.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +35,8 @@ public class NotificationCenter {
     public static final int changeRepliesCounter = totalEvents++;
     public static final int messagesDidLoad = totalEvents++;
     public static final int didLoadSponsoredMessages = totalEvents++;
+    public static final int didLoadSendAsPeers = totalEvents++;
+    public static final int updateDefaultSendAsPeer = totalEvents++;
     public static final int messagesDidLoadWithoutProcess = totalEvents++;
     public static final int loadingMessagesFailed = totalEvents++;
     public static final int messageReceivedByAck = totalEvents++;
@@ -223,6 +227,7 @@ public class NotificationCenter {
     public static final int appUpdateAvailable = totalEvents++;
     public static final int onDatabaseMigration = totalEvents++;
     public static final int onEmojiInteractionsReceived = totalEvents++;
+    public static final int emojiPreviewThemesChanged = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
