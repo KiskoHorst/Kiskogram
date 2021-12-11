@@ -20,7 +20,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
@@ -45,7 +44,7 @@ import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.Locale;
 
-public class SessionCell extends LinearLayout {
+public class SessionCell extends FrameLayout {
 
     private TextView nameTextView;
     private TextView onlineTextView;
@@ -62,13 +61,14 @@ public class SessionCell extends LinearLayout {
 
     public SessionCell(Context context, int type) {
         super(context);
-        setOrientation(VERTICAL);
 
         linearLayout = new LinearLayout(context);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         linearLayout.setWeightSum(1);
-        addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 14 : 20), 11, (LocaleController.isRTL ? 20 : 14), 4));
+
         if (type == 1) {
+            addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 30, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, (LocaleController.isRTL ? 15 : 49), 11, (LocaleController.isRTL ? 49 : 15), 0));
+
             avatarDrawable = new AvatarDrawable();
             avatarDrawable.setTextSize(AndroidUtilities.dp(10));
             imageView = new BackupImageView(context);
@@ -118,14 +118,19 @@ public class SessionCell extends LinearLayout {
         detailTextView = new TextView(context);
         detailTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         detailTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        detailTextView.setLines(1);
+        detailTextView.setMaxLines(1);
+        detailTextView.setSingleLine(true);
         detailTextView.setEllipsize(TextUtils.TruncateAt.END);
         detailTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
-        detailTextView.setPadding(AndroidUtilities.dp(20f),0,AndroidUtilities.dp(20f),0);
-        addView(detailTextView);
+        addView(detailTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, leftMargin, 36, rightMargin, 0));
 
         detailExTextView = new TextView(context);
         detailExTextView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
         detailExTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
+        detailExTextView.setLines(1);
+        detailExTextView.setMaxLines(1);
+        detailExTextView.setSingleLine(true);
         detailExTextView.setEllipsize(TextUtils.TruncateAt.END);
         detailExTextView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP);
         addView(detailExTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, leftMargin, 59, rightMargin, 0));
@@ -133,7 +138,7 @@ public class SessionCell extends LinearLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(90) + (needDivider ? 1 : 0), MeasureSpec.UNSPECIFIED));
+        super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(90) + (needDivider ? 1 : 0), MeasureSpec.EXACTLY));
     }
 
     public void setSession(TLObject object, boolean divider) {

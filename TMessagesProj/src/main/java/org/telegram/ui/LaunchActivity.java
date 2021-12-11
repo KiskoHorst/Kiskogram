@@ -3924,7 +3924,7 @@ public class LaunchActivity extends Activity implements ActionBarLayout.ActionBa
                             SendMessagesHelper.getInstance(account).sendMessage(user, did, null, null, null, null, true, 0);
                         }
                     }
-                    SendMessagesHelper.prepareSendingDocuments(accountInstance, documentsPathsArray, documentsOriginalPathsArray, documentsUrisArray, captionToSend, documentsMimeType, did, null, null, null, null, true, 0);
+                    //SendMessagesHelper.prepareSendingDocuments(accountInstance, documentsPathsArray, documentsOriginalPathsArray, documentsUrisArray, captionToSend, documentsMimeType, did, null, null, null, null, true, 0);
                 }
             }
             if (dialogsFragment != null && fragment == null) {

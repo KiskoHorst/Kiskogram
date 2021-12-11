@@ -374,7 +374,7 @@ public class SessionBottomSheet extends BottomSheet {
         public ItemView(Context context, boolean needSwitch) {
             super(context);
             iconView = new ImageView(context);
-            addView(iconView, LayoutHelper.createFrame(28, 28, 0, 16, 8, 0, 0));
+            addView(iconView, LayoutHelper.createFrame(24, 24, 0, 18, 10, 2, 2));
 
             LinearLayout linearLayout = new LinearLayout(context);
             linearLayout.setOrientation(LinearLayout.VERTICAL);
