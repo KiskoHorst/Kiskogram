@@ -46,6 +46,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.LineProgressView;
 import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RadialProgressView;
+import org.telegram.ui.Components.spoilers.SpoilersTextView;
 
 import java.util.ArrayList;
 
@@ -92,7 +93,7 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
     private int topHeight = 132;
     private Drawable topDrawable;
     private int topBackgroundColor;
-    private int progressViewStyle;
+    private int progressViewStyle; // TODO: Use constants here
     private int currentProgress;
 
     private boolean messageTextViewClickable = true;
@@ -540,7 +541,7 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
             contentScrollView.addView(scrollContainer, new ScrollView.LayoutParams(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         }
 
-        messageTextView = new TextView(getContext());
+        messageTextView = new SpoilersTextView(getContext());
         messageTextView.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
         messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         messageTextView.setMovementMethod(new AndroidUtilities.LinkMovementMethodMy());
@@ -639,7 +640,7 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
                 if (neutralButtonText != null) {
                     buttonsWidth += paint.measureText(neutralButtonText, 0, neutralButtonText.length()) + AndroidUtilities.dp(10);
                 }
-                if (buttonsWidth > AndroidUtilities.dp(320)) {
+                if (buttonsWidth > AndroidUtilities.displaySize.x - AndroidUtilities.dp(110)) {
                     verticalButtons = true;
                 }
             }
@@ -868,6 +869,9 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
             if (dimEnabled) {
                 params.dimAmount = 0.6f;
                 params.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+            } else {
+                params.dimAmount = 0f;
+                params.flags ^= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
             }
 
             lastScreenWidth = AndroidUtilities.displaySize.x;
@@ -1011,7 +1015,7 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
         lineProgressViewPercent.setText(String.format("%d%%", currentProgress));
     }
 
-    public void setCanCacnel(boolean value) {
+    public void setCanCancel(boolean value) {
         canCacnel = value;
     }
 
@@ -1223,6 +1227,11 @@ public class AlertDialog extends Dialog implements Drawable.Callback {
 
         public Context getContext() {
             return alertDialog.getContext();
+        }
+
+        public Builder forceVerticalButtons() {
+            alertDialog.verticalButtons = true;
+            return this;
         }
 
         public Builder setItems(CharSequence[] items, final OnClickListener onClickListener) {

@@ -21,9 +21,8 @@ import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-
-import androidx.annotation.Keep;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -34,12 +33,18 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ScrollView;
 
+import androidx.annotation.Keep;
+import androidx.annotation.Nullable;
+
+import com.google.android.exoplayer2.util.Log;
+
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.PopupSwipeBackLayout;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -84,6 +89,7 @@ public class ActionBarPopupWindow extends PopupWindow {
     }
 
     public static class ActionBarPopupWindowLayout extends FrameLayout {
+        public final static int FLAG_USE_SWIPEBACK = 1;
 
         private OnDispatchKeyEventListener mOnDispatchKeyEventListener;
         private float backScaleX = 1;
@@ -97,7 +103,9 @@ public class ActionBarPopupWindow extends PopupWindow {
         private int gapStartY = -1000000;
         private int gapEndY = -1000000;
         private Rect bgPaddings = new Rect();
+        private onSizeChangedListener onSizeChangedListener;
 
+        private PopupSwipeBackLayout swipeBackLayout;
         private ScrollView scrollView;
         protected LinearLayout linearLayout;
 
@@ -116,6 +124,10 @@ public class ActionBarPopupWindow extends PopupWindow {
         }
 
         public ActionBarPopupWindowLayout(Context context, int resId, Theme.ResourcesProvider resourcesProvider) {
+            this(context, resId, resourcesProvider, 0);
+        }
+
+        public ActionBarPopupWindowLayout(Context context, int resId, Theme.ResourcesProvider resourcesProvider, int flags) {
             super(context);
             this.resourcesProvider = resourcesProvider;
 
@@ -128,10 +140,17 @@ public class ActionBarPopupWindow extends PopupWindow {
             setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
             setWillNotDraw(false);
 
+            if ((flags & FLAG_USE_SWIPEBACK) > 0) {
+                swipeBackLayout = new PopupSwipeBackLayout(context, resourcesProvider);
+                addView(swipeBackLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+            }
+
             try {
                 scrollView = new ScrollView(context);
                 scrollView.setVerticalScrollBarEnabled(false);
-                addView(scrollView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+                if (swipeBackLayout != null) {
+                    swipeBackLayout.addView(scrollView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+                } else addView(scrollView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
             } catch (Throwable e) {
                 FileLog.e(e);
             }
@@ -181,9 +200,21 @@ public class ActionBarPopupWindow extends PopupWindow {
             linearLayout.setOrientation(LinearLayout.VERTICAL);
             if (scrollView != null) {
                 scrollView.addView(linearLayout, new ScrollView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            } else if (swipeBackLayout != null) {
+                swipeBackLayout.addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
             } else {
                 addView(linearLayout, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
             }
+        }
+
+        @Nullable
+        public PopupSwipeBackLayout getSwipeBack() {
+            return swipeBackLayout;
+        }
+
+        public int addViewToSwipeBack(View v) {
+            swipeBackLayout.addView(v);
+            return swipeBackLayout.getChildCount() - 1;
         }
 
         public void setFitItems(boolean value) {
@@ -220,50 +251,61 @@ public class ActionBarPopupWindow extends PopupWindow {
 
         @Keep
         public void setBackScaleX(float value) {
-            backScaleX = value;
-            invalidate();
+            if (backScaleY != value) {
+                backScaleY = value;
+                backScaleX = value;
+                invalidate();
+                if (onSizeChangedListener != null) {
+                    onSizeChangedListener.onSizeChanged();
+                }
+            }
         }
 
         @Keep
         public void setBackScaleY(float value) {
-            backScaleY = value;
-            if (animationEnabled) {
-                int height = getMeasuredHeight() - AndroidUtilities.dp(16);
-                if (shownFromBotton) {
-                    for (int a = lastStartedChild; a >= 0; a--) {
-                        View child = getItemAt(a);
-                        if (child.getVisibility() != VISIBLE) {
-                            continue;
+            if (backScaleY != value) {
+                backScaleY = value;
+                if (animationEnabled) {
+                    int height = getMeasuredHeight() - AndroidUtilities.dp(16);
+                    if (shownFromBotton) {
+                        for (int a = lastStartedChild; a >= 0; a--) {
+                            View child = getItemAt(a);
+                            if (child.getVisibility() != VISIBLE) {
+                                continue;
+                            }
+                            Integer position = positions.get(child);
+                            if (position != null && height - (position * AndroidUtilities.dp(48) + AndroidUtilities.dp(32)) > value * height) {
+                                break;
+                            }
+                            lastStartedChild = a - 1;
+                            startChildAnimation(child);
                         }
-                        Integer position = positions.get(child);
-                        if (position != null && height - (position * AndroidUtilities.dp(48) + AndroidUtilities.dp(32)) > value * height) {
-                            break;
+                    } else {
+                        int count = getItemsCount();
+                        int h = 0;
+                        for (int a = 0; a < count; a++) {
+                            View child = getItemAt(a);
+                            if (child.getVisibility() != VISIBLE) {
+                                continue;
+                            }
+                            h += child.getMeasuredHeight();
+                            if (a < lastStartedChild) {
+                                continue;
+                            }
+                            Integer position = positions.get(child);
+                            if (position != null && h - AndroidUtilities.dp(24) > value * height) {
+                                break;
+                            }
+                            lastStartedChild = a + 1;
+                            startChildAnimation(child);
                         }
-                        lastStartedChild = a - 1;
-                        startChildAnimation(child);
-                    }
-                } else {
-                    int count = getItemsCount();
-                    int h = 0;
-                    for (int a = 0; a < count; a++) {
-                        View child = getItemAt(a);
-                        if (child.getVisibility() != VISIBLE) {
-                            continue;
-                        }
-                        h += child.getMeasuredHeight();
-                        if (a < lastStartedChild) {
-                            continue;
-                        }
-                        Integer position = positions.get(child);
-                        if (position != null && h - AndroidUtilities.dp(24) > value * height) {
-                            break;
-                        }
-                        lastStartedChild = a + 1;
-                        startChildAnimation(child);
                     }
                 }
+                invalidate();
+                if (onSizeChangedListener != null) {
+                    onSizeChangedListener.onSizeChanged();
+                }
             }
-            invalidate();
         }
 
         public void setBackgroundDrawable(Drawable drawable) {
@@ -434,6 +476,14 @@ public class ActionBarPopupWindow extends PopupWindow {
         private int getThemedColor(String key) {
             Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
             return color != null ? color : Theme.getColor(key);
+        }
+
+        public void setOnSizeChangedListener(ActionBarPopupWindow.onSizeChangedListener onSizeChangedListener) {
+            this.onSizeChangedListener = onSizeChangedListener;
+        }
+
+        public int getVisibleHeight() {
+            return (int) (getMeasuredHeight() * backScaleY);
         }
     }
 
@@ -711,5 +761,9 @@ public class ActionBarPopupWindow extends PopupWindow {
 
     public void setEmptyOutAnimation(long time) {
         outEmptyTime = time;
+    }
+
+    public interface onSizeChangedListener {
+        void onSizeChanged();
     }
 }
