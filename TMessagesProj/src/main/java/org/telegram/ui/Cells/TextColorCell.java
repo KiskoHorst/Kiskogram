@@ -29,6 +29,7 @@ import java.util.ArrayList;
 
 public class TextColorCell extends FrameLayout {
 
+    private Theme.ResourcesProvider resourcesProvider;
     private TextView textView;
     private boolean needDivider;
     private int currentColor;
@@ -40,7 +41,12 @@ public class TextColorCell extends FrameLayout {
     public final static int[] colorsToSave = new int[] {0xffff0000, 0xffff8e01, 0xffffff00, 0xff00ff00, 0xff00ffff, 0xff0000ff, 0xffd274f9, 0xffff00ff, 0xffffffff};
 
     public TextColorCell(Context context) {
+        this(context, null);
+    }
+
+    public TextColorCell(Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context);
+        this.resourcesProvider = resourcesProvider;
 
 
         if (colorPaint == null) {
@@ -48,7 +54,7 @@ public class TextColorCell extends FrameLayout {
         }
 
         textView = new TextView(context);
-        textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
         textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         textView.setLines(1);
         textView.setMaxLines(1);

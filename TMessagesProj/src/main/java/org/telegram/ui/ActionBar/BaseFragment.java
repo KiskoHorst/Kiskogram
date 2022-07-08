@@ -230,13 +230,15 @@ public abstract class BaseFragment {
             }
             if (parentLayout != null && actionBar == null) {
                 actionBar = createActionBar(parentLayout.getContext());
-                actionBar.parentFragment = this;
+                if (actionBar != null) {
+                    actionBar.parentFragment = this;
+                }
             }
         }
     }
 
     protected ActionBar createActionBar(Context context) {
-        ActionBar actionBar = new ActionBar(context);
+        ActionBar actionBar = new ActionBar(context, getResourceProvider());
         if (Build.VERSION.SDK_INT >= 21) {
             actionBar.setElevation(AndroidUtilities.dp(4.0f));
         }
@@ -318,6 +320,8 @@ public abstract class BaseFragment {
         }
     }
 
+    public void onUserLeaveHint() {}
+
     @CallSuper
     public void onResume() {
         isPaused = false;
@@ -392,7 +396,7 @@ public abstract class BaseFragment {
         return allowPresentFragment() && parentLayout != null && parentLayout.presentFragmentAsPreview(fragment);
     }
 
-    public boolean presentFragmentAsPreviewWithMenu(BaseFragment fragment, View menu) {
+    public boolean presentFragmentAsPreviewWithMenu(BaseFragment fragment, ActionBarPopupWindow.ActionBarPopupWindowLayout menu) {
         return allowPresentFragment() && parentLayout != null && parentLayout.presentFragmentAsPreviewWithMenu(fragment, menu);
     }
 
@@ -775,10 +779,14 @@ public abstract class BaseFragment {
         }
         Theme.ResourcesProvider resourcesProvider = getResourceProvider();
         int color;
+        String key = Theme.key_actionBarDefault;
+        if (actionBar != null && actionBar.isActionModeShowed()) {
+            key = Theme.key_actionBarActionModeDefault;
+        }
         if (resourcesProvider != null) {
-            color = resourcesProvider.getColorOrDefault(Theme.key_actionBarDefault);
+            color = resourcesProvider.getColorOrDefault(key);
         } else {
-            color = Theme.getColor(Theme.key_actionBarDefault, null, true);
+            color = Theme.getColor(key, null, true);
         }
         return ColorUtils.calculateLuminance(color) > 0.7f;
     }

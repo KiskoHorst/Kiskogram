@@ -161,9 +161,11 @@ public class ChatAttachAlertContactsLayout extends ChatAttachAlert.AttachAlertLa
                     } else {
                         statusTextView.setText("");
                         Utilities.globalQueue.postRunnable(() -> {
-                            formattedPhoneNumber = PhoneFormat.getInstance().format("+" + currentUser.phone);
-                            formattedPhoneNumberUser = currentUser;
-                            AndroidUtilities.runOnUIThread(() -> statusTextView.setText(formattedPhoneNumber));
+                            if (currentUser != null) {
+                                formattedPhoneNumber = PhoneFormat.getInstance().format("+" + currentUser.phone);
+                                formattedPhoneNumberUser = currentUser;
+                                AndroidUtilities.runOnUIThread(() -> statusTextView.setText(formattedPhoneNumber));
+                            }
                         });
                     }
                 }
@@ -396,7 +398,7 @@ public class ChatAttachAlertContactsLayout extends ChatAttachAlert.AttachAlertLa
 
                 PhonebookShareAlert phonebookShareAlert = new PhonebookShareAlert(parentAlert.baseFragment, contact, null, null, null, firstName, lastName, resourcesProvider);
                 phonebookShareAlert.setDelegate((user, notify, scheduleDate) -> {
-                    parentAlert.dismiss();
+                    parentAlert.dismiss(true);
                     delegate.didSelectContact(user, notify, scheduleDate);
                 });
                 phonebookShareAlert.show();

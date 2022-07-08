@@ -22,6 +22,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -65,6 +66,7 @@ import java.util.Objects;
 
 public class ChatThemeBottomSheet extends BottomSheet implements NotificationCenter.NotificationCenterDelegate {
 
+    private FrameLayout rootLayout;
     private final Adapter adapter;
     private final ChatActivity.ThemeDelegate themeDelegate;
     private final EmojiThemes originalTheme;
@@ -100,8 +102,9 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
         setDimBehind(false);
         setCanDismissWithSwipe(false);
         setApplyBottomPadding(false);
+        drawNavigationBar = true;
 
-        FrameLayout rootLayout = new FrameLayout(getContext());
+        rootLayout = new FrameLayout(getContext());
         setCustomView(rootLayout);
 
         titleView = new TextView(getContext());
@@ -124,7 +127,17 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
         darkThemeDrawable.setPlayInDirectionOfCustomEndFrame(true);
         darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(drawableColor, PorterDuff.Mode.MULTIPLY));
 
-        darkThemeView = new RLottieImageView(getContext());
+        darkThemeView = new RLottieImageView(getContext()){
+            @Override
+            public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
+                super.onInitializeAccessibilityNodeInfo(info);
+                if (forceDark) {
+                    info.setText(LocaleController.getString("AccDescrSwitchToDayTheme", R.string.AccDescrSwitchToDayTheme));
+                } else {
+                    info.setText(LocaleController.getString("AccDescrSwitchToNightTheme", R.string.AccDescrSwitchToNightTheme));
+                }
+            }
+        };
         darkThemeView.setAnimation(darkThemeDrawable);
         darkThemeView.setScaleType(ImageView.ScaleType.CENTER);
         darkThemeView.setOnClickListener(view -> {
@@ -333,7 +346,7 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
                     isAnimationStarted = true;
                 }
                 darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_featuredStickers_addButton), PorterDuff.Mode.MULTIPLY));
-                setOverlayNavBarColor(getThemedColor(Theme.key_dialogBackground));
+                setOverlayNavBarColor(getThemedColor(Theme.key_windowBackgroundGray));
                 if (isLightDarkChangeAnimation) {
                     setItemsAnimationProgress(progress);
                 }
@@ -392,7 +405,6 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
         Shader bitmapShader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
         bitmapPaint.setShader(bitmapShader);
         changeDayNightView = new View(getContext()) {
-
             @Override
             protected void onDraw(Canvas canvas) {
                 super.onDraw(canvas);
@@ -413,10 +425,16 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
         changeDayNightViewProgress = 0f;
         changeDayNightViewAnimator = ValueAnimator.ofFloat(0, 1f);
         changeDayNightViewAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            boolean changedNavigationBarColor = false;
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
                 changeDayNightViewProgress = (float) valueAnimator.getAnimatedValue();
                 changeDayNightView.invalidate();
+                if (!changedNavigationBarColor && changeDayNightViewProgress > .5f) {
+                    changedNavigationBarColor = true;
+                    AndroidUtilities.setLightNavigationBar(getWindow(), !isDark);
+                    AndroidUtilities.setNavigationBarColor(getWindow(), getThemedColor(Theme.key_windowBackgroundGray));
+                }
             }
         });
         changeDayNightViewAnimator.addListener(new AnimatorListenerAdapter() {
@@ -563,8 +581,6 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
     }
 
     private void setForceDark(boolean isDark, boolean playAnimation) {
-        useLightNavBar = isDark;
-        useLightStatusBar = isDark;
         if (forceDark == isDark) {
             return;
         }
@@ -691,6 +707,10 @@ public class ChatThemeBottomSheet extends BottomSheet implements NotificationCen
                 animated = false;
             }
 
+            view.setFocusable(true);
+            view.setEnabled(true);
+
+            view.setBackgroundColor(Theme.getColor(Theme.key_dialogBackgroundGray));
             view.setItem(newItem, animated);
             view.setSelected(position == selectedItemPosition, animated);
             if (position == selectedItemPosition) {
