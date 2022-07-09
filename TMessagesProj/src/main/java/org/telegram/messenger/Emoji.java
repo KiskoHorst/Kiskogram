@@ -349,7 +349,33 @@ public class Emoji {
         if (cs == null || cs.length() <= 0) {
             return emojis;
         }
-        return s;
+        return emojis;
+    }
+
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew) {
+        return replaceEmoji(cs, fontMetrics, size, createNew, null, false, null);
+    }
+
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew, boolean allowAnimated, AtomicReference<WeakReference<View>> viewRef) {
+        return replaceEmoji(cs, fontMetrics, size, createNew, null, allowAnimated, viewRef);
+    }
+
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew, int[] emojiOnly) {
+        return replaceEmoji(cs, fontMetrics, size, createNew, emojiOnly, false, null);
+    }
+
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew, int[] emojiOnly, boolean allowAnimated, AtomicReference<WeakReference<View>> viewRef) {
+        allowAnimated = false;
+        if (SharedConfig.useSystemEmoji || cs == null || cs.length() == 0) {
+            return cs;
+        }
+        Spannable s;
+        if (!createNew && cs instanceof Spannable) {
+            s = (Spannable) cs;
+        } else {
+            s = Spannable.Factory.getInstance().newSpannable(cs.toString());
+        }
+		return s;
     }
 
     public static class EmojiSpan extends ImageSpan {

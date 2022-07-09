@@ -633,7 +633,7 @@ public class FiltersSetupActivity extends BaseFragment implements NotificationCe
                         };
                         final int[] icons = new int[]{
                                 R.drawable.group_edit,
-                                R.drawable.ic_ab_delete
+                                R.drawable.msg_delete
                         };
                         builder1.setItems(items, icons, (dialog, which) -> {
                             if (which == 0) {

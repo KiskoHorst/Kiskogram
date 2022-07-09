@@ -892,7 +892,7 @@ public class StickersActivity extends BaseFragment implements NotificationCenter
                     TextCell settingsCell = (TextCell) holder.itemView;
                     if (position == featuredStickersShowMoreRow) {
                         settingsCell.setColors(Theme.key_windowBackgroundWhiteBlueText4, Theme.key_windowBackgroundWhiteBlueText4);
-                        settingsCell.setTextAndIcon(LocaleController.getString(R.string.ShowMoreStickers), R.drawable.msg_trending, false);
+                        settingsCell.setTextAndIcon(LocaleController.getString(R.string.ShowMoreStickers), R.drawable.sticker_plus_outline, false);
                     } else {
                         settingsCell.setColors(Theme.key_windowBackgroundWhiteGrayIcon, Theme.key_windowBackgroundWhiteBlackText);
                         if (position == archivedRow) {

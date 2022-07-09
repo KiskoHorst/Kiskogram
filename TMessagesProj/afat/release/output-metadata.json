@@ -1,0 +1,20 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "li.peeloi.kisko.kiskogram",
+  "variantName": "afatRelease",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 272101,
+      "versionName": "8.8.5-r1",
+      "outputFile": "app.apk"
+    }
+  ],
+  "elementType": "File"
+}

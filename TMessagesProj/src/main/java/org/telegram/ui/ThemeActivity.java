@@ -1641,7 +1641,7 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                 };
                 icons = new int[]{
                         0,
-                        R.drawable.abc_ic_menu_share_mtrl_alpha
+                        R.drawable.msg_share
                 };
             } else {
                 hasDelete = themeInfo.info == null || !themeInfo.info.isDefault;
@@ -1653,10 +1653,10 @@ public class ThemeActivity extends BaseFragment implements NotificationCenter.No
                         hasDelete ? LocaleController.getString("Delete", R.string.Delete) : null};
                 icons = new int[]{
                         R.drawable.forward,
-                        R.drawable.abc_ic_menu_share_mtrl_alpha,
+                        R.drawable.msg_share,
                         R.drawable.group_edit,
                         R.drawable.profile_link,
-                        R.drawable.ic_ab_delete
+                        R.drawable.msg_delete
                 };
             }
             builder.setItems(items, icons, (dialog, which) -> {
