@@ -240,7 +240,7 @@ public abstract class BaseFragment {
     protected ActionBar createActionBar(Context context) {
         ActionBar actionBar = new ActionBar(context, getResourceProvider());
         if (Build.VERSION.SDK_INT >= 21) {
-            actionBar.setElevation(AndroidUtilities.dp(4.0f));
+            //actionBar.setElevation(AndroidUtilities.dp(4.0f));
         }
         actionBar.setBackgroundColor(getThemedColor(Theme.key_actionBarDefault));
         actionBar.setItemsBackgroundColor(getThemedColor(Theme.key_actionBarDefaultSelector), false);
