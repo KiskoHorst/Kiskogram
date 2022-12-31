@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +38,7 @@ public class Utilities {
     public static volatile DispatchQueue searchQueue = new DispatchQueue("searchQueue");
     public static volatile DispatchQueue phoneBookQueue = new DispatchQueue("phoneBookQueue");
     public static volatile DispatchQueue themeQueue = new DispatchQueue("themeQueue");
+    public static volatile DispatchQueue externalNetworkQueue = new DispatchQueue("externalNetworkQueue");
 
     private final static String RANDOM_STRING_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -71,12 +73,39 @@ public class Utilities {
     public native static String readlink(String path);
     public native static String readlinkFd(int fd);
     public native static long getDirSize(String path, int docType, boolean subdirs);
+    public native static long getLastUsageFileTime(String path);
     public native static void clearDir(String path, int docType, long time, boolean subdirs);
     private native static int pbkdf2(byte[] password, byte[] salt, byte[] dst, int iterations);
     public static native void stackBlurBitmap(Bitmap bitmap, int radius);
     public static native void drawDitheredGradient(Bitmap bitmap, int[] colors, int startX, int startY, int endX, int endY);
     public static native int saveProgressiveJpeg(Bitmap bitmap, int width, int height, int stride, int quality, String path);
     public static native void generateGradient(Bitmap bitmap, boolean unpin, int phase, float progress, int width, int height, int stride, int[] colors);
+
+    public static Bitmap stackBlurBitmapMax(Bitmap bitmap) {
+        int w = AndroidUtilities.dp(20);
+        int h = (int) (AndroidUtilities.dp(20) * (float) bitmap.getHeight() / bitmap.getWidth());
+        Bitmap scaledBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.save();
+        canvas.scale((float) scaledBitmap.getWidth() / bitmap.getWidth(), (float) scaledBitmap.getHeight() / bitmap.getHeight());
+        canvas.drawBitmap(bitmap, 0, 0, null);
+        canvas.restore();
+        Utilities.stackBlurBitmap(scaledBitmap, Math.max(10, Math.max(w, h) / 150));
+        return scaledBitmap;
+    }
+
+    public static Bitmap stackBlurBitmapWithScaleFactor(Bitmap bitmap, float scaleFactor) {
+        int w = (int) Math.max(AndroidUtilities.dp(20), bitmap.getWidth() / scaleFactor);
+        int h = (int) Math.max(AndroidUtilities.dp(20) * (float) bitmap.getHeight() / bitmap.getWidth(), bitmap.getHeight() / scaleFactor);
+        Bitmap scaledBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.save();
+        canvas.scale((float) scaledBitmap.getWidth() / bitmap.getWidth(), (float) scaledBitmap.getHeight() / bitmap.getHeight());
+        canvas.drawBitmap(bitmap, 0, 0, null);
+        canvas.restore();
+        Utilities.stackBlurBitmap(scaledBitmap, Math.max(10, Math.max(w, h) / 150));
+        return scaledBitmap;
+    }
 
     public static Bitmap blurWallpaper(Bitmap src) {
         if (src == null) {
@@ -111,32 +140,36 @@ public class Utilities {
         if (value == null) {
             return 0;
         }
-        int val = 0;
-        try {
-            int start = -1, end;
-            for (end = 0; end < value.length(); ++end) {
-                char character = value.charAt(end);
-                boolean allowedChar = character == '-' || character >= '0' && character <= '9';
-                if (allowedChar && start < 0) {
-                    start = end;
-                } else if (!allowedChar && start >= 0) {
-                    end++;
-                    break;
+        if (BuildConfig.BUILD_HOST_IS_WINDOWS) {
+            Matcher matcher = pattern.matcher(value);
+            if (matcher.find()) {
+                return Integer.valueOf(matcher.group());
+            }
+        } else {
+            int val = 0;
+            try {
+                int start = -1, end;
+                for (end = 0; end < value.length(); ++end) {
+                    char character = value.charAt(end);
+                    boolean allowedChar = character == '-' || character >= '0' && character <= '9';
+                    if (allowedChar && start < 0) {
+                        start = end;
+                    } else if (!allowedChar && start >= 0) {
+                        end++;
+                        break;
+                    }
                 }
-            }
-            if (start >= 0) {
-                String str = value.subSequence(start, end).toString();
+                if (start >= 0) {
+                    String str = value.subSequence(start, end).toString();
 //                val = parseInt(str);
-                val = Integer.parseInt(str);
-            }
-//            Matcher matcher = pattern.matcher(value);
-//            if (matcher.find()) {
-//                String num = matcher.group(0);
-//                val = Integer.parseInt(num);
-//            }
-        } catch (Exception ignore) {}
-        return val;
+                    val = Integer.parseInt(str);
+                }
+            } catch (Exception ignore) {}
+            return val;
+        }
+        return 0;
     }
+
     private static int parseInt(final String s) {
         int num = 0;
         boolean negative = true;
@@ -434,6 +467,10 @@ public class Utilities {
         return null;
     }
 
+    public static int clamp(int value, int maxValue, int minValue) {
+        return Math.max(Math.min(value, maxValue), minValue);
+    }
+
     public static float clamp(float value, float maxValue, float minValue) {
         if (Float.isNaN(value)) {
             return minValue;
@@ -454,5 +491,34 @@ public class Utilities {
             sb.append(RANDOM_STRING_CHARS.charAt(fastRandom.nextInt(RANDOM_STRING_CHARS.length())));
         }
         return sb.toString();
+    }
+
+    public static String getExtension(String fileName) {
+        int idx = fileName.lastIndexOf('.');
+        String ext = null;
+        if (idx != -1) {
+            ext = fileName.substring(idx + 1);
+        }
+        if (ext == null) {
+            return null;
+        }
+        ext = ext.toUpperCase();
+        return ext;
+    }
+
+    public static interface Callback<T> {
+        public void run(T arg);
+    }
+
+    public static interface Callback2<T, T2> {
+        public void run(T arg, T2 arg2);
+    }
+
+    public static <Key, Value> Value getOrDefault(HashMap<Key, Value> map, Key key, Value defaultValue) {
+        Value v = map.get(key);
+        if (v == null) {
+            return defaultValue;
+        }
+        return v;
     }
 }

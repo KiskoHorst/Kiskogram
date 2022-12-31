@@ -115,7 +115,7 @@ public class SlotsDrawable extends RLottieDrawable {
                             if (secondFrameNums[0] == secondFrameCounts[0] - 100) {
                                 playWinAnimation = true;
                                 if (left == ReelValue.sevenWin) {
-                                    Runnable runnable = onFinishCallback.get();
+                                    Runnable runnable = onFinishCallback == null ? null : onFinishCallback.get();
                                     if (runnable != null) {
                                         AndroidUtilities.runOnUIThread(runnable);
                                     }
@@ -226,7 +226,7 @@ public class SlotsDrawable extends RLottieDrawable {
                     AndroidUtilities.runOnUIThread(() -> {
                         String fileName = FileLoader.getAttachFileName(document);
                         DownloadController.getInstance(account).addLoadingFileObserver(fileName, currentMessageObject, messageCell);
-                        FileLoader.getInstance(account).loadFile(document, stickerSet, 1, 1);
+                        FileLoader.getInstance(account).loadFile(document, stickerSet, FileLoader.PRIORITY_NORMAL, 1);
                     });
                 } else {
                     nativePtrs[a] = createWithJson(json, "dice", metaData, null);
@@ -336,7 +336,7 @@ public class SlotsDrawable extends RLottieDrawable {
                     AndroidUtilities.runOnUIThread(() -> {
                         String fileName = FileLoader.getAttachFileName(document);
                         DownloadController.getInstance(account).addLoadingFileObserver(fileName, currentMessageObject, messageCell);
-                        FileLoader.getInstance(account).loadFile(document, stickerSet, 1, 1);
+                        FileLoader.getInstance(account).loadFile(document, stickerSet, FileLoader.PRIORITY_NORMAL, 1);
                     });
                 } else {
                     if (a <= 2) {

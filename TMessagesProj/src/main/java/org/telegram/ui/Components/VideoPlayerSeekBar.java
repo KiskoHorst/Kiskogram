@@ -16,12 +16,12 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.os.SystemClock;
 import android.text.Layout;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Pair;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
@@ -223,6 +223,10 @@ public class VideoPlayerSeekBar {
     public void setSize(int w, int h) {
         width = w;
         height = h;
+
+        if (parentView != null) {
+            parentView.invalidate();
+        }
     }
 
     public int getWidth() {
@@ -253,19 +257,30 @@ public class VideoPlayerSeekBar {
     private CharSequence lastCaption;
     private long lastVideoDuration;
 
+    public void clearTimestamps() {
+        timestamps = null;
+        currentTimestamp = -1;
+        timestampsAppearing = 0;
+        if (timestampLabel != null) {
+            timestampLabel[0] = timestampLabel[1] = null;
+        }
+        lastCaption = null;
+        lastVideoDuration = -1;
+    }
+
     public void updateTimestamps(MessageObject messageObject, long videoDuration) {
         if (messageObject == null || videoDuration < 0) {
-            timestamps = null;
-            currentTimestamp = -1;
-            timestampsAppearing = 0;
-            if (timestampLabel != null) {
-                timestampLabel[0] = timestampLabel[1] = null;
-            }
-            lastCaption = null;
-            lastVideoDuration = -1;
+            clearTimestamps();
             return;
         }
         CharSequence text = messageObject.caption;
+        if (messageObject.isYouTubeVideo()) {
+            if (messageObject.youtubeDescription == null && messageObject.messageOwner.media.webpage.description != null) {
+                messageObject.youtubeDescription = SpannableString.valueOf(messageObject.messageOwner.media.webpage.description);
+                MessageObject.addUrlsByPattern(messageObject.isOut(), messageObject.youtubeDescription, false, 3, (int) videoDuration, false);
+            }
+            text = messageObject.youtubeDescription;
+        }
         if (text == lastCaption && lastVideoDuration == videoDuration) {
             return;
         }
@@ -303,7 +318,7 @@ public class VideoPlayerSeekBar {
         }
         for (int i = 0; i < links.length; ++i) {
             URLSpanNoUnderline link = links[i];
-            if (link != null && link.getURL().startsWith("video?")) {
+            if (link != null && link.getURL() != null && link.label != null && link.getURL().startsWith("video?")) {
                 Integer seconds = Utilities.parseInt(link.getURL().substring(6));
                 if (seconds != null && seconds >= 0) {
                     float position = seconds * 1000L / (float) videoDuration;
@@ -495,6 +510,10 @@ public class VideoPlayerSeekBar {
             for (int i = start; i <= end; ++i) {
                 float from = i == start ? 0 : timestamps.get(i - 1).first;
                 float to = i == end ? 1 : timestamps.get(i).first;
+                while (i != end && i != 0 && i < timestamps.size() - 1 && timestamps.get(i).first - from <= minDur) {
+                    i++;
+                    to = timestamps.get(i).first;
+                }
 
                 AndroidUtilities.rectTmp.left = AndroidUtilities.lerp(left, right, from) + (i > 0 ? halfGap : 0);
                 AndroidUtilities.rectTmp.right = AndroidUtilities.lerp(left, right, to) - (i < end ? halfGap : 0);
@@ -652,6 +671,9 @@ public class VideoPlayerSeekBar {
             timestampLabelPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
             timestampLabelPaint.setTextSize(AndroidUtilities.dp(12));
             timestampLabelPaint.setColor(0xffffffff);
+        }
+        if (text == null) {
+            text = "";
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return StaticLayout.Builder.obtain(text, 0, text.length(), timestampLabelPaint, width)

@@ -15,14 +15,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +36,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.Utilities;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -74,6 +77,9 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
     private ArrayList<LocaleController.LocaleInfo> sortedLanguages;
     private ArrayList<LocaleController.LocaleInfo> unofficialLanguages;
 
+    private ActionBarMenuItem searchItem;
+    private int translateSettingsBackgroundHeight;
+
     @Override
     public boolean onFragmentCreate() {
         fillLanguages();
@@ -107,7 +113,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
         });
 
         ActionBarMenu menu = actionBar.createMenu();
-        ActionBarMenuItem item = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
+        searchItem = menu.addItem(0, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
             @Override
             public void onSearchExpand() {
                 searching = true;
@@ -143,7 +149,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                 }
             }
         });
-        item.setSearchFieldHint(LocaleController.getString("Search", R.string.Search));
+        searchItem.setSearchFieldHint(LocaleController.getString("Search", R.string.Search));
 
         listAdapter = new ListAdapter(context, false);
         searchListViewAdapter = new ListAdapter(context, true);
@@ -158,11 +164,32 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
         emptyView.setShowAtCenter(true);
         frameLayout.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        listView = new RecyclerListView(context);
+        listView = new RecyclerListView(context) {
+            @Override
+            protected void dispatchDraw(Canvas canvas) {
+                if (getAdapter() == listAdapter && getItemAnimator() != null && getItemAnimator().isRunning()) {
+                    int backgroundColor = Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider);
+                    drawItemBackground(canvas, 0, translateSettingsBackgroundHeight, backgroundColor);
+//                    drawItemBackground(canvas, 1, Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider));
+                    drawSectionBackground(canvas, 1, 2, backgroundColor);
+                }
+                super.dispatchDraw(canvas);
+            }
+        };
         listView.setEmptyView(emptyView);
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
         listView.setAdapter(listAdapter);
+        DefaultItemAnimator itemAnimator = new DefaultItemAnimator() {
+            @Override
+            protected void onMoveAnimationUpdate(RecyclerView.ViewHolder holder) {
+                listView.invalidate();
+                listView.updateSelector();
+            }
+        };
+        itemAnimator.setDurations(400);
+        itemAnimator.setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT);
+        listView.setItemAnimator(itemAnimator);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         listView.setOnItemClickListener((view, position) -> {
@@ -187,8 +214,21 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                 }
                 if (localeInfo != null) {
                     LocaleController.LocaleInfo prevLocale = LocaleController.getInstance().getCurrentLocaleInfo();
-                    LocaleController.getInstance().applyLanguage(localeInfo, true, false, false, true, currentAccount);
-                    parentLayout.rebuildAllFragmentViews(false, false);
+                    boolean sameLang = prevLocale == localeInfo;
+
+                    final AlertDialog progressDialog = new AlertDialog(getContext(), AlertDialog.ALERT_TYPE_SPINNER);
+                    int reqId = LocaleController.getInstance().applyLanguage(localeInfo, true, false, false, true, currentAccount, () -> {
+                        progressDialog.dismiss();
+                        if (!sameLang) {
+                            actionBar.closeSearchField();
+                            updateLanguage();
+                        }
+                    });
+                    if (reqId != 0) {
+                        progressDialog.setOnCancelListener(di -> {
+                            ConnectionsManager.getInstance(currentAccount).cancelRequest(reqId, true);
+                        });
+                    }
 
                     String langCode = localeInfo.pluralLangCode,
                             prevLangCode = prevLocale.pluralLangCode;
@@ -203,7 +243,9 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                     }
                     preferences.edit().putStringSet("translate_button_restricted_languages", newSelectedLanguages).apply();
 
-                    finishFragment();
+                    if (!sameLang) {
+                        progressDialog.showDelayed(500);
+                    }
                 }
             } catch (Exception e) {
                 FileLog.e(e);
@@ -360,6 +402,22 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
         }
     }
 
+    private void updateLanguage() {
+        if (actionBar != null) {
+            actionBar.setTitleAnimated(LocaleController.getString("Language", R.string.Language), true, 350, CubicBezierInterpolator.EASE_OUT_QUINT);
+        }
+        if (listView != null) {
+            for (int i = 0; i < listView.getChildCount(); ++i) {
+                View child = listView.getChildAt(i);
+                if (child instanceof TranslateSettings || child instanceof HeaderCell) {
+                    listAdapter.notifyItemChanged(listView.getChildAdapterPosition(child));
+                } else {
+                    listAdapter.onBindViewHolder(listView.getChildViewHolder(child), listView.getChildAdapterPosition(child));
+                }
+            }
+        }
+    }
+
     private void processSearch(final String query) {
         Utilities.searchQueue.postRunnable(() -> {
 
@@ -429,7 +487,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
 
             boolean value = getValue();
             showButtonCheck = new TextCheckCell(context);
-            showButtonCheck.setBackground(Theme.AdaptiveRipple.filledRect(Theme.getColor(Theme.key_windowBackgroundWhite)));
+            showButtonCheck.setBackground(Theme.createSelectorWithBackgroundDrawable(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_listSelector)));
             showButtonCheck.setTextAndCheck(
                 LocaleController.getString("ShowTranslateButton", R.string.ShowTranslateButton),
                 value,
@@ -437,11 +495,12 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
             );
             showButtonCheck.setOnClickListener(e -> {
                 preferences.edit().putBoolean("translate_button", !getValue()).apply();
+                NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateSearchSettings);
             });
             addView(showButtonCheck, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             doNotTranslateCell = new TextSettingsCell(context);
-            doNotTranslateCell.setBackground(Theme.AdaptiveRipple.filledRect(Theme.getColor(Theme.key_windowBackgroundWhite)));
+            doNotTranslateCell.setBackground(Theme.createSelectorWithBackgroundDrawable(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_listSelector)));
             doNotTranslateCell.setOnClickListener(e -> {
                 presentFragment(new RestrictedLanguagesSelectActivity());
                 update();
@@ -476,6 +535,21 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
 //            setLayoutParams(new RecyclerView.LayoutParams(LayoutHelper.MATCH_PARENT, height()));
             updateHeight();
             update();
+        }
+
+        public void updateTranslations() {
+            header.setText(LocaleController.getString("TranslateMessages", R.string.TranslateMessages));
+            showButtonCheck.setTextAndCheck(
+                LocaleController.getString("ShowTranslateButton", R.string.ShowTranslateButton), getValue(), getValue()
+            );
+            showButtonCheck.updateRTL();
+            doNotTranslateCell.updateRTL();
+            info.setText(LocaleController.getString("TranslateMessagesInfo1", R.string.TranslateMessagesInfo1));
+            info.getTextView().setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            info2.setText(LocaleController.getString("TranslateMessagesInfo2", R.string.TranslateMessagesInfo2));
+            info2.getTextView().setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+            update();
+            updateHeight();
         }
 
         private boolean getValue() {
@@ -521,15 +595,8 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                 info.setTranslationY(-doNotTranslateCell.getHeight() * (1f - t));
                 info2.setAlpha(1f - t);
                 info2.setTranslationY(-doNotTranslateCell.getHeight() * (1f - t));
-//                header2.setTranslationY(-Math.max(doNotTranslateCell.getHeight(), info2.getHeight()));
 
-//                updateHeight();
-//                header2.setTranslationY(-doNotTranslateCell.getHeight());
-//                header2.setTranslationY(-doNotTranslateCell.getHeight() * (1f - t));
-
-//                ViewGroup.LayoutParams layoutParams = getLayoutParams();
-//                layoutParams.height = AndroidUtilities.dp(HEIGHT_CLOSED + (HEIGHT_OPEN - HEIGHT_CLOSED) * t);
-//                setLayoutParams(layoutParams);
+                translateSettingsBackgroundHeight = header.getMeasuredHeight() + showButtonCheck.getMeasuredHeight() + (int) (doNotTranslateCell.getAlpha() * doNotTranslateCell.getMeasuredHeight());
             });
             doNotTranslateCellAnimation.addListener(new AnimatorListenerAdapter() {
                 @Override
@@ -540,11 +607,12 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                     } else {
                         info2.setVisibility(View.VISIBLE);
                     }
+
+                    translateSettingsBackgroundHeight = header.getMeasuredHeight() + showButtonCheck.getMeasuredHeight() + (int) (doNotTranslateCell.getAlpha() * doNotTranslateCell.getMeasuredHeight());
                 }
             });
             doNotTranslateCellAnimation.setDuration((long) (Math.abs(doNotTranslateCell.getAlpha() - (value ? 1f : 0f)) * 200));
             doNotTranslateCellAnimation.start();
-
 //            updateHeight();
         }
 
@@ -576,6 +644,7 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                 setLayoutParams(lp);
             }
         }
+
         int height() {
             return Math.max(AndroidUtilities.dp(40), header.getMeasuredHeight()) +
                    Math.max(AndroidUtilities.dp(50), showButtonCheck.getMeasuredHeight()) +
@@ -661,7 +730,6 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                 case 3:
                     HeaderCell header = new HeaderCell(mContext);
                     header.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-                    header.setText(LocaleController.getString("Language", R.string.Language));
                     view = header;
                     break;
                 case 1:
@@ -677,14 +745,16 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
                 case 0: {
-                    if (!search)
+                    if (!search) {
                         position -= 2;
-//                    LanguageCell textSettingsCell = (LanguageCell) holder.itemView;
+                    }
                     TextRadioCell textSettingsCell = (TextRadioCell) holder.itemView;
-                    LocaleController.LocaleInfo localeInfo;
+                    LocaleController.LocaleInfo localeInfo = null;
                     boolean last;
                     if (search) {
-                        localeInfo = searchResult.get(position);
+                        if (position >= 0 && position < searchResult.size()) {
+                            localeInfo = searchResult.get(position);
+                        }
                         last = position == searchResult.size() - 1;
                     } else if (!unofficialLanguages.isEmpty() && position >= 0 && position < unofficialLanguages.size()) {
                         localeInfo = unofficialLanguages.get(position);
@@ -693,13 +763,17 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                         if (!unofficialLanguages.isEmpty()) {
                             position -= unofficialLanguages.size() + 1;
                         }
-                        localeInfo = sortedLanguages.get(position);
+                        if (position >= 0 && position < sortedLanguages.size()) {
+                            localeInfo = sortedLanguages.get(position);
+                        }
                         last = position == sortedLanguages.size() - 1;
                     }
-                    if (localeInfo.isLocal()) {
-                        textSettingsCell.setTextAndValueAndCheck(String.format("%1$s (%2$s)", localeInfo.name, LocaleController.getString("LanguageCustom", R.string.LanguageCustom)), localeInfo.nameEnglish, false, false, !last);
-                    } else {
-                        textSettingsCell.setTextAndValueAndCheck(localeInfo.name, localeInfo.nameEnglish, false, false, !last);
+                    if (localeInfo != null) {
+                        if (localeInfo.isLocal()) {
+                            textSettingsCell.setTextAndValueAndCheck(String.format("%1$s (%2$s)", localeInfo.name, LocaleController.getString("LanguageCustom", R.string.LanguageCustom)), localeInfo.nameEnglish, false, false, !last);
+                        } else {
+                            textSettingsCell.setTextAndValueAndCheck(localeInfo.name, localeInfo.nameEnglish, false, false, !last);
+                        }
                     }
                     textSettingsCell.setChecked(localeInfo == LocaleController.getInstance().getCurrentLocaleInfo());
                     break;
@@ -718,7 +792,13 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                 case 2: {
                     TranslateSettings translateSettings = (TranslateSettings) holder.itemView;
                     translateSettings.setVisibility(searching ? View.GONE : View.VISIBLE);
-                    translateSettings.updateHeight();
+                    translateSettings.updateTranslations();
+                    break;
+                }
+                case 3: {
+                    HeaderCell header = (HeaderCell) holder.itemView;
+                    header.setText(LocaleController.getString("Language", R.string.Language));
+                    break;
                 }
             }
         }

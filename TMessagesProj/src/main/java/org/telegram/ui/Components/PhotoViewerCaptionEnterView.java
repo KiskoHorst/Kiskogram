@@ -11,7 +11,10 @@ package org.telegram.ui.Components;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,9 +22,10 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Vibrator;
 import android.text.Editable;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -29,6 +33,7 @@ import android.text.style.ImageSpan;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
@@ -48,9 +53,15 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AdjustPanLayoutHelper;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.FloatingToolbar;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
+import org.telegram.ui.LaunchActivity;
+import org.telegram.ui.PhotoViewer;
+import org.telegram.ui.PremiumPreviewFragment;
 
 public class PhotoViewerCaptionEnterView extends FrameLayout implements NotificationCenter.NotificationCenterDelegate, SizeNotifierFrameLayoutPhoto.SizeNotifierFrameLayoutPhotoDelegate {
 
@@ -58,6 +69,10 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
 
     public int getCaptionLimitOffset() {
         return MessagesController.getInstance(currentAccount).getCaptionMaxLengthLimit() - codePointCount;
+    }
+
+    public int getCodePointCount() {
+        return codePointCount;
     }
 
     public interface PhotoViewerCaptionEnterViewDelegate {
@@ -112,9 +127,9 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
     private final Theme.ResourcesProvider resourcesProvider;
     public int currentAccount = UserConfig.selectedAccount;
 
-    public PhotoViewerCaptionEnterView(Context context, SizeNotifierFrameLayoutPhoto parent, final View window, Theme.ResourcesProvider resourcesProvider) {
+    public PhotoViewerCaptionEnterView(PhotoViewer photoViewer, Context context, SizeNotifierFrameLayoutPhoto parent, final View window, Theme.ResourcesProvider resourcesProvider) {
         super(context);
-        this.resourcesProvider = resourcesProvider;
+        this.resourcesProvider = new DarkTheme();
         paint.setColor(0x7f000000);
         setWillNotDraw(false);
         setFocusable(true);
@@ -196,6 +211,12 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
                 rectangle.bottom += AndroidUtilities.dp(1000);
                 return super.requestRectangleOnScreen(rectangle);
             }
+
+            @Override
+            public void setText(CharSequence text, BufferType type) {
+                super.setText(text, type);
+                invalidateForce();
+            }
         };
         messageEditText.setOnFocusChangeListener((view, focused) -> {
             if (focused) {
@@ -206,7 +227,9 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
         });
         messageEditText.setSelectAllOnFocus(false);
 
-        messageEditText.setDelegate(() -> messageEditText.invalidateEffects());
+        messageEditText.setDelegate(() -> {
+            messageEditText.invalidateEffects();
+        });
         messageEditText.setWindowView(windowView);
         messageEditText.setHint(LocaleController.getString("AddCaption", R.string.AddCaption));
         messageEditText.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
@@ -244,6 +267,7 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
         });
         messageEditText.addTextChangedListener(new TextWatcher() {
             boolean processChange = false;
+            boolean heightShouldBeChanged;
 
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
@@ -252,10 +276,13 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
             @Override
             public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
                 if (lineCount != messageEditText.getLineCount()) {
+                    heightShouldBeChanged = (messageEditText.getLineCount() >= 4) != (lineCount >= 4);
                     if (!isInitLineCount && messageEditText.getMeasuredWidth() > 0) {
                         onLineCountChanged(lineCount, messageEditText.getLineCount());
                     }
                     lineCount = messageEditText.getLineCount();
+                } else {
+                    heightShouldBeChanged = false;
                 }
 
                 if (innerTextChange) {
@@ -335,6 +362,15 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
                     });
                     sendButtonColorAnimator.setDuration(150).start();
                 }
+
+                if (photoViewer.getParentAlert() != null && !photoViewer.getParentAlert().captionLimitBulletinShown && !MessagesController.getInstance(currentAccount).premiumLocked && !UserConfig.getInstance(currentAccount).isPremium() && codePointCount > MessagesController.getInstance(currentAccount).captionLengthLimitDefault && codePointCount < MessagesController.getInstance(currentAccount).captionLengthLimitPremium) {
+                    photoViewer.getParentAlert().captionLimitBulletinShown = true;
+                    if (heightShouldBeChanged) {
+                        AndroidUtilities.runOnUIThread(()->photoViewer.showCaptionLimitBulletin(parent), 300);
+                    } else {
+                        photoViewer.showCaptionLimitBulletin(parent);
+                    }
+                }
             }
         });
 
@@ -349,10 +385,13 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
         textFieldContainer.addView(doneButton, LayoutHelper.createLinear(48, 48, Gravity.BOTTOM));
         doneButton.setOnClickListener(view -> {
             if (MessagesController.getInstance(currentAccount).getCaptionMaxLengthLimit() - codePointCount < 0) {
-                AndroidUtilities.shakeView(captionLimitView, 2, 0);
-                Vibrator v = (Vibrator) captionLimitView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
-                if (v != null) {
-                    v.vibrate(200);
+                AndroidUtilities.shakeView(captionLimitView);
+                try {
+                    captionLimitView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+                } catch (Exception ignored) {}
+
+                if (!MessagesController.getInstance(currentAccount).premiumLocked && MessagesController.getInstance(currentAccount).captionLengthLimitPremium > codePointCount) {
+                    photoViewer.showCaptionLimitBulletin(parent);
                 }
                 return;
             }
@@ -545,11 +584,47 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
         return messageEditText.getSelectionStart();
     }
 
+    private class DarkTheme implements Theme.ResourcesProvider {
+        @Override
+        public Integer getColor(String key) {
+            switch (key) {
+                case Theme.key_dialogBackground: return -14803426;
+                case Theme.key_windowBackgroundWhite: return -15198183;
+                case Theme.key_windowBackgroundWhiteBlackText: return -1;
+//                case Theme.key_chat_emojiPanelNewTrending: return 0xffff0000;
+//                case Theme.key_chat_gifSaveHintBackground: return 0xffff0000;
+//                case Theme.key_chat_gifSaveHintText: return 0xffff0000;
+                case Theme.key_chat_emojiPanelEmptyText: return -8553090;
+                case Theme.key_progressCircle: return -10177027;
+                case Theme.key_chat_emojiSearchIcon: return -9211020;
+                case Theme.key_chat_emojiPanelStickerPackSelector:
+                case Theme.key_chat_emojiSearchBackground: return 181267199;
+//                case Theme.key_chat_emojiPanelStickerSetName: return 0xffff0000;
+                case Theme.key_chat_emojiPanelIcon: return -9539985;
+                case Theme.key_chat_emojiBottomPanelIcon: return -9539985;
+                case Theme.key_chat_emojiPanelIconSelected: return -10177041;
+                case Theme.key_chat_emojiPanelStickerPackSelectorLine: return -10177041;
+                case Theme.key_chat_emojiPanelBackground: return -14803425;
+                case Theme.key_chat_emojiPanelShadowLine: return -1610612736;
+                case Theme.key_chat_emojiPanelBackspace: return -9539985;
+//                case Theme.key_featuredStickers_addButton: return 0xffff0000;
+//                case Theme.key_featuredStickers_removeButtonText: return 0xffff0000;
+                case Theme.key_listSelector: return 771751936;
+                case Theme.key_divider: return -16777216;
+            }
+            return null;
+        }
+    }
+
     private void createEmojiView() {
+        if (emojiView != null && emojiView.currentAccount != UserConfig.selectedAccount) {
+            sizeNotifierLayout.removeView(emojiView);
+            emojiView = null;
+        }
         if (emojiView != null) {
             return;
         }
-        emojiView = new EmojiView(false, false, getContext(), false, null, null, null);
+        emojiView = new EmojiView(null, true, false, false, getContext(), false, null, null, resourcesProvider);
         emojiView.setDelegate(new EmojiView.EmojiViewDelegate() {
             @Override
             public boolean onBackspace() {
@@ -558,6 +633,83 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
                 }
                 messageEditText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
                 return true;
+            }
+
+            @Override
+            public void onAnimatedEmojiUnlockClick() {
+                new PremiumFeatureBottomSheet(new BaseFragment() {
+                    @Override
+                    public int getCurrentAccount() {
+                        return currentAccount;
+                    }
+
+                    @Override
+                    public Context getContext() {
+                        return PhotoViewerCaptionEnterView.this.getContext();
+                    }
+
+                    @Override
+                    public Activity getParentActivity() {
+                        Context context = getContext();
+                        while (context instanceof ContextWrapper) {
+                            if (context instanceof Activity) {
+                                return (Activity) context;
+                            }
+                            context = ((ContextWrapper) context).getBaseContext();
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public Dialog getVisibleDialog() {
+                        return new Dialog(PhotoViewerCaptionEnterView.this.getContext()) {
+                            @Override
+                            public void dismiss() {
+                                if (getParentActivity() instanceof LaunchActivity && ((LaunchActivity) getParentActivity()).getActionBarLayout() != null) {
+                                    parentLayout = ((LaunchActivity) getParentActivity()).getActionBarLayout();
+                                    if (parentLayout != null && parentLayout.getLastFragment() != null && parentLayout.getLastFragment().getVisibleDialog() != null) {
+                                        Dialog dialog = parentLayout.getLastFragment().getVisibleDialog();
+                                        if (dialog instanceof ChatAttachAlert) {
+                                            ((ChatAttachAlert) dialog).dismiss(true);
+                                        } else {
+                                            dialog.dismiss();
+                                        }
+                                    }
+                                }
+                                PhotoViewer.getInstance().closePhoto(false, false);
+                            }
+                        };
+                    }
+                }, PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_EMOJI, false).show();
+            }
+
+            @Override
+            public void onCustomEmojiSelected(long documentId, TLRPC.Document document,  String emoticon, boolean isRecent) {
+                int i = messageEditText.getSelectionEnd();
+                if (i < 0) {
+                    i = 0;
+                }
+                try {
+                    innerTextChange = true;
+                    SpannableString spannable = new SpannableString(emoticon);
+                    AnimatedEmojiSpan span;
+                    if (document != null) {
+                        span = new AnimatedEmojiSpan(document, messageEditText.getPaint().getFontMetricsInt());
+                    } else {
+                        span = new AnimatedEmojiSpan(documentId, messageEditText.getPaint().getFontMetricsInt());
+                    }
+                    if (!isRecent) {
+                        span.fromEmojiKeyboard = true;
+                    }
+                    spannable.setSpan(span, 0, spannable.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    messageEditText.setText(messageEditText.getText().insert(i, spannable));
+                    int j = i + spannable.length();
+                    messageEditText.setSelection(j, j);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                } finally {
+                    innerTextChange = false;
+                }
             }
 
             @Override
@@ -640,9 +792,7 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
     private void showPopup(int show, boolean animated) {
         lastShow = show;
         if (show == 1) {
-            if (emojiView == null) {
-                createEmojiView();
-            }
+            createEmojiView();
 
             emojiView.setVisibility(VISIBLE);
             delegate.onEmojiViewOpen();
@@ -828,5 +978,9 @@ public class PhotoViewerCaptionEnterView extends FrameLayout implements Notifica
     private int getThemedColor(String key) {
         Integer color = resourcesProvider != null ? resourcesProvider.getColor(key) : null;
         return color != null ? color : Theme.getColor(key);
+    }
+
+    public Theme.ResourcesProvider getResourcesProvider() {
+        return resourcesProvider;
     }
 }

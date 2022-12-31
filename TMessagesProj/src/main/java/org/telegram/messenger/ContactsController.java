@@ -23,7 +23,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 
 import androidx.collection.LongSparseArray;
@@ -38,6 +40,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ContactsController extends BaseController {
 
@@ -69,6 +73,7 @@ public class ContactsController extends BaseController {
     private ArrayList<TLRPC.PrivacyRule> forwardsPrivacyRules;
     private ArrayList<TLRPC.PrivacyRule> phonePrivacyRules;
     private ArrayList<TLRPC.PrivacyRule> addedByPhonePrivacyRules;
+    private ArrayList<TLRPC.PrivacyRule> voiceMessagesRules;
     private TLRPC.TL_globalPrivacySettings globalPrivacySettings;
 
     public final static int PRIVACY_RULES_TYPE_LASTSEEN = 0;
@@ -79,8 +84,9 @@ public class ContactsController extends BaseController {
     public final static int PRIVACY_RULES_TYPE_FORWARDS = 5;
     public final static int PRIVACY_RULES_TYPE_PHONE = 6;
     public final static int PRIVACY_RULES_TYPE_ADDED_BY_PHONE = 7;
+    public final static int PRIVACY_RULES_TYPE_VOICE_MESSAGES = 8;
 
-    public final static int PRIVACY_RULES_TYPE_COUNT = 8;
+    public final static int PRIVACY_RULES_TYPE_COUNT = 9;
 
     private class MyContentObserver extends ContentObserver {
 
@@ -554,7 +560,7 @@ public class ContactsController extends BaseController {
         return count > 3;
     }
 
-    private HashMap<String, Contact> readContactsFromPhoneBook() {
+    public HashMap<String, Contact> readContactsFromPhoneBook() {
         if (!getUserConfig().syncContacts) {
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("contacts sync disabled");
@@ -746,6 +752,69 @@ public class ContactsController extends BaseController {
                 }
                 pCur = null;
             }
+
+            Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null,ContactsContract.Contacts.HAS_PHONE_NUMBER + " = ?", new String[]{"0"}, null);
+            if (cur != null) {
+                String[] metadata = new String[5];
+                Pattern phonePattern = Pattern.compile(".*(\\+[0-9 \\-]+).*");
+                while (cur.moveToNext()) {
+                    String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                    String lookup_key = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
+                    String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                    String phone = null;
+                    if (contactsMap.get(lookup_key) != null || TextUtils.isEmpty(name)) {
+                        continue;
+                    }
+                    pCur = cr.query(
+                            ContactsContract.Data.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            new String[]{id}, null);
+                    loop : while (pCur.moveToNext()) {
+                        metadata[0] = pCur.getString(pCur.getColumnIndex(ContactsContract.Data.DATA1));
+                        metadata[1] = pCur.getString(pCur.getColumnIndex(ContactsContract.Data.DATA2));
+                        metadata[2] = pCur.getString(pCur.getColumnIndex(ContactsContract.Data.DATA3));
+                        metadata[3] = pCur.getString(pCur.getColumnIndex(ContactsContract.Data.DATA4));
+                        metadata[4] = pCur.getString(pCur.getColumnIndex(ContactsContract.Data.DATA5));
+                        for (int i = 0; i < metadata.length; i++) {
+                            if (metadata[i] == null) {
+                                continue;
+                            }
+                            Matcher matcher = phonePattern.matcher(metadata[i]);
+                            if (matcher.matches()) {
+                                phone = matcher.group(1).replace(" ", "").replace("-", "");
+                                break loop;
+                            }
+                        }
+                    }
+
+                    pCur.close();
+
+                    if (phone != null) {
+
+                        String shortNumber = phone;
+                        if (phone.startsWith("+")) {
+                            shortNumber = phone.substring(1);
+                        }
+
+                        Contact contact = new Contact();
+                        contact.first_name = name;
+                        contact.last_name = "";
+                        contact.contact_id = lastContactId++;
+                        contact.key = lookup_key;
+                        contact.phones.add(phone);
+                        contact.shortPhones.add(shortNumber);
+                        contact.phoneDeleted.add(0);
+                        contact.phoneTypes.add(LocaleController.getString("PhoneOther", R.string.PhoneOther));
+
+//                        contact.provider = accountType;
+//                        contact.isGoodProvider = isGoodAccountType;
+                        contactsMap.put(lookup_key, contact);
+                    }
+                }
+                cur.close();
+            }
+
         } catch (Throwable e) {
             FileLog.e(e);
             if (contactsMap != null) {
@@ -2167,13 +2236,14 @@ public class ContactsController extends BaseController {
                 return;
             }
             final TLRPC.Updates res = (TLRPC.Updates) response;
-            getMessagesController().processUpdates(res, false);
-
-            /*if (BuildVars.DEBUG_VERSION) {
-                for (TLRPC.User user : res.users) {
-                    FileLog.e("received user " + user.first_name + " " + user.last_name + " " + user.phone);
+            if (user.photo != null && user.photo.personal) {
+                for (int i = 0; i < res.users.size(); i++) {
+                    if (res.users.get(i).id == user.id) {
+                        res.users.get(i).photo = user.photo;
+                    }
                 }
-            }*/
+            }
+            getMessagesController().processUpdates(res, false);
 
             for (int a = 0; a < res.users.size(); a++) {
                 final TLRPC.User u = res.users.get(a);
@@ -2386,6 +2456,9 @@ public class ContactsController extends BaseController {
                 case PRIVACY_RULES_TYPE_PHONE:
                     req.key = new TLRPC.TL_inputPrivacyKeyPhoneNumber();
                     break;
+                case PRIVACY_RULES_TYPE_VOICE_MESSAGES:
+                    req.key = new TLRPC.TL_inputPrivacyKeyVoiceMessages();
+                    break;
                 case PRIVACY_RULES_TYPE_ADDED_BY_PHONE:
                 default:
                     req.key = new TLRPC.TL_inputPrivacyKeyAddedByPhone();
@@ -2420,6 +2493,9 @@ public class ContactsController extends BaseController {
                         case PRIVACY_RULES_TYPE_PHONE:
                             phonePrivacyRules = rules.rules;
                             break;
+                        case PRIVACY_RULES_TYPE_VOICE_MESSAGES:
+                            voiceMessagesRules = rules.rules;
+                            break;
                         case PRIVACY_RULES_TYPE_ADDED_BY_PHONE:
                         default:
                             addedByPhonePrivacyRules = rules.rules;
@@ -2451,7 +2527,7 @@ public class ContactsController extends BaseController {
         return loadingGlobalSettings != 2;
     }
 
-    public boolean getLoadingPrivicyInfo(int type) {
+    public boolean getLoadingPrivacyInfo(int type) {
         return loadingPrivacyInfo[type] != 2;
     }
 
@@ -2477,6 +2553,8 @@ public class ContactsController extends BaseController {
                 return phonePrivacyRules;
             case PRIVACY_RULES_TYPE_ADDED_BY_PHONE:
                 return addedByPhonePrivacyRules;
+            case PRIVACY_RULES_TYPE_VOICE_MESSAGES:
+                return voiceMessagesRules;
         }
         return null;
     }
@@ -2506,6 +2584,9 @@ public class ContactsController extends BaseController {
                 break;
             case PRIVACY_RULES_TYPE_ADDED_BY_PHONE:
                 addedByPhonePrivacyRules = rules;
+                break;
+            case PRIVACY_RULES_TYPE_VOICE_MESSAGES:
+                voiceMessagesRules = rules;
                 break;
         }
         getNotificationCenter().postNotificationName(NotificationCenter.privacyRulesUpdated);

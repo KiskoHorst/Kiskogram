@@ -9,7 +9,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
@@ -131,7 +130,7 @@ public class UsersAlertBase extends BottomSheet {
             }
 
             @Override
-            protected boolean emptyViewIsVisible() {
+            public boolean emptyViewIsVisible() {
                 if (getAdapter() == null) {
                     return false;
                 }
@@ -182,7 +181,7 @@ public class UsersAlertBase extends BottomSheet {
         setColorProgress(0.0f);
 
         listView.setEmptyView(emptyView);
-        listView.setAnimateEmptyView(true, 0);
+        listView.setAnimateEmptyView(true, RecyclerListView.EMPTY_VIEW_ANIMATION_TYPE_ALPHA);
     }
 
     @Override
@@ -299,7 +298,7 @@ public class UsersAlertBase extends BottomSheet {
                     if (TextUtils.isEmpty(text) && listView != null && listView.getAdapter() != listViewAdapter) {
                         listView.setAnimateEmptyView(false, 0);
                         listView.setAdapter(listViewAdapter);
-                        listView.setAnimateEmptyView(true, 0);
+                        listView.setAnimateEmptyView(true, RecyclerListView.EMPTY_VIEW_ANIMATION_TYPE_ALPHA);
                         if (oldItemsCount == 0) {
                             showItemsAnimated(0);
                         }
@@ -360,6 +359,7 @@ public class UsersAlertBase extends BottomSheet {
         backgroundColor = AndroidUtilities.getOffsetColor(Theme.getColor(keyInviteMembersBackground), Theme.getColor(keyListViewBackground), progress, 1.0f);
         shadowDrawable.setColorFilter(new PorterDuffColorFilter(backgroundColor, PorterDuff.Mode.MULTIPLY));
         frameLayout.setBackgroundColor(backgroundColor);
+        fixNavigationBar(backgroundColor);
         navBarColor = backgroundColor;
         listView.setGlowColor(backgroundColor);
 
@@ -628,11 +628,22 @@ public class UsersAlertBase extends BottomSheet {
             canvas.drawRoundRect(rect, AndroidUtilities.dp(2), AndroidUtilities.dp(2), Theme.dialogs_onlineCirclePaint);
 
             if (statusBarHeight > 0) {
-                int finalColor = Color.argb(0xff, (int) (Color.red(backgroundColor) * 0.8f), (int) (Color.green(backgroundColor) * 0.8f), (int) (Color.blue(backgroundColor) * 0.8f));
-                Theme.dialogs_onlineCirclePaint.setColor(finalColor);
+                Theme.dialogs_onlineCirclePaint.setColor(backgroundColor);
                 canvas.drawRect(backgroundPaddingLeft, AndroidUtilities.statusBarHeight - statusBarHeight - getTranslationY(), getMeasuredWidth() - backgroundPaddingLeft, AndroidUtilities.statusBarHeight - getTranslationY(), Theme.dialogs_onlineCirclePaint);
             }
+            updateLightStatusBar(statusBarHeight > AndroidUtilities.statusBarHeight / 2);
             canvas.restore();
+        }
+
+        private Boolean statusBarOpen;
+        private void updateLightStatusBar(boolean open) {
+            if (statusBarOpen != null && statusBarOpen == open) {
+                return;
+            }
+            boolean openBgLight = AndroidUtilities.computePerceivedBrightness(getThemedColor(Theme.key_dialogBackground)) > .721f;
+            boolean closedBgLight = AndroidUtilities.computePerceivedBrightness(Theme.blendOver(getThemedColor(Theme.key_actionBarDefault), 0x33000000)) > .721f;
+            boolean isLight = (statusBarOpen = open) ? openBgLight : closedBgLight;
+            AndroidUtilities.setLightStatusBar(getWindow(), isLight);
         }
 
         @Override

@@ -1,27 +1,19 @@
 package org.telegram.ui.Components;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.TimeInterpolator;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.DashPathEffect;
-import android.graphics.Interpolator;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.text.TextPaint;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.animation.LinearInterpolator;
 
 import androidx.core.graphics.ColorUtils;
 import androidx.core.math.MathUtils;
 
-import org.checkerframework.checker.units.qual.A;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.Theme;
 
@@ -140,7 +132,7 @@ public class SlideChooseView extends View {
                 }
             }
             if (startMoving) {
-                if (Math.abs(xTouchDown - x) >= AndroidUtilities.dp(2)) {
+                if (Math.abs(xTouchDown - x) >= AndroidUtilities.touchSlop) {
                     moving = true;
                     startMoving = false;
                 }
@@ -156,7 +148,7 @@ public class SlideChooseView extends View {
         } else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             if (!moving) {
                 selectedIndexTouch = indexTouch;
-                if (Math.round(selectedIndexTouch) != selectedIndex) {
+                if (event.getAction() == MotionEvent.ACTION_UP && Math.round(selectedIndexTouch) != selectedIndex) {
                     setOption(Math.round(selectedIndexTouch));
                 }
             } else {

@@ -25,22 +25,17 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
-import android.media.AudioManager;
 import android.os.Build;
-import androidx.annotation.Keep;
-
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.StateSet;
-import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.OneUIUtilities;
-import org.telegram.ui.ActionBar.Theme;
+import androidx.annotation.Keep;
 
-import java.lang.reflect.Method;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.ui.ActionBar.Theme;
 
 public class Switch extends View {
 
@@ -292,15 +287,7 @@ public class Switch extends View {
                 onCheckedChangeListener.onCheckedChanged(this, checked);
             }
         }
-        if (drawIconType != iconType) {
-            drawIconType = iconType;
-            if (attachedToWindow && animated) {
-                animateIcon(iconType == 0);
-            } else {
-                cancelIconAnimator();
-                setIconProgress(iconType == 0 ? 1.0f : 0.0f);
-            }
-        }
+        setDrawIconType(iconType, animated);
     }
 
     public void setIcon(int icon) {
@@ -311,6 +298,19 @@ public class Switch extends View {
             }
         } else {
             iconDrawable = null;
+        }
+        invalidate();
+    }
+
+    public void setDrawIconType(int iconType, boolean animated) {
+        if (drawIconType != iconType) {
+            drawIconType = iconType;
+            if (attachedToWindow && animated) {
+                animateIcon(iconType == 0);
+            } else {
+                cancelIconAnimator();
+                setIconProgress(iconType == 0 ? 1.0f : 0.0f);
+            }
         }
     }
 
@@ -549,13 +549,8 @@ public class Switch extends View {
     private void vibrateChecked(boolean toCheck) {
         try {
             if (isHapticFeedbackEnabled() && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                final Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-                int slightAmplitude = OneUIUtilities.isOneUI() ? 5 : 15;
-                VibrationEffect vibrationEffect = VibrationEffect.createWaveform(
-                        toCheck ? new long[] { 80, 25, 15 } : new long[] { 25, 80, 10 },
-                        toCheck ? new int[] { slightAmplitude, 0, 255 } : new int[] { 0, slightAmplitude, 140 },
-                        -1
-                );
+                Vibrator vibrator = AndroidUtilities.getVibrator();
+                VibrationEffect vibrationEffect = VibrationEffect.createWaveform(new long[]{75,10,5,10}, new int[] {5,20,110,20}, -1);
                 vibrator.cancel();
                 vibrator.vibrate(vibrationEffect);
                 semHaptics = true;

@@ -83,6 +83,17 @@ public class ImageLocation {
             return getForPhoto(photoSize, (TLRPC.Photo) object);
         } else if (object instanceof TLRPC.Document) {
             return getForDocument(photoSize, (TLRPC.Document) object);
+        } else if (object instanceof TLRPC.Message) {
+            return getForMessage(photoSize, (TLRPC.Message) object);
+        }
+        return null;
+    }
+
+    public static ImageLocation getForMessage(TLRPC.PhotoSize photoSize, TLRPC.Message message) {
+        if (photoSize instanceof TLRPC.TL_photoStrippedSize || photoSize instanceof TLRPC.TL_photoPathSize) {
+            ImageLocation imageLocation = new ImageLocation();
+            imageLocation.photoSize = photoSize;
+            return imageLocation;
         }
         return null;
     }
@@ -126,7 +137,7 @@ public class ImageLocation {
             int currentAccount = UserConfig.selectedAccount;
             if (MessagesController.getInstance(currentAccount).isPremiumUser(user) && user.photo.has_video) {
                 final TLRPC.UserFull userFull = MessagesController.getInstance(currentAccount).getUserFull(user.id);
-                if (userFull != null && userFull.profile_photo !=null && userFull.profile_photo.video_sizes != null && !userFull.profile_photo.video_sizes.isEmpty()) {
+                if (userFull != null && userFull.profile_photo != null && userFull.profile_photo.video_sizes != null && !userFull.profile_photo.video_sizes.isEmpty()) {
                     TLRPC.VideoSize videoSize = userFull.profile_photo.video_sizes.get(0);
                     for (int i = 0; i < userFull.profile_photo.video_sizes.size(); i++) {
                         if ("p".equals(userFull.profile_photo.video_sizes.get(i).type)) {

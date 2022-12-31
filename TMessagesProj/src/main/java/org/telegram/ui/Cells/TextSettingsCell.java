@@ -27,6 +27,7 @@ import android.widget.TextView;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.AnimatedEmojiDrawable;
 import org.telegram.ui.Components.AnimatedTextView;
 import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.CubicBezierInterpolator;
@@ -104,6 +105,10 @@ public class TextSettingsCell extends FrameLayout {
         addView(valueImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, padding, 0, padding, 0));
     }
 
+    public ImageView getValueImageView() {
+        return valueImageView;
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), AndroidUtilities.dp(50) + (needDivider ? 1 : 0));
@@ -124,6 +129,15 @@ public class TextSettingsCell extends FrameLayout {
         if (valueTextView.getVisibility() == VISIBLE) {
             valueTextView.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.AT_MOST), MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
             width = availableWidth - valueTextView.getMeasuredWidth() - AndroidUtilities.dp(8);
+
+            if (valueImageView.getVisibility() == VISIBLE) {
+                MarginLayoutParams params = (MarginLayoutParams) valueImageView.getLayoutParams();
+                if (LocaleController.isRTL) {
+                    params.leftMargin = AndroidUtilities.dp(padding + 4) + valueTextView.getMeasuredWidth();
+                } else {
+                    params.rightMargin = AndroidUtilities.dp(padding + 4) + valueTextView.getMeasuredWidth();
+                }
+            }
         } else {
             width = availableWidth;
         }
@@ -201,11 +215,19 @@ public class TextSettingsCell extends FrameLayout {
         MarginLayoutParams params = (MarginLayoutParams) textView.getLayoutParams();
         if (resId == 0) {
             imageView.setVisibility(GONE);
-            params.leftMargin = 0;
+            if (LocaleController.isRTL) {
+                params.rightMargin = AndroidUtilities.dp(this.padding);
+            } else {
+                params.leftMargin = AndroidUtilities.dp(this.padding);
+            }
         } else {
             imageView.setImageResource(resId);
             imageView.setVisibility(VISIBLE);
-            params.leftMargin = AndroidUtilities.dp(71);
+            if (LocaleController.isRTL) {
+                params.rightMargin = AndroidUtilities.dp(71);
+            } else {
+                params.leftMargin = AndroidUtilities.dp(71);
+            }
         }
     }
 
@@ -293,7 +315,8 @@ public class TextSettingsCell extends FrameLayout {
         super.dispatchDraw(canvas);
 
         if (needDivider) {
-            canvas.drawLine(LocaleController.isRTL ? 0 : AndroidUtilities.dp(20), getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? AndroidUtilities.dp(20) : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
+            int offset = AndroidUtilities.dp(imageView.getVisibility() == View.VISIBLE ? 71 : 20);
+            canvas.drawLine(LocaleController.isRTL ? 0 : offset, getMeasuredHeight() - 1, getMeasuredWidth() - (LocaleController.isRTL ? offset : 0), getMeasuredHeight() - 1, Theme.dividerPaint);
         }
     }
 
@@ -323,5 +346,29 @@ public class TextSettingsCell extends FrameLayout {
             addView(valueBackupImageView, LayoutHelper.createFrame(24, 24, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, padding, 0, padding, 0));
         }
         return valueBackupImageView;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (valueBackupImageView != null && valueBackupImageView.getImageReceiver() != null && valueBackupImageView.getImageReceiver().getDrawable() instanceof AnimatedEmojiDrawable) {
+            ((AnimatedEmojiDrawable) valueBackupImageView.getImageReceiver().getDrawable()).removeView(this);
+        }
+    }
+
+    public void updateRTL() {
+        textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
+        removeView(textView);
+        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, padding, 0, padding, 0));
+
+        valueTextView.setGravity((LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL);
+        removeView(valueTextView);
+        addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.TOP, padding, 0, padding, 0));
+
+        removeView(imageView);
+        addView(imageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, 21, 0, 21, 0));
+
+        removeView(valueImageView);
+        addView(valueImageView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, padding, 0, padding, 0));
     }
 }

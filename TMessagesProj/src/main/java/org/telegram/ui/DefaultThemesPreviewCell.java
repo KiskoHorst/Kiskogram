@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.RippleDrawable;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -34,11 +33,11 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.DrawerProfileCell;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Components.ChatThemeBottomSheet;
-import org.telegram.ui.Components.ThemeSmallPreviewView;
 import org.telegram.ui.Components.FlickerLoadingView;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RecyclerListView;
+import org.telegram.ui.Components.ThemeSmallPreviewView;
 
 import java.util.ArrayList;
 
@@ -146,7 +145,7 @@ public class DefaultThemesPreviewCell extends LinearLayout {
 
 
         recyclerView.setEmptyView(progressView);
-        recyclerView.setAnimateEmptyView(true, 0);
+        recyclerView.setAnimateEmptyView(true, RecyclerListView.EMPTY_VIEW_ANIMATION_TYPE_ALPHA);
 
         if (currentType == ThemeActivity.THEME_TYPE_BASIC) {
             darkThemeDrawable = new RLottieDrawable(R.raw.sun_outline, "" + R.raw.sun_outline, AndroidUtilities.dp(28), AndroidUtilities.dp(28), true, null);
@@ -206,66 +205,67 @@ public class DefaultThemesPreviewCell extends LinearLayout {
                     dayNightCell.getImageView().getLocationInWindow(pos);
                     pos[0] += dayNightCell.getImageView().getMeasuredWidth() / 2;
                     pos[1] += dayNightCell.getImageView().getMeasuredHeight() / 2 + AndroidUtilities.dp(3);
-                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, themeInfo, false, pos, -1, toDark, dayNightCell.getImageView(), dayNightCell);
 
-                    updateDayNightMode();
-                    updateSelectedPosition();
+                    Runnable then = () -> AndroidUtilities.runOnUIThread(() -> {
+                        updateDayNightMode();
+                        updateSelectedPosition();
 
-                    int iconNewColor = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4);
-                    darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(iconNewColor, PorterDuff.Mode.SRC_IN));
-                    ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1f);
-                    valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                        @Override
-                        public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                            int iconColor = ColorUtils.blendARGB(iconOldColor, iconNewColor, (float) valueAnimator.getAnimatedValue());
-                            darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
-                        }
-                    });
-                    valueAnimator.addListener(new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-                            darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(iconNewColor, PorterDuff.Mode.SRC_IN));
-                            super.onAnimationEnd(animation);
-                        }
-                    });
-                    valueAnimator.setDuration(350);
-                    valueAnimator.start();
-
-                    int navBarNewColor = Theme.getColor(Theme.key_windowBackgroundGray);
-                    final Window window = context instanceof Activity ? ((Activity) context).getWindow() : null;
-                    if (window != null) {
-                        if (navBarAnimator != null && navBarAnimator.isRunning()) {
-                            navBarOldColor = navBarColor;
-                            navBarAnimator.cancel();
-                        }
-                        final int navBarFromColor = navBarOldColor;
-                        navBarAnimator = ValueAnimator.ofFloat(0, 1);
-                        final float startDelay = toDark ? 50 : 200, duration = 150, fullDuration = 350;
-                        navBarAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                        int iconNewColor = Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4);
+                        darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(iconNewColor, PorterDuff.Mode.SRC_IN));
+                        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1f);
+                        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                             @Override
                             public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                                float t = Math.max(0, Math.min(1, ((float) valueAnimator.getAnimatedValue() * fullDuration - startDelay) / duration));
-                                navBarColor = ColorUtils.blendARGB(navBarFromColor, navBarNewColor, t);
-                                AndroidUtilities.setNavigationBarColor(window, navBarColor, false);
-                                AndroidUtilities.setLightNavigationBar(window, AndroidUtilities.computePerceivedBrightness(navBarColor) >= 0.721f);
+                                int iconColor = ColorUtils.blendARGB(iconOldColor, iconNewColor, (float) valueAnimator.getAnimatedValue());
+                                darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
                             }
                         });
-                        navBarAnimator.addListener(new AnimatorListenerAdapter() {
+                        valueAnimator.addListener(new AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(Animator animation) {
-                                AndroidUtilities.setNavigationBarColor(window, navBarNewColor, false);
-                                AndroidUtilities.setLightNavigationBar(window, AndroidUtilities.computePerceivedBrightness(navBarNewColor) >= 0.721f);
+                                darkThemeDrawable.setColorFilter(new PorterDuffColorFilter(iconNewColor, PorterDuff.Mode.SRC_IN));
+                                super.onAnimationEnd(animation);
                             }
                         });
-                        navBarAnimator.setDuration((long) fullDuration);
-                        navBarAnimator.start();
-                    }
+                        valueAnimator.setDuration(350);
+                        valueAnimator.start();
 
-                    if (Theme.isCurrentThemeDay()) {
-                        dayNightCell.setTextAndIcon(LocaleController.getString("SettingsSwitchToNightMode", R.string.SettingsSwitchToNightMode), darkThemeDrawable, true);
-                    } else {
-                        dayNightCell.setTextAndIcon(LocaleController.getString("SettingsSwitchToDayMode", R.string.SettingsSwitchToDayMode), darkThemeDrawable, true);
-                    }
+                        int navBarNewColor = Theme.getColor(Theme.key_windowBackgroundGray);
+                        final Window window = context instanceof Activity ? ((Activity) context).getWindow() : null;
+                        if (window != null) {
+                            if (navBarAnimator != null && navBarAnimator.isRunning()) {
+                                navBarAnimator.cancel();
+                            }
+                            final int navBarFromColor = navBarAnimator != null && navBarAnimator.isRunning() ? navBarColor : navBarOldColor;
+                            navBarAnimator = ValueAnimator.ofFloat(0, 1);
+                            final float startDelay = toDark ? 50 : 200, duration = 150, fullDuration = 350;
+                            navBarAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                @Override
+                                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                                    float t = Math.max(0, Math.min(1, ((float) valueAnimator.getAnimatedValue() * fullDuration - startDelay) / duration));
+                                    navBarColor = ColorUtils.blendARGB(navBarFromColor, navBarNewColor, t);
+                                    AndroidUtilities.setNavigationBarColor(window, navBarColor, false);
+                                    AndroidUtilities.setLightNavigationBar(window, AndroidUtilities.computePerceivedBrightness(navBarColor) >= 0.721f);
+                                }
+                            });
+                            navBarAnimator.addListener(new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    AndroidUtilities.setNavigationBarColor(window, navBarNewColor, false);
+                                    AndroidUtilities.setLightNavigationBar(window, AndroidUtilities.computePerceivedBrightness(navBarNewColor) >= 0.721f);
+                                }
+                            });
+                            navBarAnimator.setDuration((long) fullDuration);
+                            navBarAnimator.start();
+                        }
+
+                        if (Theme.isCurrentThemeDay()) {
+                            dayNightCell.setTextAndIcon(LocaleController.getString("SettingsSwitchToNightMode", R.string.SettingsSwitchToNightMode), darkThemeDrawable, true);
+                        } else {
+                            dayNightCell.setTextAndIcon(LocaleController.getString("SettingsSwitchToDayMode", R.string.SettingsSwitchToDayMode), darkThemeDrawable, true);
+                        }
+                    });
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme, themeInfo, false, pos, -1, toDark, dayNightCell.getImageView(), dayNightCell, then);
                 }
             });
 

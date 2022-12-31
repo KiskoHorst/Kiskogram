@@ -28,7 +28,6 @@ import android.widget.TextView;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AnimationProperties;
 import org.telegram.ui.Components.CubicBezierInterpolator;
@@ -52,6 +51,7 @@ public class TextCheckCell extends FrameLayout {
     private float lastTouchX;
     private ObjectAnimator animator;
     private boolean drawCheckRipple;
+    private int padding;
     private Theme.ResourcesProvider resourcesProvider;
 
     public static final Property<TextCheckCell, Float> ANIMATION_PROGRESS = new AnimationProperties.FloatProperty<TextCheckCell>("animationProgress") {
@@ -87,6 +87,7 @@ public class TextCheckCell extends FrameLayout {
         super(context);
         this.resourcesProvider = resourcesProvider;
 
+        this.padding = padding;
 
         textView = new TextView(context);
         textView.setTextColor(Theme.getColor(dialog ? Theme.key_dialogTextBlack : Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
@@ -145,7 +146,7 @@ public class TextCheckCell extends FrameLayout {
     public void setTextAndCheck(String text, boolean checked, boolean divider) {
         textView.setText(text);
         isMultiline = false;
-        checkBox.setChecked(checked, false);
+        checkBox.setChecked(checked, attached);
         needDivider = divider;
         valueTextView.setVisibility(GONE);
         LayoutParams layoutParams = (LayoutParams) textView.getLayoutParams();
@@ -153,6 +154,19 @@ public class TextCheckCell extends FrameLayout {
         layoutParams.topMargin = 0;
         textView.setLayoutParams(layoutParams);
         setWillNotDraw(!divider);
+    }
+
+    public void updateRTL() {
+        textView.setGravity((LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL);
+        removeView(textView);
+        addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 70 : padding, 0, LocaleController.isRTL ? padding : 70, 0));
+
+        valueTextView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
+        removeView(valueTextView);
+        addView(valueTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.TOP, LocaleController.isRTL ? 64 : padding, 36, LocaleController.isRTL ? padding : 64, 0));
+
+        removeView(checkBox);
+        addView(checkBox, LayoutHelper.createFrame(37, 20, (LocaleController.isRTL ? Gravity.LEFT : Gravity.RIGHT) | Gravity.CENTER_VERTICAL, 22, 0, 22, 0));
     }
 
     public void setColors(String key, String switchKey, String switchKeyChecked, String switchThumb, String switchThumbChecked) {
@@ -340,5 +354,19 @@ public class TextCheckCell extends FrameLayout {
             sb.append(valueTextView.getText());
         }
         info.setContentDescription(sb);
+    }
+
+    boolean attached;
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        attached = true;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        attached = false;
     }
 }

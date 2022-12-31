@@ -10,6 +10,7 @@ package org.telegram.messenger;
 
 import android.os.SystemClock;
 import android.util.SparseArray;
+import android.view.View;
 
 import androidx.annotation.UiThread;
 
@@ -19,6 +20,7 @@ import java.util.HashSet;
 
 public class NotificationCenter {
 
+    private final static long EXPIRE_NOTIFICATIONS_TIME = 5017;
     private static int totalEvents = 1;
 
     public static final int didReceiveNewMessages = totalEvents++;
@@ -78,6 +80,7 @@ public class NotificationCenter {
     public static final int stickersDidLoad = totalEvents++;
     public static final int diceStickersDidLoad = totalEvents++;
     public static final int featuredStickersDidLoad = totalEvents++;
+    public static final int featuredEmojiDidLoad = totalEvents++;
     public static final int groupStickersDidLoad = totalEvents++;
     public static final int messagesReadContent = totalEvents++;
     public static final int botInfoDidLoad = totalEvents++;
@@ -114,6 +117,7 @@ public class NotificationCenter {
     public static final int startSpoilers = totalEvents++;
     public static final int sendingMessagesChanged = totalEvents++;
     public static final int didUpdateReactions = totalEvents++;
+    public static final int didUpdateExtendedMedia = totalEvents++;
     public static final int didVerifyMessagesStickers = totalEvents++;
     public static final int scheduledMessagesUpdated = totalEvents++;
     public static final int newSuggestionsAvailable = totalEvents++;
@@ -125,6 +129,9 @@ public class NotificationCenter {
     public static final int dialogDeleted = totalEvents++;
     public static final int webViewResultSent = totalEvents++;
     public static final int voiceTranscriptionUpdate = totalEvents++;
+    public static final int animatedEmojiDocumentLoaded = totalEvents++;
+    public static final int recentEmojiStatusesUpdate = totalEvents++;
+    public static final int updateSearchSettings = totalEvents++;
 
     public static final int didGenerateFingerprintKeyPair = totalEvents++;
 
@@ -192,6 +199,8 @@ public class NotificationCenter {
 
     public static final int updateBotMenuButton = totalEvents++;
 
+    public static final int didUpdatePremiumGiftStickers = totalEvents++;
+
     //global
     public static final int pushMessagesUpdated = totalEvents++;
     public static final int stopEncodingService = totalEvents++;
@@ -251,6 +260,12 @@ public class NotificationCenter {
     public static final int currentUserShowLimitReachedDialog = totalEvents++;
     public static final int billingProductDetailsUpdated = totalEvents++;
     public static final int premiumStickersPreviewLoaded = totalEvents++;
+    public static final int userEmojiStatusUpdated = totalEvents++;
+    public static final int requestPermissions = totalEvents++;
+    public static final int permissionsGranted = totalEvents++;
+    public static int topicsDidLoaded = totalEvents++;
+    public static int chatSwithcedToForum = totalEvents++;
+    public static int didUpdateGlobalAutoDeleteTimer = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
@@ -344,7 +359,7 @@ public class NotificationCenter {
         notifications.allowedIds = allowedNotifications;
         this.allowedNotifications.put(animationInProgressPointer, notifications);
         if (checkForExpiredNotifications == null) {
-            AndroidUtilities.runOnUIThread(checkForExpiredNotifications = this::checkForExpiredNotifications, 1017);
+            AndroidUtilities.runOnUIThread(checkForExpiredNotifications = this::checkForExpiredNotifications, EXPIRE_NOTIFICATIONS_TIME);
         }
 
         return animationInProgressPointer;
@@ -375,7 +390,7 @@ public class NotificationCenter {
             }
         }
         if (minTime != Long.MAX_VALUE) {
-            long time = 1017 - (currentTime - minTime);
+            long time = EXPIRE_NOTIFICATIONS_TIME - (currentTime - minTime);
             AndroidUtilities.runOnUIThread(() -> checkForExpiredNotifications = this::checkForExpiredNotifications, Math.max(17, time));
         }
     }
@@ -451,7 +466,7 @@ public class NotificationCenter {
             long currentTime = SystemClock.elapsedRealtime();
             for (HashMap.Entry<Integer, AllowedNotifications> entry : allowedNotifications.entrySet()) {
                 AllowedNotifications allowedNotification = entry.getValue();
-                if (currentTime - allowedNotification.time > 1000) {
+                if (currentTime - allowedNotification.time > EXPIRE_NOTIFICATIONS_TIME) {
                     if (expiredIndices == null) {
                         expiredIndices = new ArrayList<>();
                     }
@@ -497,9 +512,6 @@ public class NotificationCenter {
         if (!allowDuringAnimation && isAnimationInProgress()) {
             DelayedPost delayedPost = new DelayedPost(id, args);
             delayedPosts.add(delayedPost);
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.e("delay post notification " + id + " with args count = " + args.length);
-            }
             return;
         }
         if (!postponeCallbackList.isEmpty()) {
@@ -639,5 +651,30 @@ public class NotificationCenter {
         private AllowedNotifications() {
             time = SystemClock.elapsedRealtime();
         }
+    }
+
+    public static void listenEmojiLoading(View view) {
+        if (view == null) {
+            return;
+        }
+
+        final NotificationCenterDelegate delegate = (id, account, args) -> {
+            if (id == NotificationCenter.emojiLoaded) {
+                if (view != null && view.isAttachedToWindow()) {
+                    view.invalidate();
+                }
+            }
+        };
+        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {
+                NotificationCenter.getGlobalInstance().addObserver(delegate, NotificationCenter.emojiLoaded);
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                NotificationCenter.getGlobalInstance().removeObserver(delegate, NotificationCenter.emojiLoaded);
+            }
+        });
     }
 }

@@ -50,6 +50,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.DynamicDrawableSpan;
 import android.text.style.MetricAffectingSpan;
 import android.text.style.URLSpan;
 import android.util.Property;
@@ -104,7 +105,9 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DownloadController;
+import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.ImageLoader;
@@ -518,7 +521,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
 
             sizeBar = new SeekBarView(context);
             sizeBar.setReportChanges(true);
-//            sizeBar.setSeparatorsCount(endFontSize - startFontSize);
+            sizeBar.setSeparatorsCount(endFontSize - startFontSize + 1);
             sizeBar.setDelegate(new SeekBarView.SeekBarViewDelegate() {
                 @Override
                 public void onSeekBarDrag(boolean stop, float progress) {
@@ -1294,7 +1297,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
             deleteView.setOnClickListener(v -> {
                 if (pressedLinkOwnerLayout != null) {
                     AndroidUtilities.addToClipboard(pressedLinkOwnerLayout.getText());
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                    if (AndroidUtilities.shouldShowClipboardToast()) {
                         Toast.makeText(parentActivity, LocaleController.getString("TextCopied", R.string.TextCopied), Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -2500,6 +2503,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
         } else {
             paint = getTextPaint(richText, richText, parentBlock);
         }
+        text = Emoji.replaceEmoji(text, paint.getFontMetricsInt(), false, null, DynamicDrawableSpan.ALIGN_BASELINE);
         StaticLayout result;
         if (maxLines != 0) {
             if (parentBlock instanceof TLRPC.TL_pageBlockPullquote) {
@@ -3201,7 +3205,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
                     }
                     if (pageBlock instanceof TLRPC.TL_pageBlockChannel) {
                         TLRPC.TL_pageBlockChannel pageBlockChannel = (TLRPC.TL_pageBlockChannel) pageBlock;
-                        MessagesController.getInstance(currentAccount).openByUserName(pageBlockChannel.channel.username, parentFragment, 2);
+                        MessagesController.getInstance(currentAccount).openByUserName(ChatObject.getPublicUsername(pageBlockChannel.channel), parentFragment, 2);
                         close(false, true);
                     } else if (pageBlock instanceof TL_pageBlockRelatedArticlesChild) {
                         TL_pageBlockRelatedArticlesChild pageBlockRelatedArticlesChild = (TL_pageBlockRelatedArticlesChild) pageBlock;
@@ -3686,7 +3690,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
         textSelectionHelper.setParentView(listView[0]);
         if (MessagesController.getGlobalMainSettings().getBoolean("translate_button", false)) {
             textSelectionHelper.setOnTranslate((text, fromLang, toLang, onAlertDismiss) -> {
-                TranslateAlert.showAlert(parentActivity, parentFragment, fromLang, toLang, text, false, null, onAlertDismiss);
+                TranslateAlert.showAlert(parentActivity, parentFragment, currentAccount, fromLang, toLang, text, false, null, onAlertDismiss);
             });
         }
         textSelectionHelper.layoutManager = layoutManager[0];
@@ -3700,7 +3704,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
 
             @Override
             public void onTextCopied() {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                if (AndroidUtilities.shouldShowClipboardToast()) {
                     BulletinFactory.of(containerView, null).createCopyBulletin(LocaleController.getString("TextCopied", R.string.TextCopied)).show();
                 }
             }
@@ -4161,7 +4165,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
                             messageObject.messageOwner.media.webpage = webPage;
                             TLRPC.TL_messages_messages messagesRes = new TLRPC.TL_messages_messages();
                             messagesRes.messages.add(messageObject.messageOwner);
-                            MessagesStorage.getInstance(currentAccount).putMessages(messagesRes, messageObject.getDialogId(), -2, 0, false, messageObject.scheduled);
+                            MessagesStorage.getInstance(currentAccount).putMessages(messagesRes, messageObject.getDialogId(), -2, 0, false, messageObject.scheduled, 0);
                         }
                         pagesStack.set(0, webPage);
                         if (pagesStack.size() == 1) {
@@ -4194,7 +4198,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
                             if (messageObject != null) {
                                 TLRPC.TL_messages_messages messagesRes = new TLRPC.TL_messages_messages();
                                 messagesRes.messages.add(messageObject.messageOwner);
-                                MessagesStorage.getInstance(currentAccount).putMessages(messagesRes, messageObject.getDialogId(), -2, 0, false, messageObject.scheduled);
+                                MessagesStorage.getInstance(currentAccount).putMessages(messagesRes, messageObject.getDialogId(), -2, 0, false, messageObject.scheduled, 0);
                             }
                         }
                     }
@@ -4652,7 +4656,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
     }
 
     private void loadChannel(final BlockChannelCell cell, WebpageAdapter adapter, TLRPC.Chat channel) {
-        if (loadingChannel || TextUtils.isEmpty(channel.username)) {
+        if (loadingChannel || !ChatObject.isPublic(channel)) {
             return;
         }
         loadingChannel = true;
@@ -6025,7 +6029,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
             float y = event.getY();
             if (channelCell.getVisibility() == VISIBLE && y > channelCell.getTranslationY() && y < channelCell.getTranslationY() + AndroidUtilities.dp(39)) {
                 if (parentAdapter.channelBlock != null && event.getAction() == MotionEvent.ACTION_UP) {
-                    MessagesController.getInstance(currentAccount).openByUserName(parentAdapter.channelBlock.channel.username, parentFragment, 2);
+                    MessagesController.getInstance(currentAccount).openByUserName(ChatObject.getPublicUsername(parentAdapter.channelBlock.channel), parentFragment, 2);
                     close(false, true);
                 }
                 return true;
@@ -6273,7 +6277,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
                     TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(currentDocument.thumbs, 40);
                     imageView.setImage(ImageLocation.getForDocument(currentDocument), null, ImageLocation.getForDocument(thumb, currentDocument), "80_80_b", currentDocument.size, null, parentAdapter.currentPage, 1);
                 } else {
-                    FileLoader.getInstance(currentAccount).loadFile(currentDocument, parentAdapter.currentPage, 1, 1);
+                    FileLoader.getInstance(currentAccount).loadFile(currentDocument, parentAdapter.currentPage, FileLoader.PRIORITY_NORMAL, 1);
                 }
                 buttonState = 1;
                 radialProgress.setIcon(getIconForCurrentState(), true, animated);
@@ -9909,7 +9913,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
             float y = event.getY();
             if (channelCell.getVisibility() == VISIBLE && y > channelCell.getTranslationY() && y < channelCell.getTranslationY() + AndroidUtilities.dp(39)) {
                 if (parentAdapter.channelBlock != null && event.getAction() == MotionEvent.ACTION_UP) {
-                    MessagesController.getInstance(currentAccount).openByUserName(parentAdapter.channelBlock.channel.username, parentFragment, 2);
+                    MessagesController.getInstance(currentAccount).openByUserName(ChatObject.getPublicUsername(parentAdapter.channelBlock.channel), parentFragment, 2);
                     close(false, true);
                 }
                 return true;
@@ -10553,7 +10557,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
             progressView.measure(MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(39), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(39), MeasureSpec.EXACTLY));
             imageView.measure(MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(39), MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(39), MeasureSpec.EXACTLY));
             if (currentBlock != null) {
-                textLayout = createLayoutForText(this, currentBlock.channel.title, null, width - AndroidUtilities.dp(36 + 16) - buttonWidth, textY, currentBlock, StaticLayoutEx.ALIGN_LEFT(), parentAdapter);
+                textLayout = createLayoutForText(this, currentBlock.channel.title, null, width - AndroidUtilities.dp(36 + 16) - buttonWidth, textY, currentBlock, StaticLayoutEx.ALIGN_LEFT(), 1, parentAdapter);
                 if (parentAdapter.isRtl) {
                     textX2 = textX;
                 } else {
@@ -11212,6 +11216,9 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
     }
 
     public boolean openPhoto(TLRPC.PageBlock block, WebpageAdapter adapter) {
+        if (parentFragment == null || parentFragment.getParentActivity() == null) {
+            return false;
+        }
         final int index;
         final List<TLRPC.PageBlock> pageBlocks;
         if (!(block instanceof TLRPC.TL_pageBlockVideo) || WebPageUtils.isVideo(adapter.currentPage, block)) {
@@ -11222,7 +11229,7 @@ public class ArticleViewer implements NotificationCenter.NotificationCenterDeleg
             index = 0;
         }
         final PhotoViewer photoViewer = PhotoViewer.getInstance();
-        photoViewer.setParentActivity(parentActivity);
+        photoViewer.setParentActivity(parentFragment);
         return photoViewer.openPhoto(index, new RealPageBlocksAdapter(adapter.currentPage, pageBlocks), new PageBlocksPhotoViewerProvider(pageBlocks));
     }
 

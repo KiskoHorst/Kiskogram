@@ -16,6 +16,7 @@ import android.view.View;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.math.MathUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -109,9 +110,11 @@ public class StarParticlesView extends View {
         private final Bitmap[] stars = new Bitmap[3];
         public boolean paused;
         public boolean startFromCenter;
-        private Paint paint = new Paint();
+        public Paint paint = new Paint();
+        public float excludeRadius = 0;
+        public Paint overridePaint;
 
-        ArrayList<Particle> particles = new ArrayList<>();
+        public ArrayList<Particle> particles = new ArrayList<>();
         public float speedScale = 1f;
 
         public final int count;
@@ -122,7 +125,7 @@ public class StarParticlesView extends View {
         public int randLifeTime = 1000;
         private int lastColor;
         private final float dt = 1000 / AndroidUtilities.screenRefreshRate;
-        private boolean distributionAlgorithm;
+        public boolean distributionAlgorithm;
         Matrix matrix = new Matrix();
         Matrix matrix2 = new Matrix();
         Matrix matrix3 = new Matrix();
@@ -135,10 +138,17 @@ public class StarParticlesView extends View {
         public boolean checkTime = true;
         public boolean isCircle = true;
         public boolean useBlur = false;
+        public boolean forceMaxAlpha = false;
         public boolean roundEffect = true;
         public int type = -1;
         public String colorKey = Theme.key_premiumStartSmallStarsColor;
         public boolean svg;
+
+        public long pausedTime;
+
+        float a;
+        float a1;
+        float a2;
 
         public final static int TYPE_SETTINGS = 101;
 
@@ -196,7 +206,19 @@ public class StarParticlesView extends View {
                     stars[i] = SvgHelper.getBitmap(res, size, size, ColorUtils.setAlphaComponent(Theme.getColor(colorKey), 30));
                     svg = true;
                     continue;
-                }else if (type == PremiumPreviewFragment.PREMIUM_FEATURE_ADS) {
+                } else if (type == PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_EMOJI || type == PremiumPreviewFragment.PREMIUM_FEATURE_REACTIONS) {
+                    int res;
+                    if (i == 0) {
+                        res = R.raw.premium_object_smile1;
+                    } else if (i == 1) {
+                        res = R.raw.premium_object_smile2;
+                    } else {
+                        res = R.raw.premium_object_like;
+                    }
+                    stars[i] = SvgHelper.getBitmap(res, size, size, ColorUtils.setAlphaComponent(Theme.getColor(colorKey), 30));
+                    svg = true;
+                    continue;
+                } else if (type == PremiumPreviewFragment.PREMIUM_FEATURE_ADS) {
                     int res;
                     if (i == 0) {
                         res = R.raw.premium_object_adsbubble;
@@ -267,7 +289,9 @@ public class StarParticlesView extends View {
                     if (roundEffect) {
                         paint1.setPathEffect(new CornerPathEffect(AndroidUtilities.dpf2(size1 / 5f)));
                     }
-                    if (useBlur) {
+                    if (forceMaxAlpha) {
+                        paint1.setAlpha(0xFF);
+                    } else if (useBlur) {
                         paint1.setAlpha(60);
                     } else {
                         paint1.setAlpha(120);
@@ -300,21 +324,19 @@ public class StarParticlesView extends View {
             }
         }
 
-        float a;
-        float a1;
-        float a2;
-
         public void onDraw(Canvas canvas) {
             onDraw(canvas, 1f);
         }
 
+        private long prevTime;
         public void onDraw(Canvas canvas, float alpha) {
             long time = System.currentTimeMillis();
+            long diff = MathUtils.clamp(time - prevTime, 4, 50);
             if (useRotate) {
                 matrix.reset();
-                a += 360f * (16f / 40000f);
-                a1 += 360f * (16f / 50000f);
-                a2 += 360f * (16f / 60000f);
+                a += 360f * (diff / 40000f);
+                a1 += 360f * (diff / 50000f);
+                a2 += 360f * (diff / 60000f);
                 matrix.setRotate(a, rect.centerX(), rect.centerY());
                 matrix2.setRotate(a1, rect.centerX(), rect.centerY());
                 matrix3.setRotate(a2, rect.centerX(), rect.centerY());
@@ -339,7 +361,7 @@ public class StarParticlesView extends View {
                 if (paused) {
                     particle.draw(canvas, pausedTime, alpha);
                 } else {
-                    particle.draw(canvas, time,alpha);
+                    particle.draw(canvas, time, alpha);
                 }
                 if (checkTime) {
                     if (time > particle.lifeTime) {
@@ -352,17 +374,17 @@ public class StarParticlesView extends View {
                     }
                 }
             }
+            prevTime = time;
         }
 
-        long pausedTime;
+        public class Particle {
+            public long lifeTime;
 
-        private class Particle {
             private float x, y;
             private float x2, y2;
             private float drawingX, drawingY;
             private float vecX, vecY;
             private int starIndex;
-            private long lifeTime;
             private int alpha;
             private float randomRotate;
             float inProgress;
@@ -421,6 +443,7 @@ public class StarParticlesView extends View {
                         outProgress = 1f - (lifeTime - time) / 150f;
                         outProgress = Utilities.clamp(outProgress, 1f, 0f);
                     }
+                    Paint paint = overridePaint != null ? overridePaint : Drawable.this.paint;
                     paint.setAlpha((int) (this.alpha * (1f - outProgress) * alpha));
                     canvas.drawBitmap(stars[starIndex], -(stars[starIndex].getWidth() >> 1), -(stars[starIndex].getHeight() >> 1), paint);
                     canvas.restore();
@@ -478,7 +501,7 @@ public class StarParticlesView extends View {
                     y = bestY;
                 } else {
                     if (isCircle) {
-                        float r = (Math.abs(Utilities.fastRandom.nextInt() % 1000) / 1000f) * rect.width();
+                        float r = (Math.abs(Utilities.fastRandom.nextInt() % 1000) / 1000f) * (rect.width() - excludeRadius) + excludeRadius;
                         float a = Math.abs(Utilities.fastRandom.nextInt() % 360);
                         x = rect.centerX() + (float) (r * Math.sin(Math.toRadians(a)));
                         y = rect.centerY() + (float) (r * Math.cos(Math.toRadians(a)));
@@ -496,7 +519,13 @@ public class StarParticlesView extends View {
                 } else {
                     alpha = (int) (255 * ((50 + Utilities.fastRandom.nextInt(50)) / 100f));
                 }
-                if ((type == PremiumPreviewFragment.PREMIUM_FEATURE_PROFILE_BADGE && (starIndex == 1 || starIndex == 2)) || type == PremiumPreviewFragment.PREMIUM_FEATURE_ADVANCED_CHAT_MANAGEMENT || type == PremiumPreviewFragment.PREMIUM_FEATURE_ADS || type == PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_AVATARS) {
+                if ((type == PremiumPreviewFragment.PREMIUM_FEATURE_PROFILE_BADGE && (starIndex == 1 || starIndex == 2)) ||
+                        type == PremiumPreviewFragment.PREMIUM_FEATURE_ADVANCED_CHAT_MANAGEMENT ||
+                        type == PremiumPreviewFragment.PREMIUM_FEATURE_ADS ||
+                        type == PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_AVATARS ||
+                        type == PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_EMOJI ||
+                        type == PremiumPreviewFragment.PREMIUM_FEATURE_REACTIONS
+                ) {
                     randomRotate = (int) (45 * ((Utilities.fastRandom.nextInt() % 100) / 100f));
                 }
                 if (type != TYPE_SETTINGS) {

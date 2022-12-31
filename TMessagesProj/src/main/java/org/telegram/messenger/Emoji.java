@@ -24,26 +24,17 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.DynamicDrawableSpan;
 import android.text.style.ImageSpan;
-import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import org.telegram.ui.Components.AnimatedEmojiSpan;
 
-import org.telegram.tgnet.TLRPC;
-import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.Cells.ChatMessageCell;
-
-import java.io.File;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Emoji {
 
@@ -52,7 +43,16 @@ public class Emoji {
     private static int bigImgSize;
     private static boolean inited = false;
     private static Paint placeholderPaint;
-    private static int[] emojiCounts = new int[]{1906, 199, 123, 332, 128, 222, 292, 259};
+    private static int[] emojiCounts = new int[]{
+        EmojiData.data[0].length,
+        EmojiData.data[1].length,
+        EmojiData.data[2].length,
+        EmojiData.data[3].length,
+        EmojiData.data[4].length,
+        EmojiData.data[5].length,
+        EmojiData.data[6].length,
+        EmojiData.data[7].length
+    };
     private static Bitmap[][] emojiBmp = new Bitmap[8][];
     private static boolean[][] loadingEmoji = new boolean[8][];
 
@@ -234,7 +234,7 @@ public class Emoji {
         private boolean fullSize = false;
         private static Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
         private static Rect rect = new Rect();
-        public int placeholderColor = 0x20000000;
+        public int placeholderColor = 0x10000000;
 
         public EmojiDrawable(DrawableInfo i) {
             info = i;
@@ -329,9 +329,9 @@ public class Emoji {
             this.end = end;
             this.code = code;
         }
-        int start;
-        int end;
-        CharSequence code;
+        public int start;
+        public int end;
+        public CharSequence code;
     }
 
     public static boolean fullyConsistsOfEmojis(CharSequence cs) {
@@ -352,20 +352,19 @@ public class Emoji {
         return emojis;
     }
 
-    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew) {
-        return replaceEmoji(cs, fontMetrics, size, createNew, null, false, null);
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, boolean createNew) {
+        return replaceEmoji(cs, fontMetrics, AndroidUtilities.dp(16), createNew, null);
     }
 
-    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew, boolean allowAnimated, AtomicReference<WeakReference<View>> viewRef) {
-        return replaceEmoji(cs, fontMetrics, size, createNew, null, allowAnimated, viewRef);
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew) {
+        return replaceEmoji(cs, fontMetrics, size, createNew, null);
     }
 
     public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew, int[] emojiOnly) {
-        return replaceEmoji(cs, fontMetrics, size, createNew, emojiOnly, false, null);
+        return replaceEmoji(cs, fontMetrics, createNew, emojiOnly, DynamicDrawableSpan.ALIGN_BOTTOM);
     }
 
-    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, int size, boolean createNew, int[] emojiOnly, boolean allowAnimated, AtomicReference<WeakReference<View>> viewRef) {
-        allowAnimated = false;
+    public static CharSequence replaceEmoji(CharSequence cs, Paint.FontMetricsInt fontMetrics, boolean createNew, int[] emojiOnly, int alignment) {
         if (SharedConfig.useSystemEmoji || cs == null || cs.length() == 0) {
             return cs;
         }
@@ -379,10 +378,11 @@ public class Emoji {
     }
 
     public static class EmojiSpan extends ImageSpan {
-        private Paint.FontMetricsInt fontMetrics;
-        private int size = AndroidUtilities.dp(20);
+        public Paint.FontMetricsInt fontMetrics;
+        public int size = AndroidUtilities.dp(20);
+        public String emoji;
 
-        public EmojiSpan(Drawable d, int verticalAlignment, int s, Paint.FontMetricsInt original) {
+        public EmojiSpan(Drawable d, int verticalAlignment, Paint.FontMetricsInt original) {
             super(d, verticalAlignment);
             fontMetrics = original;
             if (original != null) {
@@ -396,6 +396,16 @@ public class Emoji {
         public void replaceFontMetrics(Paint.FontMetricsInt newMetrics, int newSize) {
             fontMetrics = newMetrics;
             size = newSize;
+        }
+
+        public void replaceFontMetrics(Paint.FontMetricsInt newMetrics) {
+            fontMetrics = newMetrics;
+            if (fontMetrics != null) {
+                size = Math.abs(fontMetrics.descent) + Math.abs(fontMetrics.ascent);
+                if (size == 0) {
+                    size = AndroidUtilities.dp(20);
+                }
+            }
         }
 
         @Override
@@ -431,8 +441,15 @@ public class Emoji {
             }
         }
 
+        public boolean drawn;
+        public float lastDrawX, lastDrawY;
+
         @Override
         public void draw(Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, Paint paint) {
+            lastDrawX = x + size / 2f;
+            lastDrawY = top + (bottom - top) / 2f;
+            drawn = true;
+
             boolean restoreAlpha = false;
             if (paint.getAlpha() != 255 && emojiDrawingUseAlpha) {
                 restoreAlpha = true;
@@ -456,7 +473,7 @@ public class Emoji {
         @Override
         public void updateDrawState(TextPaint ds) {
             if (getDrawable() instanceof EmojiDrawable) {
-                ((EmojiDrawable) getDrawable()).placeholderColor = 0x20ffffff & ds.getColor();
+                ((EmojiDrawable) getDrawable()).placeholderColor = 0x10ffffff & ds.getColor();
             }
             super.updateDrawState(ds);
         }
