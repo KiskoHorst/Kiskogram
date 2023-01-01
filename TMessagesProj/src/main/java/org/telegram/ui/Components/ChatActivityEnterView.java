@@ -389,7 +389,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     private ActionBarPopupWindow sendPopupWindow;
     private ActionBarPopupWindow.ActionBarPopupWindowLayout sendPopupLayout;
     private ImageView cancelBotButton;
-    private ChatActivityEnterViewAnimatedIconView emojiButton;
+    private ImageView emojiButton;
     private ImageView expandStickersButton;
     private EmojiView emojiView;
     private AnimatorSet panelAnimation;
@@ -397,7 +397,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     private boolean botKeyboardViewVisible;
     private TimerView recordTimerView;
     private FrameLayout audioVideoButtonContainer;
-    private ChatActivityEnterViewAnimatedIconView audioVideoSendButton;
+    private ImageView audioVideoSendButton;
     private boolean isInVideoMode;
     private FrameLayout recordPanel;
     private FrameLayout recordedAudioPanel;
@@ -440,6 +440,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
     protected int animatedTop;
     public ValueAnimator currentTopViewAnimation;
     private ReplaceableIconDrawable botButtonDrawable;
+    private ReplaceableIconDrawable emojiButtonDrawable;
+    private ReplaceableIconDrawable audioVideoSendButtonDrawable;
 
     private CharSequence draftMessage;
     private boolean draftSearchWebpage;
@@ -1821,25 +1823,11 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         frameLayout.setClipChildren(false);
         textFieldContainer.addView(frameLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, 48, 0));
 
-        emojiButton = new ChatActivityEnterViewAnimatedIconView(context) {
-            @Override
-            protected void onDraw(Canvas canvas) {
-                super.onDraw(canvas);
-                if (getTag() != null && attachLayout != null && !emojiViewVisible && !MediaDataController.getInstance(currentAccount).getUnreadStickerSets().isEmpty() && dotPaint != null) {
-                    int x = getWidth() / 2 + AndroidUtilities.dp(4 + 5);
-                    int y = getHeight() / 2 - AndroidUtilities.dp(13 - 5);
-                    canvas.drawCircle(x, y, AndroidUtilities.dp(5), dotPaint);
-                }
-            }
-        };
-        emojiButton.setContentDescription(LocaleController.getString(R.string.AccDescrEmojiButton));
-        emojiButton.setFocusable(true);
-        int padding = AndroidUtilities.dp(9.5f);
-        emojiButton.setPadding(padding, padding, padding, padding);
-        emojiButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.SRC_IN));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            emojiButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
-        }
+        emojiButton = new ImageView(context);
+        emojiButton.setImageDrawable(emojiButtonDrawable = new ReplaceableIconDrawable(context));
+        emojiButtonDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
+        emojiButtonDrawable.setIcon(R.drawable.msg_sticker, false);
+        emojiButton.setScaleType(ImageView.ScaleType.CENTER);
         emojiButton.setOnClickListener(v -> {
             if (adjustPanLayoutHelper != null && adjustPanLayoutHelper.animationInProgress()) {
                 return;
@@ -3238,11 +3226,14 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             return true;
         });
 
-        audioVideoSendButton = new ChatActivityEnterViewAnimatedIconView(context);
+        audioVideoSendButton = new ImageView(context);
+        audioVideoSendButton.setImageDrawable(audioVideoSendButtonDrawable = new ReplaceableIconDrawable(context));
+        audioVideoSendButtonDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.MULTIPLY));
+        audioVideoSendButtonDrawable.setIcon(R.drawable.input_mic, false);
         audioVideoSendButton.setFocusable(true);
         audioVideoSendButton.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         audioVideoSendButton.setAccessibilityDelegate(mediaMessageButtonsDelegate);
-        padding = AndroidUtilities.dp(9.5f);
+        int padding = AndroidUtilities.dp(9.5f);
         audioVideoSendButton.setPadding(padding, padding, padding, padding);
         audioVideoSendButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_chat_messagePanelIcons), PorterDuff.Mode.SRC_IN));
         audioVideoButtonContainer.addView(audioVideoSendButton, LayoutHelper.createFrame(48, 48));
@@ -3804,10 +3795,12 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             }
             preferences.edit().putBoolean(isChannel ? "currentModeVideoChannel" : "currentModeVideo", visible).apply();
         }
-        audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, animated);
+        //audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, animated);
         audioVideoSendButton.setContentDescription(LocaleController.getString(isInVideoMode() ? R.string.AccDescrVideoMessage : R.string.AccDescrVoiceMessage));
         audioVideoButtonContainer.setContentDescription(LocaleController.getString(isInVideoMode() ? R.string.AccDescrVideoMessage : R.string.AccDescrVoiceMessage));
         audioVideoSendButton.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
+
+        audioVideoSendButtonDrawable.setIcon(isInVideoMode() ? R.drawable.ic_msg_panel_video : R.drawable.mic, animated);
     }
 
     public boolean isRecordingAudioVideo() {
@@ -5909,7 +5902,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                     audioVideoSendButton.setScaleX(1f);
                     audioVideoSendButton.setScaleY(1f);
                     runningAnimationAudio.playTogether(ObjectAnimator.ofFloat(audioVideoSendButton, View.ALPHA, 1));
-                    audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                    //audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                    audioVideoSendButtonDrawable.setIcon(isInVideoMode() ? R.drawable.ic_msg_panel_video : R.drawable.mic, true);
                 }
                 if (scheduledButton != null) {
                     runningAnimationAudio.playTogether(
@@ -6016,7 +6010,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                             ObjectAnimator.ofFloat(audioVideoSendButton, View.SCALE_X, 1),
                             ObjectAnimator.ofFloat(audioVideoSendButton, View.SCALE_Y, 1)
                     );
-                    audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                    //audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                    audioVideoSendButtonDrawable.setIcon(isInVideoMode() ? R.drawable.ic_msg_panel_video : R.drawable.mic, true);
                 }
 
                 if (botCommandsMenuButton != null) {
@@ -6158,7 +6153,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                         iconsAnimator.playTogether(ObjectAnimator.ofFloat(audioVideoSendButton, View.ALPHA, 1));
                         iconsAnimator.playTogether(ObjectAnimator.ofFloat(audioVideoSendButton, View.SCALE_X, 1));
                         iconsAnimator.playTogether(ObjectAnimator.ofFloat(audioVideoSendButton, View.SCALE_Y, 1));
-                        audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                        //audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                        audioVideoSendButtonDrawable.setIcon(isInVideoMode() ? R.drawable.ic_msg_panel_video : R.drawable.mic, true);
                     }
                     if (scheduledButton != null) {
                         iconsAnimator.playTogether(
@@ -6256,7 +6252,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
                     audioVideoSendButton.setScaleX(1f);
                     audioVideoSendButton.setScaleY(1f);
                     iconsAnimator.playTogether(ObjectAnimator.ofFloat(audioVideoSendButton, View.ALPHA, 1));
-                    audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                    //audioVideoSendButton.setState(isInVideoMode() ? ChatActivityEnterViewAnimatedIconView.State.VIDEO : ChatActivityEnterViewAnimatedIconView.State.VOICE, true);
+                    audioVideoSendButtonDrawable.setIcon(isInVideoMode() ? R.drawable.ic_msg_panel_video : R.drawable.mic, true);
                 }
                 if (attachLayout != null) {
                     attachLayout.setTranslationX(0);
@@ -7985,6 +7982,7 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
         ChatActivityEnterViewAnimatedIconView.State nextIcon;
         if (byOpen && currentPopupContentType == 0) {
             nextIcon = ChatActivityEnterViewAnimatedIconView.State.KEYBOARD;
+            emojiButtonDrawable.setIcon(R.drawable.input_keyboard, true);
         } else {
             int currentPage;
             if (emojiView == null) {
@@ -7999,13 +7997,15 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             } else {
                 if (currentPage == 1) {
                     nextIcon = ChatActivityEnterViewAnimatedIconView.State.STICKER;
+                    emojiButtonDrawable.setIcon(R.drawable.msg_sticker, true);
                 } else {
                     nextIcon = ChatActivityEnterViewAnimatedIconView.State.GIF;
+                    emojiButtonDrawable.setIcon(R.drawable.input_gif, true);
                 }
             }
         }
 
-        emojiButton.setState(nextIcon, animated);
+        //emojiButton.setState(nextIcon, animated);
         onEmojiIconChanged(nextIcon);
     }
 
@@ -8370,7 +8370,8 @@ public class ChatActivityEnterView extends BlurredFrameLayout implements Notific
             }
             boolean audio = (Boolean) args[1];
             isInVideoMode = !audio;
-            audioVideoSendButton.setState(audio ? ChatActivityEnterViewAnimatedIconView.State.VOICE : ChatActivityEnterViewAnimatedIconView.State.VIDEO, true);
+            //audioVideoSendButton.setState(audio ? ChatActivityEnterViewAnimatedIconView.State.VOICE : ChatActivityEnterViewAnimatedIconView.State.VIDEO, true);
+            audioVideoSendButtonDrawable.setIcon(audio ? R.drawable.mic : R.drawable.ic_msg_panel_video, true);
             if (!recordingAudioVideo) {
                 recordingAudioVideo = true;
                 updateRecordInterface(RECORD_STATE_ENTER);

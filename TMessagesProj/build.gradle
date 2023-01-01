@@ -51,7 +51,6 @@ android {
     buildToolsVersion '31.0.0'
     //ndkVersion "21.4.7075529"
 
-    defaultConfig.applicationId = "li.peeloi.kisko.kiskogram"
 
     sourceSets.main {
         jniLibs.srcDir 'libs'
@@ -75,12 +74,10 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-    defaultConfig.versionCode = Integer.parseInt(APP_VERSION_CODE)
 
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 31
-        versionName "8.9.0"
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
 
@@ -96,7 +93,6 @@ android {
 
     buildTypes {
         debug {
-            debuggable true
             jniDebuggable true
             minifyEnabled false
             shrinkResources false
@@ -110,7 +106,6 @@ android {
         }
 
         HA_private {
-            debuggable false
             jniDebuggable false
             minifyEnabled true
             multiDexEnabled true
@@ -123,7 +118,6 @@ android {
         }
 
         HA_public {
-            debuggable false
             jniDebuggable false
             minifyEnabled true
             multiDexEnabled true
@@ -136,7 +130,6 @@ android {
         }
 
         standalone {
-            debuggable false
             jniDebuggable false
             minifyEnabled true
             multiDexEnabled true
@@ -149,7 +142,6 @@ android {
         }
 
         release {
-            debuggable false
             jniDebuggable false
             minifyEnabled true
             shrinkResources false

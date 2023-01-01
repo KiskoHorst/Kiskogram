@@ -1907,7 +1907,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             }
                         } else {
                             TLRPC.WebPage webPage = MessageObject.getMedia(currentMessageObject.messageOwner).webpage;
-                            } else if (buttonState == -1 || buttonState == 3) {
+                            if (buttonState == -1 || buttonState == 3) {
                                 delegate.didPressImage(this, lastTouchX, lastTouchY);
                                 playSoundEffect(SoundEffectConstants.CLICK);
                             } else if (webPage != null) {

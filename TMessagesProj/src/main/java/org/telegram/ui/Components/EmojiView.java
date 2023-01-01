@@ -1339,7 +1339,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         needEmojiSearch = needSearch;
 
         tabIcons = new Drawable[]{
-                Theme.createEmojiIconSelectorDrawable(context, R.drawable.smiles_tab_smiles, getThemedColor(Theme.key_chat_emojiPanelBackspace), getThemedColor(Theme.key_chat_emojiPanelIconSelected)),
+                //Theme.createEmojiIconSelectorDrawable(context, R.drawable.smiles_tab_smiles, getThemedColor(Theme.key_chat_emojiPanelBackspace), getThemedColor(Theme.key_chat_emojiPanelIconSelected)),
                 Theme.createEmojiIconSelectorDrawable(context, R.drawable.smiles_tab_gif, getThemedColor(Theme.key_chat_emojiPanelBackspace), getThemedColor(Theme.key_chat_emojiPanelIconSelected)),
                 Theme.createEmojiIconSelectorDrawable(context, R.drawable.smiles_tab_stickers, getThemedColor(Theme.key_chat_emojiPanelBackspace), getThemedColor(Theme.key_chat_emojiPanelIconSelected))
         };
@@ -1390,7 +1390,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
         Tab emojiTab = new Tab();
         emojiTab.type = TAB_EMOJI;
         emojiTab.view = emojiContainer;
-        allTabs.add(emojiTab);
+        //allTabs.add(emojiTab);
 
         if (needAnimatedEmoji) {
             MediaDataController.getInstance(currentAccount).checkStickers(MediaDataController.TYPE_EMOJIPACKS);
@@ -3194,18 +3194,12 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
             return;
         }
         if (position == 0) {
-            emojiGridView.setVisibility(View.VISIBLE);
-            gifGridView.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
-            gifTabs.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
-            stickersGridView.setVisibility(View.GONE);
-            stickersTabContainer.setVisibility(View.GONE);
-        } else if (position == 1) {
             emojiGridView.setVisibility(View.GONE);
             gifGridView.setVisibility(View.VISIBLE);
             gifTabs.setVisibility(View.VISIBLE);
             stickersGridView.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
             stickersTabContainer.setVisibility(positionOffset == 0 ? View.GONE : View.VISIBLE);
-        } else if (position == 2) {
+        } else if (position == 1) {
             emojiGridView.setVisibility(View.GONE);
             gifGridView.setVisibility(View.GONE);
             gifTabs.setVisibility(View.GONE);
@@ -5312,16 +5306,7 @@ public class EmojiView extends FrameLayout implements NotificationCenter.Notific
     }
 
     public void onOpen(boolean forceEmoji) {
-        if (currentPage != 0 && currentChatId != 0) {
-            currentPage = 0;
-        }
-        if (currentPage == 0 || forceEmoji || currentTabs.size() == 1) {
-            showBackspaceButton(true, false);
-            showStickerSettingsButton(false, false);
-            if (pager.getCurrentItem() != 0) {
-                pager.setCurrentItem(0, !forceEmoji);
-            }
-        } else if (currentPage == 1) {
+        if (currentPage != 2) {
             showBackspaceButton(false, false);
             showStickerSettingsButton(true, false);
             if (pager.getCurrentItem() != 1) {
